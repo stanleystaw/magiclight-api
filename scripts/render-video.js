@@ -272,7 +272,7 @@ async function main() {
     }
 
     // ----------------------------------------------------
-    // ÉTAPE 4 : Encodage vidéo FFmpeg multi-scènes
+    // ÉTAPE 4 : Encodage vidéo FFmpeg multi-scènes (Rapide)
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 80,
@@ -312,7 +312,7 @@ async function main() {
 
       const subFilter = `drawbox=y=ih-120:color=black@0.65:width=iw:height=100:t=fill,drawtext=text='${line1}':fontcolor=white:fontsize=24:x=(w-text_w)/2:y=h-95,drawtext=text='${line2}':fontcolor=0xFFD700:fontsize=22:x=(w-text_w)/2:y=h-60`;
 
-      const cmd = `ffmpeg -y -loop 1 -t ${duration} -i "${imgFile}" -i "${audioFile}" -filter_complex "[0:v]${zoomEffect},${subFilter}[v]" -map "[v]" -map 1:a -c:v libx264 -pix_fmt yuv420p -c:a aac -shortest "${clipOutput}" -loglevel error`;
+      const cmd = `ffmpeg -y -loop 1 -t ${duration} -i "${imgFile}" -i "${audioFile}" -filter_complex "[0:v]${zoomEffect},${subFilter}[v]" -map "[v]" -map 1:a -c:v libx264 -preset ultrafast -tune stillimage -pix_fmt yuv420p -threads 4 -c:a aac -shortest "${clipOutput}" -loglevel error`;
       execSync(cmd);
       sceneClips.push(clipOutput);
       console.log(` - Rendu Scène ${i+1} terminé (${duration.toFixed(1)}s)`);
@@ -337,7 +337,7 @@ async function main() {
     } catch (e) {}
 
     // ----------------------------------------------------
-    // ÉTAPE 5 : Publication de la vidéo finale
+    // ÉTAPE 5 : Publication de la vidéo finale via gh CLI
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 95,
@@ -345,47 +345,23 @@ async function main() {
       message: "Publication de la vidéo finale HD..."
     });
 
-    let releaseTag = "v1.0.0-videos";
-    let videoUrl = `https://github.com/${REPO}/releases/download/${releaseTag}/${taskId}.mp4`;
+    const releaseTag = "v1.0.0-videos";
+    const assetName = `${taskId}.mp4`;
+    const finalAssetPath = path.join(workDir, assetName);
+    fs.copyFileSync(finalMp4Path, finalAssetPath);
+
+    let videoUrl = `https://github.com/${REPO}/releases/download/${releaseTag}/${assetName}`;
 
     try {
-      let releaseRes = await (await fetch(`https://api.github.com/repos/${REPO}/releases/tags/${releaseTag}`, {
-        headers: { "Authorization": `token ${GITHUB_TOKEN}`, "User-Agent": "Mozilla/5.0" }
-      })).json();
-
-      if (!releaseRes.id) {
-        releaseRes = await (await fetch(`https://api.github.com/repos/${REPO}/releases`, {
-          method: "POST",
-          headers: { "Authorization": `token ${GITHUB_TOKEN}`, "Content-Type": "application/json", "User-Agent": "Mozilla/5.0" },
-          body: JSON.stringify({
-            tag_name: releaseTag,
-            name: "MagicLight AI Video Storage",
-            body: "Stockage public des vidéos rendues par le moteur MagicLight AI"
-          })
-        })).json();
-      }
-
-      if (releaseRes.id) {
-        const assetName = `${taskId}.mp4`;
-        const uploadUrl = `https://uploads.github.com/repos/${REPO}/releases/${releaseRes.id}/assets?name=${assetName}`;
-        const fileBuffer = fs.readFileSync(finalMp4Path);
-
-        const uploadRes = await (await fetch(uploadUrl, {
-          method: "POST",
-          headers: {
-            "Authorization": `token ${GITHUB_TOKEN}`,
-            "Content-Type": "video/mp4",
-            "User-Agent": "Mozilla/5.0"
-          },
-          body: fileBuffer
-        })).json();
-
-        if (uploadRes.browser_download_url) {
-          videoUrl = uploadRes.browser_download_url;
-        }
-      }
+      execSync(`gh release view ${releaseTag} --repo ${REPO} || gh release create ${releaseTag} --repo ${REPO} --title "MagicLight AI Videos" --notes "Public video storage"`, {
+        env: { ...process.env, GH_TOKEN: GITHUB_TOKEN }
+      });
+      execSync(`gh release upload ${releaseTag} "${finalAssetPath}" --repo ${REPO} --clobber`, {
+        env: { ...process.env, GH_TOKEN: GITHUB_TOKEN }
+      });
+      console.log("✅ Asset uploadé avec succès sur GitHub Releases !");
     } catch (ghErr) {
-      console.warn("Erreur upload release:", ghErr.message);
+      console.warn("Warning gh release:", ghErr.message);
     }
 
     console.log(`\n🎉 SUCCÈS COMPLET !`);
