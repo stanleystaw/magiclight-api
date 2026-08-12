@@ -525,7 +525,7 @@
         <div class="card-title">🎨 Génération d'Image IA</div>
         <div class="form-group">
           <label>Prompt de l'image</label>
-          <textarea id="imagePrompt" placeholder="Ex: Un chevalier cyberpunk sous des néons sous la pluie, 8k, photoréaliste..."></textarea>
+          <textarea id="imagePrompt" placeholder="Ex: Un adorable petit chaton blanc aux yeux bleus dans un jardin féerique, 8k, photoréaliste..."></textarea>
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -658,6 +658,21 @@
       return baseUrlInput.value.replace(/\/$/, "");
     }
 
+    async function safeFetchJson(url, options = {}) {
+      const res = await fetch(url, options);
+      const contentType = res.headers.get("content-type") || "";
+      if (!res.ok) {
+        if (contentType.includes("application/json")) {
+          const errData = await res.json();
+          throw new Error(errData.error || errData.message || JSON.stringify(errData));
+        } else {
+          const text = await res.text();
+          throw new Error(`Erreur ${res.status}: ${text.slice(0, 150)}`);
+        }
+      }
+      return res.json();
+    }
+
     function switchTab(tabId) {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
@@ -692,59 +707,55 @@
       `;
 
       try {
-        // 1. Initialisation instantanée (< 1s)
-        const initRes = await fetch(`${getBaseUrl()}/stanleystawa/video`, {
+        const initData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/video`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ prompt, mode, ratio })
         });
-        const initData = await initRes.json();
-
-        if (!initData.project_id) {
-          throw new Error(initData.error || JSON.stringify(initData));
-        }
 
         const projectId = initData.project_id;
         const accountEmail = initData.account_email || "";
         document.getElementById("videoUrlSnippet").innerText = `Projet ID : ${projectId} | Suivi : GET /stanleystawa/status?project_id=${projectId}`;
 
-        // 2. Polling progressif de l'état
         let isDone = false;
         let attempts = 0;
 
-        while (!isDone && attempts < 45) {
+        while (!isDone && attempts < 40) {
           await new Promise(r => setTimeout(r, 3500));
           attempts++;
 
-          const statusRes = await fetch(`${getBaseUrl()}/stanleystawa/status?project_id=${projectId}&account=${encodeURIComponent(accountEmail)}`);
-          const statusData = await statusRes.json();
+          try {
+            const statusData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/status?project_id=${projectId}&account=${encodeURIComponent(accountEmail)}`);
 
-          if (statusData.status === "success" && statusData.video_url) {
-            isDone = true;
-            box.innerHTML = `
-              <video class="preview-video" src="${statusData.video_url}" controls autoplay loop></video>
-              <div class="meta-box">
-                <div><strong>Durée :</strong> ${statusData.duration}s | <strong>Résolution :</strong> ${statusData.resolution} | <strong>Filigrane :</strong> ${statusData.no_watermark ? '❌ Aucun (Watermark-Free)' : 'Incrusté'}</div>
-                <div><strong>Compte :</strong> ${statusData.account_used}</div>
-                <div><strong>Lien direct CDN :</strong> <a href="${statusData.video_url}" target="_blank">${statusData.video_url}</a></div>
-              </div>
-            `;
-            loadAccounts();
-            break;
-          } else {
-            const pct = statusData.progress || Math.min(90, 15 + attempts * 3);
-            const pBar = document.getElementById("progressBar");
-            const pLbl = document.getElementById("progressLabel");
-            const pDet = document.getElementById("progressDetail");
+            if (statusData.status === "success" && statusData.video_url) {
+              isDone = true;
+              box.innerHTML = `
+                <video class="preview-video" src="${statusData.video_url}" controls autoplay loop></video>
+                <div class="meta-box">
+                  <div><strong>Durée :</strong> ${statusData.duration}s | <strong>Résolution :</strong> ${statusData.resolution} | <strong>Filigrane :</strong> ${statusData.no_watermark ? '❌ Aucun (Watermark-Free)' : 'Incrusté'}</div>
+                  <div><strong>Compte :</strong> ${statusData.account_used}</div>
+                  <div><strong>Lien direct CDN :</strong> <a href="${statusData.video_url}" target="_blank">${statusData.video_url}</a></div>
+                </div>
+              `;
+              loadAccounts();
+              break;
+            } else {
+              const pct = statusData.progress || Math.min(90, 15 + attempts * 3);
+              const pBar = document.getElementById("progressBar");
+              const pLbl = document.getElementById("progressLabel");
+              const pDet = document.getElementById("progressDetail");
 
-            if (pBar) pBar.style.width = pct + "%";
-            if (pLbl) pLbl.innerText = `Rendu en cours (${pct}%)...`;
-            if (pDet) pDet.innerText = statusData.message || "Génération des scènes et encodage MagicLight...";
+              if (pBar) pBar.style.width = pct + "%";
+              if (pLbl) pLbl.innerText = `Rendu en cours (${pct}%)...`;
+              if (pDet) pDet.innerText = statusData.message || "Génération des scènes et encodage MagicLight...";
+            }
+          } catch (e) {
+            console.warn("Poll status check retry...", e);
           }
         }
 
         if (!isDone) {
-          throw new Error("Délai d'attente dépassé. Vous pouvez réinterroger le statut avec le projectId.");
+          throw new Error("Rendu en cours sur MagicLight. Vous pouvez réinterroger /stanleystawa/status?project_id=" + projectId);
         }
       } catch (err) {
         box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;
@@ -753,7 +764,7 @@
       }
     }
 
-    // --- 2. IMAGE ---
+    // --- 2. IMAGE AVEC AFFICHAGE DIRECT ---
     async function generateImage() {
       const prompt = document.getElementById("imagePrompt").value.trim();
       const ratio = document.getElementById("imageRatio").value;
@@ -764,33 +775,76 @@
       if (!prompt) return alert("Veuillez saisir un prompt pour l'image.");
 
       btn.disabled = true;
-      box.innerHTML = `<div class="loader"></div><div>Génération de l'image haute définition en cours...</div>`;
+      box.innerHTML = `
+        <div class="loader"></div>
+        <div style="font-weight: 600;" id="imgProgressLabel">Génération de l'image haute définition...</div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="imgProgressBar" style="width: 30%;"></div></div>
+        <div style="font-size: 12px; color: var(--text-muted);">Création par le moteur MagicLight AI...</div>
+      `;
 
       try {
-        const url = `${getBaseUrl()}/stanleystawa/image?prompt=${encodeURIComponent(prompt)}&ratio=${ratio}&styleId=${styleId}`;
-        const res = await fetch(url);
-        const data = await res.json();
+        const initData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/image`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt, ratio, styleId })
+        });
 
-        if (data.image_url) {
+        // Si l'image est déjà disponible immédiatement
+        if (initData.status === "success" && initData.image_url) {
           box.innerHTML = `
-            <img class="preview-img" src="${data.image_url}" alt="Image générée">
+            <img class="preview-img" src="${initData.image_url}" alt="Image générée">
             <div class="meta-box">
-              <div><strong>Compte :</strong> ${data.account_used}</div>
-              <div><strong>Lien direct :</strong> <a href="${data.image_url}" target="_blank">${data.image_url}</a></div>
+              <div><strong>Compte :</strong> ${initData.account_used}</div>
+              <div><strong>Lien direct :</strong> <a href="${initData.image_url}" target="_blank">${initData.image_url}</a></div>
             </div>
           `;
           loadAccounts();
-        } else {
-          box.innerHTML = `<pre class="code-preview">${JSON.stringify(data, null, 2)}</pre>`;
+          return;
+        }
+
+        // Sinon polling progressif jusqu'à l'image prête
+        const projectId = initData.project_id;
+        let isDone = false;
+        let attempts = 0;
+
+        while (!isDone && attempts < 25) {
+          await new Promise(r => setTimeout(r, 2500));
+          attempts++;
+
+          try {
+            const statusData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/status?project_id=${projectId}`);
+            if (statusData.cover_url || statusData.image_url) {
+              const finalImgUrl = statusData.cover_url || statusData.image_url;
+              isDone = true;
+              box.innerHTML = `
+                <img class="preview-img" src="${finalImgUrl}" alt="Image générée">
+                <div class="meta-box">
+                  <div><strong>Compte :</strong> ${statusData.account_used || 'MagicLight'}</div>
+                  <div><strong>Lien direct :</strong> <a href="${finalImgUrl}" target="_blank">${finalImgUrl}</a></div>
+                </div>
+              `;
+              loadAccounts();
+              break;
+            } else {
+              const pBar = document.getElementById("imgProgressBar");
+              if (pBar) pBar.style.width = Math.min(90, 30 + attempts * 5) + "%";
+            }
+          } catch (e) {
+            console.warn("Poll image retry...", e);
+          }
+        }
+
+        if (!isDone) {
+          throw new Error("L'image met plus de temps que prévu à s'afficher.");
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: #ef4444;">❌ Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
     }
 
-    // --- 3. EDIT ---
+    // --- 3. EDIT AVEC AFFICHAGE DIRECT ---
     async function editImage() {
       const imageUrl = document.getElementById("editImgUrl").value.trim();
       const prompt = document.getElementById("editPrompt").value.trim();
@@ -800,27 +854,58 @@
       if (!prompt) return alert("Veuillez saisir une consigne de retouche.");
 
       btn.disabled = true;
-      box.innerHTML = `<div class="loader"></div><div>Application de la retouche en cours...</div>`;
+      box.innerHTML = `
+        <div class="loader"></div>
+        <div style="font-weight: 600;">Application de la retouche...</div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width: 45%;"></div></div>
+      `;
 
       try {
-        const res = await fetch(`${getBaseUrl()}/stanleystawa/edit`, {
+        const initData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/edit`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ imageUrl, prompt })
         });
-        const data = await res.json();
-        if (data.image_url) {
+
+        if (initData.status === "success" && initData.image_url) {
           box.innerHTML = `
-            <img class="preview-img" src="${data.image_url}" alt="Image retouchée">
+            <img class="preview-img" src="${initData.image_url}" alt="Image retouchée">
             <div class="meta-box">
-              <div><strong>Compte :</strong> ${data.account_used}</div>
-              <div><strong>Lien :</strong> <a href="${data.image_url}" target="_blank">${data.image_url}</a></div>
+              <div><strong>Compte :</strong> ${initData.account_used}</div>
+              <div><strong>Lien :</strong> <a href="${initData.image_url}" target="_blank">${initData.image_url}</a></div>
             </div>
           `;
           loadAccounts();
+          return;
+        }
+
+        const projectId = initData.project_id;
+        let isDone = false;
+        let attempts = 0;
+
+        while (!isDone && attempts < 25) {
+          await new Promise(r => setTimeout(r, 2500));
+          attempts++;
+
+          try {
+            const statusData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/status?project_id=${projectId}`);
+            const finalImgUrl = statusData.cover_url || statusData.image_url;
+            if (finalImgUrl) {
+              isDone = true;
+              box.innerHTML = `
+                <img class="preview-img" src="${finalImgUrl}" alt="Image retouchée">
+                <div class="meta-box">
+                  <div><strong>Compte :</strong> ${statusData.account_used || 'MagicLight'}</div>
+                  <div><strong>Lien :</strong> <a href="${finalImgUrl}" target="_blank">${finalImgUrl}</a></div>
+                </div>
+              `;
+              loadAccounts();
+              break;
+            }
+          } catch (e) {}
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: #ef4444;">❌ Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
@@ -839,9 +924,7 @@
       box.innerHTML = `<div class="loader"></div><div>Expansion du scénario et découpage multi-scènes...</div>`;
 
       try {
-        const url = `${getBaseUrl()}/stanleystawa/story?idea=${encodeURIComponent(idea)}&language=${language}`;
-        const res = await fetch(url);
-        const data = await res.json();
+        const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/story?idea=${encodeURIComponent(idea)}&language=${language}`);
 
         let scenesHtml = data.scenes.map((s, i) => `
           <div class="scene-item">
@@ -857,7 +940,7 @@
           <div class="scenes-grid">${scenesHtml}</div>
         `;
       } catch (err) {
-        box.innerHTML = `<div style="color: #ef4444;">❌ Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
@@ -876,9 +959,7 @@
       box.innerHTML = `<div class="loader"></div><div>Synthèse vocale en cours...</div>`;
 
       try {
-        const url = `${getBaseUrl()}/stanleystawa/voice?text=${encodeURIComponent(text)}&voice_id=${voiceId}`;
-        const res = await fetch(url);
-        const data = await res.json();
+        const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/voice?text=${encodeURIComponent(text)}&voice_id=${voiceId}`);
 
         if (data.audio_url) {
           box.innerHTML = `
@@ -891,7 +972,7 @@
           loadAccounts();
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: #ef4444;">❌ Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
@@ -903,8 +984,7 @@
       container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 24px;"><div class="loader" style="margin: 0 auto 12px;"></div>Chargement des données Turso DB...</div>`;
 
       try {
-        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts`);
-        const data = await res.json();
+        const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/accounts`);
 
         document.getElementById("tursoStats").innerText = `Turso DB : ${data.total_credits_pool} Crédits (${data.active_accounts_count} Comptes)`;
 
@@ -940,8 +1020,7 @@
     async function refillAccount() {
       if (!confirm("Voulez-vous créer automatiquement un nouveau compte MagicLight et l'ajouter à Turso ?")) return;
       try {
-        const res = await fetch(`${getBaseUrl()}/stanleystawa/refill`);
-        const data = await res.json();
+        const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/refill`);
         alert(`✅ Compte créé avec succès !\nE-mail : ${data.account.email}\nCrédits : ${data.account.credits}`);
         loadAccounts();
       } catch (err) {

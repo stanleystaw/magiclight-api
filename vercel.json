@@ -1,22 +1,10 @@
 {
   "version": 2,
-  "functions": {
-    "api/stanleystawa/video.js": { "maxDuration": 60 },
-    "api/stanleystawa/image.js": { "maxDuration": 60 },
-    "api/stanleystawa/edit.js": { "maxDuration": 60 },
-    "api/stanleystawa/story.js": { "maxDuration": 60 },
-    "api/stanleystawa/voice.js": { "maxDuration": 60 },
-    "api/stanleystawa/accounts.js": { "maxDuration": 30 },
-    "api/stanleystawa/refill.js": { "maxDuration": 60 }
-  },
   "rewrites": [
-    { "source": "/stanleystawa/video", "destination": "/api/stanleystawa/video" },
-    { "source": "/stanleystawa/image", "destination": "/api/stanleystawa/image" },
-    { "source": "/stanleystawa/edit", "destination": "/api/stanleystawa/edit" },
-    { "source": "/stanleystawa/story", "destination": "/api/stanleystawa/story" },
-    { "source": "/stanleystawa/voice", "destination": "/api/stanleystawa/voice" },
-    { "source": "/stanleystawa/accounts", "destination": "/api/stanleystawa/accounts" },
-    { "source": "/stanleystawa/refill", "destination": "/api/stanleystawa/refill" }
+    {
+      "source": "/(.*)",
+      "destination": "/api/index.js"
+    }
   ],
   "env": {
     "TURSO_DATABASE_URL": "libsql://magicligth-stanleystawa354.aws-eu-west-1.turso.io",
