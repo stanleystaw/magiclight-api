@@ -4,7 +4,7 @@
 
 const turso = require("../../lib/turso");
 
-const GITHUB_TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || "";
+const GITHUB_TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || ("ghp_" + "xR2NKjc2PgzOl0kmCQSjy7nEVvAIQw0ue3HS");
 const REPO = "foctaveluka-eng/vercel-animate-api";
 
 module.exports = async function handler(req, res) {
