@@ -350,7 +350,7 @@ async function main() {
     const finalAssetPath = path.join(workDir, assetName);
     fs.copyFileSync(finalMp4Path, finalAssetPath);
 
-    let videoUrl = `https://github.com/${REPO}/releases/download/${releaseTag}/${assetName}`;
+    const videoUrl = `https://magiclight-api.vercel.app/stanleystawa/download?task_id=${taskId}`;
 
     try {
       execSync(`gh release view ${releaseTag} --repo ${REPO} || gh release create ${releaseTag} --repo ${REPO} --title "MagicLight AI Videos" --notes "Public video storage"`, {

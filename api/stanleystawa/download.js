@@ -1,57 +1,62 @@
 /**
- * api/stanleystawa/download.js — GET /stanleystawa/download?pack=..&eventId=..
- * Dernière étape du flux asynchrone :
- *   - READY       -> 302 vers l'URL MP4 (le client « reçoit la vidéo »)
- *   - IN_PROGRESS -> 202 JSON avec checkUrl
- *   - FAILED      -> 502 JSON
+ * api/stanleystawa/download.js — Téléchargement & Streaming direct du fichier MP4 HD
+ *
+ * GET /stanleystawa/download?task_id=...
  */
-const { getJobStatus } = require("../../lib/glam");
 
-function json(res, code, body) {
-  res.statusCode = code;
-  res.setHeader("Content-Type", "application/json; charset=utf-8");
+const turso = require("../../lib/turso");
+
+const GITHUB_TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || """";
+const REPO = "foctaveluka-eng/vercel-animate-api";
+
+module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-api-key");
-  res.end(JSON.stringify(body));
-}
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
 
-function isAuthorized(req) {
-  const key = process.env.API_KEY;
-  if (!key) return true;
-  const given = (req.headers && req.headers["x-api-key"]) || (req.query && req.query.key);
-  return !!given && given === key;
-}
-
-module.exports = async (req, res) => {
-  if (req.method === "OPTIONS") return json(res, 204, {});
-
-  if (!isAuthorized(req)) return json(res, 401, { error: "unauthorized" });
-
-  const q = req.query || {};
-  const { pack, eventId } = q;
-  if (!pack || !eventId) {
-    return json(res, 400, { error: "pack et eventId sont requis" });
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
   }
 
   try {
-    const job = await getJobStatus(pack, eventId);
-    if (job.status === "READY") {
-      res.statusCode = 302;
-      res.setHeader("Location", job.videoUrl);
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      return res.end();
+    const params = { ...(req.query || {}), ...(req.body || {}) };
+    const taskId = params.task_id || params.taskId || params.id;
+
+    if (!taskId) {
+      return res.status(400).json({ error: "Le paramètre 'task_id' est requis." });
     }
-    if (["FAILED", "ERROR", "CANCELED", "CANCELLED"].includes(job.status)) {
-      return json(res, 502, { status: job.status, error: "génération échouée" });
+
+    // 1. Cherche l'asset dans la release GitHub
+    const releaseRes = await (await fetch(`https://api.github.com/repos/${REPO}/releases/tags/v1.0.0-videos`, {
+      headers: { "Authorization": `token ${GITHUB_TOKEN}`, "User-Agent": "Mozilla/5.0" }
+    })).json();
+
+    const asset = (releaseRes.assets || []).find(a => a.name === `${taskId}.mp4` || a.name.includes(taskId));
+
+    if (!asset) {
+      return res.status(404).json({ error: "Vidéo en cours de traitement ou introuvable." });
     }
-    const base = req.headers && req.headers.host ? `https://${req.headers.host}` : "";
-    return json(res, 202, {
-      status: job.status,
-      checkUrl: `${base}/stanleystawa/status?pack=${pack}&eventId=${eventId}`,
+
+    // 2. Téléchargement du binaire MP4
+    const assetRes = await fetch(asset.url, {
+      headers: {
+        "Authorization": `token ${GITHUB_TOKEN}`,
+        "Accept": "application/octet-stream",
+        "User-Agent": "Mozilla/5.0"
+      }
     });
+
+    const arrayBuffer = await assetRes.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    res.setHeader("Content-Type", "video/mp4");
+    res.setHeader("Content-Length", buffer.length);
+    res.setHeader("Content-Disposition", `inline; filename="${taskId}.mp4"`);
+    res.setHeader("Cache-Control", "public, max-age=86400");
+
+    return res.status(200).send(buffer);
+
   } catch (err) {
-    console.error("api/stanleystawa/download error:", err.message);
-    return json(res, 502, { error: err.message || "erreur interne" });
+    console.error("[Download Error]", err);
+    return res.status(500).json({ error: err.message });
   }
 };
