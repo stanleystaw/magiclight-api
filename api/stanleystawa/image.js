@@ -1,5 +1,5 @@
 /**
- * api/stanleystawa/image.js — Génération d'images HD
+ * api/stanleystawa/image.js — Génération d'images 100% MagicLight AI
  */
 
 const engine = require("../../lib/magiclight");

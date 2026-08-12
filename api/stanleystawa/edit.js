@@ -1,5 +1,5 @@
 /**
- * api/stanleystawa/edit.js — Retouche et modification d'images
+ * api/stanleystawa/edit.js — Retouche et modification d'images 100% MagicLight AI
  */
 
 const engine = require("../../lib/magiclight");
