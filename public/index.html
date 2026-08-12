@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MagicLight AI Studio — Testeur d'API</title>
+  <style>
+    :root {
+      --bg-base: #0b0f19;
+      --bg-surface: #111827;
+      --bg-card: #1f2937;
+      --border: #374151;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.25);
+      --accent: #ec4899;
+      --success: #10b981;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+    header {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      font-size: 24px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      padding: 8px 12px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .brand-title h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-title p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge-turso {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #064e3b;
+      color: #6ee7b7;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid #059669;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .base-url-input {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      width: 260px;
+    }
+
+    /* MAIN CONTAINER */
+    .container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 16px;
+      flex: 1;
+    }
+
+    /* TABS */
+    .tabs-nav {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      background: var(--primary);
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    /* TAB PANELS */
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .tab-panel.active {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* CARDS & FORMS */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    input, textarea, select {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-glow);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    .btn-submit:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+
+    /* RESULT PREVIEW */
+    .preview-box {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      min-height: 240px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preview-placeholder {
+      color: var(--text-muted);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .preview-video {
+      width: 100%;
+      max-height: 480px;
+      border-radius: 8px;
+      background: #000;
+    }
+
+    .preview-img {
+      max-width: 100%;
+      max-height: 420px;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+
+    .preview-audio {
+      width: 100%;
+      margin-top: 12px;
+    }
+
+    .meta-box {
+      width: 100%;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .meta-box a {
+      color: #818cf8;
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    .meta-box a:hover {
+      text-decoration: underline;
+    }
+
+    .loader {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(99, 102, 241, 0.2);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* SCENE CARDS (STORY) */
+    .scenes-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .scene-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .scene-num {
+      color: #818cf8;
+      font-weight: 700;
+      min-width: 24px;
+    }
+
+    /* TABLE (ACCOUNTS) */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--text-muted);
+      font-weight: 600;
+      background: rgba(0,0,0,0.2);
+    }
+
+    .badge-status {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .status-active {
+      background: #064e3b;
+      color: #6ee7b7;
+    }
+
+    /* CODE SNIPPET */
+    .code-preview {
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #34d399;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">⚡</div>
+      <div class="brand-title">
+        <h1>MagicLight AI Studio</h1>
+        <p>Console de Test des API Déployées — stanleystawa</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="badge-turso">
+        <div class="badge-dot"></div>
+        <span id="tursoStats">Turso DB Connecté</span>
+      </div>
+      <input type="text" id="baseUrl" class="base-url-input" placeholder="Base URL de l'API..." value="">
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <div class="container">
+
+    <!-- TABS NAVIGATION -->
+    <div class="tabs-nav">
+      <button class="tab-btn active" onclick="switchTab('video')">🎬 Vidéo Cloud</button>
+      <button class="tab-btn" onclick="switchTab('image')">🎨 Génération Image</button>
+      <button class="tab-btn" onclick="switchTab('edit')">✏️ Retouche Image</button>
+      <button class="tab-btn" onclick="switchTab('story')">📖 Scénario IA</button>
+      <button class="tab-btn" onclick="switchTab('voice')">🎙️ Voix & TTS</button>
+      <button class="tab-btn" onclick="switchTab('accounts')">📊 Comptes & Turso DB</button>
+    </div>
+
+    <!-- TAB 1 : VIDÉO -->
+    <div id="tab-video" class="tab-panel active">
+      <div class="card">
+        <div class="card-title">🎬 Générateur Vidéo Cloud (100% Sans Filigrane)</div>
+        <div class="form-group">
+          <label>Prompt / Idée de l'histoire</label>
+          <textarea id="videoPrompt" placeholder="Ex: Un petit chaton joueur qui découvre un papillon magique sous le soleil..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Mode de Génération</label>
+            <select id="videoMode">
+              <option value="expand" selected>Scénario Développé IA (10-15 Scènes)</option>
+              <option value="direct">Texte Brut Direct</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Format de sortie</label>
+            <select id="videoFormat">
+              <option value="json" selected>Données JSON</option>
+              <option value="mp4">Flux Vidéo MP4 Direct</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Ratio Vidéo</label>
+            <select id="videoRatio">
+              <option value="1" selected>16:9 Paysage</option>
+              <option value="2">9:16 Vertical (TikTok/Reels)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Langue</label>
+            <select id="videoLang">
+              <option value="french" selected>Français</option>
+              <option value="english">Anglais</option>
+              <option value="spanish">Espagnol</option>
+            </select>
+          </div>
+        </div>
+        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">🚀 Lancer le rendu vidéo</button>
+        <div class="code-preview" id="videoUrlSnippet">Endpoint: GET /stanleystawa/video</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📺 Lecteur & Résultat Vidéo</div>
+        <div class="preview-box" id="videoPreviewBox">
+          <div class="preview-placeholder">La vidéo rendue par MagicLight s'affichera ici après génération.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2 : IMAGE -->
+    <div id="tab-image" class="tab-panel">
+      <div class="card">
+        <div class="card-title">🎨 Génération d'Image IA</div>
+        <div class="form-group">
+          <label>Prompt de l'image</label>
+          <textarea id="imagePrompt" placeholder="Ex: Un chevalier cyberpunk sous des néons sous la pluie, 8k, photoréaliste..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Format Ratio</label>
+            <select id="imageRatio">
+              <option value="1" selected>16:9 Paysage</option>
+              <option value="2">9:16 Vertical</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Style Visuel</label>
+            <select id="imageStyle">
+              <option value="5001" selected>Réaliste (5001)</option>
+              <option value="5013">Anime 3D (5013)</option>
+              <option value="6000">Cinématique (6000)</option>
+            </select>
+          </div>
+        </div>
+        <button id="btnGenImg" class="btn-submit" onclick="generateImage()">✨ Générer l'image</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🖼️ Aperçu de l'Image</div>
+        <div class="preview-box" id="imagePreviewBox">
+          <div class="preview-placeholder">L'image générée s'affichera ici.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3 : EDIT -->
+    <div id="tab-edit" class="tab-panel">
+      <div class="card">
+        <div class="card-title">✏️ Retouche & Modification d'Image</div>
+        <div class="form-group">
+          <label>URL de l'image source</label>
+          <input type="text" id="editImgUrl" placeholder="https://.../mon-image.jpg">
+        </div>
+        <div class="form-group">
+          <label>Consignes de retouche</label>
+          <textarea id="editPrompt" placeholder="Ex: Ajouter une aura magique dorée autour du personnage..."></textarea>
+        </div>
+        <button id="btnEditImg" class="btn-submit" onclick="editImage()">🎨 Appliquer la retouche</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🖼️ Image Retouchée</div>
+        <div class="preview-box" id="editPreviewBox">
+          <div class="preview-placeholder">L'image retouchée s'affichera ici.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4 : STORY -->
+    <div id="tab-story" class="tab-panel">
+      <div class="card">
+        <div class="card-title">📖 Découpage & Expansion de Scénario IA</div>
+        <div class="form-group">
+          <label>Pitch / Idée de base</label>
+          <textarea id="storyIdea" placeholder="Ex: Un petit robot solitaire qui découvre une forêt enchantée et se lie d'amitié avec un renard..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Langue de narration</label>
+          <select id="storyLang">
+            <option value="french" selected>Français</option>
+            <option value="english">Anglais</option>
+            <option value="spanish">Espagnol</option>
+          </select>
+        </div>
+        <button id="btnStory" class="btn-submit" onclick="expandStory()">⚡ Développer le scénario</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📑 Scènes & Storyboard Découpé</div>
+        <div class="preview-box" id="storyPreviewBox" style="align-items: flex-start;">
+          <div class="preview-placeholder">Le scénario développé et ses 10 à 20 scènes s'afficheront ici.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5 : VOIX & TTS -->
+    <div id="tab-voice" class="tab-panel">
+      <div class="card">
+        <div class="card-title">🎙️ Synthèse Vocale MagicLight TTS</div>
+        <div class="form-group">
+          <label>Texte à vocaliser</label>
+          <textarea id="voiceText" placeholder="Ex: Bienvenue sur notre service d'intelligence artificielle. Voici une démonstration de synthèse vocale de haute qualité."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Modèle de Voix</label>
+          <select id="voiceId">
+            <option value="MM:lengdan_xiongzhang" selected>Narrateur Français Standard</option>
+            <option value="MM:English_radiant_girl">Chloe (Anglais Féminin)</option>
+            <option value="MM:English_Trustworthy_Man">David (Anglais Masculin)</option>
+          </select>
+        </div>
+        <button id="btnVoice" class="btn-submit" onclick="synthesizeVoice()">🔊 Synthétiser la voix</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎧 Lecteur Audio</div>
+        <div class="preview-box" id="voicePreviewBox">
+          <div class="preview-placeholder">L'extrait audio synthétisé s'affichera ici.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6 : COMPTES & TURSO DB -->
+    <div id="tab-accounts" class="tab-panel">
+      <div class="card" style="grid-column: 1 / -1;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="card-title" style="border: none; padding: 0;">📊 Pool de Comptes & Crédits (Turso DB)</div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-secondary" onclick="loadAccounts()">🔄 Actualiser</button>
+            <button class="btn-submit" style="padding: 8px 14px; font-size: 13px;" onclick="refillAccount()">+ Créer un nouveau compte auto</button>
+          </div>
+        </div>
+        <div class="table-container" id="accountsTableContainer">
+          <div style="text-align: center; color: var(--text-muted); padding: 24px;">Chargement des données Turso...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Initialise l'URL de base dynamique
+    const baseUrlInput = document.getElementById("baseUrl");
+    baseUrlInput.value = window.location.origin;
+
+    function getBaseUrl() {
+      return baseUrlInput.value.replace(/\/$/, "");
+    }
+
+    // Gestion des onglets
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+
+      const targetBtn = Array.from(document.querySelectorAll(".tab-btn")).find(b => b.getAttribute("onclick").includes(tabId));
+      if (targetBtn) targetBtn.classList.add("active");
+
+      const targetPanel = document.getElementById(`tab-${tabId}`);
+      if (targetPanel) targetPanel.classList.add("active");
+
+      if (tabId === "accounts") {
+        loadAccounts();
+      }
+    }
+
+    // --- 1. VIDÉO ---
+    async function generateVideo() {
+      const prompt = document.getElementById("videoPrompt").value.trim();
+      const mode = document.getElementById("videoMode").value;
+      const format = document.getElementById("videoFormat").value;
+      const ratio = document.getElementById("videoRatio").value;
+      const language = document.getElementById("videoLang").value;
+      const box = document.getElementById("videoPreviewBox");
+      const btn = document.getElementById("btnGenVideo");
+
+      if (!prompt) return alert("Veuillez saisir un prompt ou une idée de vidéo.");
+
+      btn.disabled = true;
+      box.innerHTML = `
+        <div class="loader"></div>
+        <div style="font-weight: 600;">Génération cloud MagicLight en cours...</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Rendu du scénario, scènes, voix et encodage sans filigrane (~30-60s)</div>
+      `;
+
+      try {
+        const url = `${getBaseUrl()}/stanleystawa/video?prompt=${encodeURIComponent(prompt)}&mode=${mode}&ratio=${ratio}&language=${language}&format=${format}`;
+        document.getElementById("videoUrlSnippet").innerText = `Appel : GET ${url}`;
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+
+        if (data.video_url) {
+          box.innerHTML = `
+            <video class="preview-video" src="${data.video_url}" controls autoplay loop></video>
+            <div class="meta-box">
+              <div><strong>Durée :</strong> ${data.duration}s | <strong>Résolution :</strong> ${data.resolution} | <strong>Filigrane :</strong> ${data.no_watermark ? '❌ Aucun (Propre)' : 'Incrusté'}</div>
+              <div><strong>Compte utilisé :</strong> ${data.account_used}</div>
+              <div><strong>Lien direct CDN :</strong> <a href="${data.video_url}" target="_blank">${data.video_url}</a></div>
+            </div>
+          `;
+        } else {
+          box.innerHTML = `<pre class="code-preview">${JSON.stringify(data, null, 2)}</pre>`;
+        }
+      } catch (err) {
+        box.innerHTML = `<div style="color: #ef4444;">❌ Erreur: ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // --- 2. IMAGE ---
+    async function generateImage() {
+      const prompt = document.getElementById("imagePrompt").value.trim();
+      const ratio = document.getElementById("imageRatio").value;
+      const styleId = document.getElementById("imageStyle").value;
+      const box = document.getElementById("imagePreviewBox");
+      const btn = document.getElementById("btnGenImg");
+
+      if (!prompt) return alert("Veuillez saisir un prompt pour l'image.");
+
+      btn.disabled = true;
+      box.innerHTML = `<div class="loader"></div><div>Génération de l'image haute définition en cours...</div>`;
+
+      try {
+        const url = `${getBaseUrl()}/stanleystawa/image?prompt=${encodeURIComponent(prompt)}&ratio=${ratio}&styleId=${styleId}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+
+        if (data.image_url) {
+          box.innerHTML = `
+            <img class="preview-img" src="${data.image_url}" alt="Image générée">
+            <div class="meta-box">
+              <div><strong>Compte :</strong> ${data.account_used}</div>
+              <div><strong>Lien direct :</strong> <a href="${data.image_url}" target="_blank">${data.image_url}</a></div>
+            </div>
+          `;
+        }
+      } catch (err) {
+        box.innerHTML = `<div style="color: #ef4444;">❌ Erreur: ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // --- 3. EDIT ---
+    async function editImage() {
+      const imageUrl = document.getElementById("editImgUrl").value.trim();
+      const prompt = document.getElementById("editPrompt").value.trim();
+      const box = document.getElementById("editPreviewBox");
+      const btn = document.getElementById("btnEditImg");
+
+      if (!prompt) return alert("Veuillez saisir une consigne de retouche.");
+
+      btn.disabled = true;
+      box.innerHTML = `<div class="loader"></div><div>Application de la retouche en cours...</div>`;
+
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/edit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageUrl, prompt })
+        });
+        const data = await res.json();
+        if (data.image_url) {
+          box.innerHTML = `
+            <img class="preview-img" src="${data.image_url}" alt="Image retouchée">
+            <div class="meta-box">
+              <div><strong>Compte :</strong> ${data.account_used}</div>
+              <div><strong>Lien :</strong> <a href="${data.image_url}" target="_blank">${data.image_url}</a></div>
+            </div>
+          `;
+        }
+      } catch (err) {
+        box.innerHTML = `<div style="color: #ef4444;">❌ Erreur: ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // --- 4. STORY ---
+    async function expandStory() {
+      const idea = document.getElementById("storyIdea").value.trim();
+      const language = document.getElementById("storyLang").value;
+      const box = document.getElementById("storyPreviewBox");
+      const btn = document.getElementById("btnStory");
+
+      if (!idea) return alert("Veuillez saisir une idée de scénario.");
+
+      btn.disabled = true;
+      box.innerHTML = `<div class="loader"></div><div>Expansion du scénario et découpage multi-scènes...</div>`;
+
+      try {
+        const url = `${getBaseUrl()}/stanleystawa/story?idea=${encodeURIComponent(idea)}&language=${language}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        let scenesHtml = data.scenes.map((s, i) => `
+          <div class="scene-item">
+            <div class="scene-num">#${i+1}</div>
+            <div>${s}</div>
+          </div>
+        `).join("");
+
+        box.innerHTML = `
+          <div style="font-weight: 700; font-size: 16px; margin-bottom: 8px; color: #818cf8;">${data.title}</div>
+          <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">${data.expanded_story}</div>
+          <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">Scènes découpées (${data.scenes.length}) :</div>
+          <div class="scenes-grid">${scenesHtml}</div>
+        `;
+      } catch (err) {
+        box.innerHTML = `<div style="color: #ef4444;">❌ Erreur: ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // --- 5. VOICE ---
+    async function synthesizeVoice() {
+      const text = document.getElementById("voiceText").value.trim();
+      const voiceId = document.getElementById("voiceId").value;
+      const box = document.getElementById("voicePreviewBox");
+      const btn = document.getElementById("btnVoice");
+
+      if (!text) return alert("Veuillez saisir un texte.");
+
+      btn.disabled = true;
+      box.innerHTML = `<div class="loader"></div><div>Synthèse vocale en cours...</div>`;
+
+      try {
+        const url = `${getBaseUrl()}/stanleystawa/voice?text=${encodeURIComponent(text)}&voice_id=${voiceId}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.audio_url) {
+          box.innerHTML = `
+            <audio class="preview-audio" src="${data.audio_url}" controls autoplay></audio>
+            <div class="meta-box">
+              <div><strong>Voix :</strong> ${data.voice_id} | <strong>Compte :</strong> ${data.account_used}</div>
+              <div><strong>Lien audio :</strong> <a href="${data.audio_url}" target="_blank">${data.audio_url}</a></div>
+            </div>
+          `;
+        }
+      } catch (err) {
+        box.innerHTML = `<div style="color: #ef4444;">❌ Erreur: ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // --- 6. ACCOUNTS & TURSO ---
+    async function loadAccounts() {
+      const container = document.getElementById("accountsTableContainer");
+      container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 24px;"><div class="loader" style="margin: 0 auto 12px;"></div>Chargement des données Turso DB...</div>`;
+
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts`);
+        const data = await res.json();
+
+        document.getElementById("tursoStats").innerText = `Turso DB : ${data.total_credits_pool} Crédits (${data.active_accounts_count} Comptes)`;
+
+        let rowsHtml = data.accounts.map(acc => `
+          <tr>
+            <td><strong>${acc.email}</strong></td>
+            <td><span style="font-weight: 700; color: #34d399;">${acc.credits}</span> crédits</td>
+            <td><span class="badge-status status-active">${acc.status}</span></td>
+            <td style="color: var(--text-muted);">${acc.created_at || '—'}</td>
+          </tr>
+        `).join("");
+
+        container.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Adresse E-mail</th>
+                <th>Solde Crédits</th>
+                <th>Statut</th>
+                <th>Date d'ajout</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur chargement Turso : ${err.message}</div>`;
+      }
+    }
+
+    async function refillAccount() {
+      if (!confirm("Voulez-vous créer automatiquement un nouveau compte MagicLight et l'ajouter à Turso ?")) return;
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/refill`);
+        const data = await res.json();
+        alert(`✅ Compte créé avec succès !\nE-mail : ${data.account.email}\nCrédits : ${data.account.credits}`);
+        loadAccounts();
+      } catch (err) {
+        alert(`❌ Erreur refill: ${err.message}`);
+      }
+    }
+
+    // Chargement initial
+    loadAccounts();
+  </script>
+</body>
+</html>
