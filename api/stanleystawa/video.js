@@ -1,7 +1,5 @@
 /**
- * api/stanleystawa/video.js — Génération de vidéo complète sans filigrane via MagicLight
- *
- * GET (ou POST JSON) /stanleystawa/video?prompt=...&mode=expand&format=mp4
+ * api/stanleystawa/video.js — Initialisation ultra-rapide de vidéo MagicLight (compatible Vercel Serverless)
  */
 
 const engine = require("../../lib/magiclight");
@@ -23,22 +21,28 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: "Le paramètre 'prompt' ou 'text' est requis." });
     }
 
-    const result = await engine.generateVideo({
+    // Initialisation instantanée du projet sur MagicLight (< 1s)
+    const initResult = await engine.initVideoProject({
       prompt,
       text: params.text || prompt,
       title: params.title || "Vidéo MagicLight",
       mode: params.mode || "expand",
       styleId: params.styleId || params.style_id || "5001",
       language: params.language || "french",
-      ratio: params.ratio || 1,
-      noWatermark: params.noWatermark !== "false" && params.noWatermark !== false
+      ratio: params.ratio || 1
     });
 
-    if (params.format === "mp4" && result.video_url) {
-      return res.redirect(302, result.video_url);
-    }
+    const host = req.headers.host || "vercel-animate-api.vercel.app";
+    const protocol = req.headers["x-forwarded-proto"] || "https";
+    const checkUrl = `${protocol}://${host}/stanleystawa/status?project_id=${initResult.project_id}&account=${encodeURIComponent(initResult.account_email)}`;
 
-    return res.status(200).json(result);
+    return res.status(200).json({
+      status: "processing",
+      project_id: initResult.project_id,
+      account_email: initResult.account_email,
+      check_url: checkUrl,
+      message: "Projet vidéo initié avec succès sur MagicLight AI. Interrogez 'check_url' pour suivre l'avancement et récupérer la vidéo finale."
+    });
   } catch (err) {
     console.error("[API Video Error]", err);
     return res.status(500).json({ error: err.message });

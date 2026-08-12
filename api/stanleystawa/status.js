@@ -1,41 +1,39 @@
 /**
- * api/stanleystawa/status.js — GET /stanleystawa/status?pack=..&eventId=..
- * Statut du job : IN_PROGRESS / READY (avec videoUrl) / FAILED.
+ * api/stanleystawa/status.js — Suivi d'avancement & Récupération de la vidéo finale MagicLight
+ *
+ * GET /stanleystawa/status?project_id=...&account=...
  */
-const { getJobStatus } = require("../../lib/glam");
 
-function json(res, code, body) {
-  res.statusCode = code;
-  res.setHeader("Content-Type", "application/json; charset=utf-8");
+const engine = require("../../lib/magiclight");
+
+module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-api-key");
-  res.end(JSON.stringify(body));
-}
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-function isAuthorized(req) {
-  const key = process.env.API_KEY;
-  if (!key) return true;
-  const given = (req.headers && req.headers["x-api-key"]) || (req.query && req.query.key);
-  return !!given && given === key;
-}
-
-module.exports = async (req, res) => {
-  if (req.method === "OPTIONS") return json(res, 204, {});
-
-  if (!isAuthorized(req)) return json(res, 401, { error: "unauthorized" });
-
-  const q = req.query || {};
-  const { pack, eventId } = q;
-  if (!pack || !eventId) {
-    return json(res, 400, { error: "pack et eventId sont requis (voir checkUrl de /stanleystawa/video)" });
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
   }
 
   try {
-    const job = await getJobStatus(pack, eventId);
-    return json(res, job.status === "READY" ? 200 : 202, job);
+    const params = { ...(req.query || {}), ...(req.body || {}) };
+    const projectId = params.project_id || params.projectId || params.id;
+    const accountEmail = params.account || params.email;
+
+    if (!projectId) {
+      return res.status(400).json({ error: "Le paramètre 'project_id' est requis." });
+    }
+
+    const statusResult = await engine.checkAndUpdateVideoStatus(projectId, accountEmail);
+
+    // Si format=mp4 et vidéo terminée, redirection directe
+    if (params.format === "mp4" && statusResult.status === "success" && statusResult.video_url) {
+      return res.redirect(302, statusResult.video_url);
+    }
+
+    return res.status(200).json(statusResult);
   } catch (err) {
-    console.error("api/stanleystawa/status error:", err.message);
-    return json(res, 502, { error: err.message || "erreur interne" });
+    console.error("[API Status Error]", err);
+    return res.status(500).json({ error: err.message });
   }
 };
