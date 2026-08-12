@@ -291,61 +291,6 @@
       min-height: 38px;
     }
 
-    /* PLAYER MULTI-SCÈNES */
-    .player-container {
-      width: 100%;
-      border-radius: 8px;
-      overflow: hidden;
-      background: #000;
-      position: relative;
-      aspect-ratio: 16/9;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .player-bg {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 6s ease-out, opacity 0.5s ease;
-      transform: scale(1);
-    }
-
-    .player-bg.kenburns {
-      transform: scale(1.12) translate(-1%, -1%);
-    }
-
-    .player-subtitles {
-      position: absolute;
-      bottom: 12px;
-      left: 12px;
-      right: 12px;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(4px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 8px;
-      padding: 8px 14px;
-      color: #fff;
-      font-size: 13px;
-      text-align: center;
-      line-height: 1.4;
-      z-index: 10;
-    }
-
-    .player-scene-badge {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      background: rgba(99, 102, 241, 0.85);
-      color: #fff;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      z-index: 10;
-    }
-
     .preview-box {
       background: var(--bg-base);
       border: 1px solid var(--border);
@@ -363,6 +308,13 @@
       color: var(--text-muted);
       font-size: 13px;
       text-align: center;
+    }
+
+    .preview-video {
+      width: 100%;
+      max-height: 440px;
+      border-radius: 8px;
+      background: #000;
     }
 
     .preview-img {
@@ -395,6 +347,22 @@
       color: #818cf8;
       text-decoration: none;
       word-break: break-all;
+    }
+
+    .progress-bar-wrap {
+      width: 100%;
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      height: 7px;
+      margin: 10px 0 5px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      height: 100%;
+      width: 15%;
+      transition: width 0.4s ease;
     }
 
     .loader {
@@ -430,14 +398,6 @@
       display: flex;
       gap: 8px;
       align-items: center;
-    }
-
-    .scene-thumb {
-      width: 48px;
-      height: 48px;
-      border-radius: 4px;
-      object-fit: cover;
-      flex-shrink: 0;
     }
 
     .scene-num {
@@ -518,7 +478,7 @@
   <div class="container">
 
     <div class="tabs-nav">
-      <button class="tab-btn active" onclick="switchTab('video')">🎬 Vidéo Multi-Scènes</button>
+      <button class="tab-btn active" onclick="switchTab('video')">🎬 Vidéo Multi-Scènes (HD)</button>
       <button class="tab-btn" onclick="switchTab('image')">🎨 Image IA HD</button>
       <button class="tab-btn" onclick="switchTab('edit')">✏️ Retouche Image</button>
       <button class="tab-btn" onclick="switchTab('story')">📖 Scénario IA</button>
@@ -529,35 +489,36 @@
     <!-- TAB 1 : VIDÉO MULTI-SCÈNES -->
     <div id="tab-video" class="tab-panel active">
       <div class="card">
-        <div class="card-title">🎬 Générateur Vidéo Multi-Scènes (Images & Voix MagicLight)</div>
+        <div class="card-title">🎬 Générateur Vidéo Multi-Scènes (FFmpeg + Voix MagicLight)</div>
         <div class="form-group">
           <label>Prompt / Idée de l'histoire</label>
-          <textarea id="videoPrompt" placeholder="Ex: Un adorable petit chaton blanc aux yeux bleus qui explore un jardin magique et rencontre des papillons dorés..."></textarea>
+          <textarea id="videoPrompt" placeholder="Ex: Un petit chaton blanc aux yeux bleus qui explore un jardin magique et rencontre des papillons dorés..."></textarea>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Mode de Génération</label>
-            <select id="videoMode">
-              <option value="expand" selected>Scénario Développé IA (Multi-Scènes)</option>
-              <option value="direct">Texte Brut Direct</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Ratio Vidéo</label>
+            <label>Format Ratio</label>
             <select id="videoRatio">
               <option value="1" selected>16:9 Paysage</option>
               <option value="2">9:16 Vertical (Reels/TikTok)</option>
             </select>
           </div>
+          <div class="form-group">
+            <label>Langue</label>
+            <select id="videoLang">
+              <option value="french" selected>Français</option>
+              <option value="english">Anglais</option>
+              <option value="spanish">Espagnol</option>
+            </select>
+          </div>
         </div>
-        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">🚀 Générer la vidéo complète</button>
-        <div class="code-preview" id="videoUrlSnippet">Endpoint: POST /stanleystawa/video</div>
+        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">🚀 Générer la vidéo HD complète</button>
+        <div class="code-preview" id="videoUrlSnippet">Endpoint: POST /stanleystawa/video + GET /stanleystawa/status?task_id=...</div>
       </div>
 
       <div class="card">
-        <div class="card-title">📺 Lecteur Vidéo Multi-Scènes en Direct</div>
+        <div class="card-title">📺 Lecteur Vidéo HD & Suivi en Direct</div>
         <div class="preview-box" id="videoPreviewBox">
-          <div class="preview-placeholder">La vidéo avec ses scènes, voix IA et sous-titres s'affichera ici.</div>
+          <div class="preview-placeholder">La vidéo finale avec ses scènes, voix MagicLight TTS et sous-titres s'affichera ici.</div>
         </div>
       </div>
     </div>
@@ -654,7 +615,7 @@
         <div class="card-title">🎙️ Synthèse Vocale MagicLight TTS</div>
         <div class="form-group">
           <label>Texte à vocaliser</label>
-          <textarea id="voiceText" placeholder="Ex: Bonjour et bienvenue sur notre service de génération de contenu propulsé par l'intelligence artificielle."></textarea>
+          <textarea id="voiceText" placeholder="Ex: Bonjour et bienvenue sur notre service de génération vidéo automatique."></textarea>
         </div>
         <div class="form-group">
           <label>Modèle de Voix</label>
@@ -733,58 +694,11 @@
       }
     }
 
-    // --- 1. VIDÉO MULTI-SCÈNES AVEC ANIMATION & LECTEUR INTÉGRÉ ---
-    let currentScenes = [];
-    let currentSceneIndex = 0;
-    let sceneTimer = null;
-    let activeAudio = null;
-
-    function playMultiScenePlayer(scenes, bgmUrl) {
-      currentScenes = scenes;
-      currentSceneIndex = 0;
-      if (sceneTimer) clearTimeout(sceneTimer);
-      if (activeAudio) activeAudio.pause();
-
-      function showScene(idx) {
-        if (idx >= currentScenes.length) {
-          idx = 0; // Boucle
-        }
-        currentSceneIndex = idx;
-        const scene = currentScenes[idx];
-
-        const imgEl = document.getElementById("playerBgImg");
-        const subEl = document.getElementById("playerSubs");
-        const badgeEl = document.getElementById("playerBadge");
-
-        if (imgEl && subEl && badgeEl) {
-          imgEl.classList.remove("kenburns");
-          void imgEl.offsetWidth; // Trigger reflow
-          imgEl.src = scene.image_url;
-          imgEl.classList.add("kenburns");
-
-          subEl.innerText = scene.text;
-          badgeEl.innerText = `Scène ${scene.scene_number}/${currentScenes.length}`;
-
-          // Joue la voix de la scène
-          if (scene.audio_url) {
-            if (activeAudio) activeAudio.pause();
-            activeAudio = new Audio(scene.audio_url);
-            activeAudio.play().catch(() => {});
-          }
-
-          sceneTimer = setTimeout(() => {
-            showScene(currentSceneIndex + 1);
-          }, (scene.duration || 5) * 1000);
-        }
-      }
-
-      showScene(0);
-    }
-
+    // --- 1. VIDÉO MULTI-SCÈNES (GITHUB ACTIONS + TURSO DB) ---
     async function generateVideo() {
       const prompt = document.getElementById("videoPrompt").value.trim();
-      const mode = document.getElementById("videoMode").value;
       const ratio = document.getElementById("videoRatio").value;
+      const language = document.getElementById("videoLang").value;
       const box = document.getElementById("videoPreviewBox");
       const btn = document.getElementById("btnGenVideo");
 
@@ -793,48 +707,61 @@
       btn.disabled = true;
       box.innerHTML = `
         <div class="loader"></div>
-        <div style="font-weight: 600;">Création de la vidéo multi-scènes...</div>
-        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Génération des visuels, voix MagicLight et scènes en cours...</div>
+        <div style="font-weight: 600;" id="progressLabel">Initialisation du rendu vidéo...</div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar" style="width: 15%;"></div></div>
+        <div style="font-size: 12px; color: var(--text-muted);" id="progressDetail">Déclenchement du moteur GitHub Actions & FFmpeg...</div>
       `;
 
       try {
-        const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/video`, {
+        const initData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/video`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, mode, ratio })
+          body: JSON.stringify({ prompt, ratio, language })
         });
 
-        if (data.scenes && data.scenes.length > 0) {
-          let scenesCardsHtml = data.scenes.map(s => `
-            <div class="scene-item">
-              <img src="${s.image_url}" class="scene-thumb" alt="Scène ${s.scene_number}">
-              <div>
-                <div style="font-weight: 700; color: #818cf8;">Scène ${s.scene_number} (${s.duration}s)</div>
-                <div style="color: var(--text-muted); font-size: 11px;">${s.text}</div>
-              </div>
-            </div>
-          `).join("");
+        const taskId = initData.task_id;
+        document.getElementById("videoUrlSnippet").innerText = `Task ID : ${taskId} | Suivi : GET /stanleystawa/status?task_id=${taskId}`;
 
-          box.innerHTML = `
-            <div class="player-container" id="playerWrap">
-              <div class="player-scene-badge" id="playerBadge">Scène 1/${data.scenes.length}</div>
-              <img id="playerBgImg" class="player-bg kenburns" src="${data.scenes[0].image_url}">
-              <div class="player-subtitles" id="playerSubs">${data.scenes[0].text}</div>
-            </div>
-            <div class="meta-box">
-              <div><strong>Titre :</strong> ${data.title} | <strong>Durée :</strong> ~${data.total_duration}s | <strong>Scènes :</strong> ${data.scenes_count}</div>
-              <div><strong>Compte utilisé :</strong> ${data.account_used}</div>
-              <div><strong>Lien direct MP4 :</strong> <a href="${data.video_url}" target="_blank">${data.video_url}</a></div>
-            </div>
-            <div style="font-weight: 700; font-size: 12px; margin-top: 10px;">Scènes découpées avec visuels distincts :</div>
-            <div class="scenes-grid">${scenesCardsHtml}</div>
-          `;
+        let isDone = false;
+        let attempts = 0;
 
-          // Lance la lecture dynamique multi-scènes
-          playMultiScenePlayer(data.scenes, data.bgm_url);
-          loadAccounts();
-        } else {
-          box.innerHTML = `<video class="preview-video" src="${data.video_url}" controls autoplay></video>`;
+        while (!isDone && attempts < 90) {
+          await new Promise(r => setTimeout(r, 3000));
+          attempts++;
+
+          try {
+            const statusData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/status?task_id=${taskId}`);
+
+            if (statusData.status === "completed" && statusData.video_url) {
+              isDone = true;
+              box.innerHTML = `
+                <video class="preview-video" src="${statusData.video_url}" controls autoplay loop></video>
+                <div class="meta-box">
+                  <div><strong>Durée :</strong> ${statusData.duration}s | <strong>Scènes :</strong> ${statusData.scenes_count} | <strong>Filigrane :</strong> ❌ Aucun (Watermark-Free)</div>
+                  <div><strong>Lien direct MP4 :</strong> <a href="${statusData.video_url}" target="_blank">${statusData.video_url}</a></div>
+                </div>
+              `;
+              loadAccounts();
+              break;
+            } else if (statusData.status === "failed") {
+              throw new Error(statusData.error || "Échec du rendu vidéo.");
+            } else {
+              const pct = statusData.progress || Math.min(95, 15 + attempts * 2);
+              const pBar = document.getElementById("progressBar");
+              const pLbl = document.getElementById("progressLabel");
+              const pDet = document.getElementById("progressDetail");
+
+              if (pBar) pBar.style.width = pct + "%";
+              if (pLbl) pLbl.innerText = `Rendu en cours (${pct}%)...`;
+              if (pDet) pDet.innerText = statusData.message || "Montage multi-scènes avec FFmpeg...";
+            }
+          } catch (e) {
+            console.warn("Poll retry...", e);
+          }
+        }
+
+        if (!isDone) {
+          throw new Error("Rendu en cours sur les serveurs. Réinterrogez /stanleystawa/status?task_id=" + taskId);
         }
       } catch (err) {
         box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;

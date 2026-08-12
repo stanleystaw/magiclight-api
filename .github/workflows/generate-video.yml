@@ -1,0 +1,57 @@
+name: MagicLight Video Generator
+
+on:
+  repository_dispatch:
+    types: [generate-video]
+  workflow_dispatch:
+    inputs:
+      task_id:
+        description: "Task ID"
+        required: true
+        default: "manual_test_1"
+      prompt:
+        description: "Video Prompt / Story"
+        required: true
+        default: "Un petit chaton blanc aux yeux bleus qui explore un jardin magique"
+      ratio:
+        description: "Ratio (1 for 16:9, 2 for 9:16)"
+        required: false
+        default: "1"
+      language:
+        description: "Language"
+        required: false
+        default: "french"
+
+permissions:
+  contents: write
+  actions: write
+  packages: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install FFmpeg & Fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg fonts-dejavu-core fonts-freefont-ttf
+
+      - name: Run Video Rendering Engine
+        env:
+          TASK_ID: ${{ github.event.client_payload.task_id || github.event.inputs.task_id }}
+          PROMPT: ${{ github.event.client_payload.prompt || github.event.inputs.prompt }}
+          RATIO: ${{ github.event.client_payload.ratio || github.event.inputs.ratio || '1' }}
+          LANGUAGE: ${{ github.event.client_payload.language || github.event.inputs.language || 'french' }}
+          TURSO_DATABASE_URL: "https://magicligth-stanleystawa354.aws-eu-west-1.turso.io"
+          TURSO_AUTH_TOKEN: "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODY1NDMwODcsImlkIjoiMDE5ZmY2NDMtZmEwMS03NzBkLWE3YjgtMWFkMDQzOWEzN2Q0Iiwia2lkIjoiRUowd0tEaER4WmxUYlZ5MHJLX1VRRnhGZml6NF9nTEp2WXBPdFdiQlM2USIsInJpZCI6ImYzNDE1MGEzLTJkMzMtNDBjOC05ZmFmLWViMDBhODFhOGFhMiJ9.DVj4IWSi5WgU1frG8BVvUmINQYQRN77Kqe0-GLT2qgTv_w6M4ccKOP-GsEkNnaL3jX7Ikb4g7Eo45llVcQAgBQ"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/render-video.js

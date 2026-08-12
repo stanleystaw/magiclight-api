@@ -1,10 +1,8 @@
 /**
- * api/stanleystawa/status.js — Suivi d'avancement & Récupération de la vidéo finale MagicLight
- *
- * GET /stanleystawa/status?project_id=...&account=...
+ * api/stanleystawa/status.js — Suivi en temps réel de l'état des vidéos & images (Turso DB)
  */
 
-const engine = require("../../lib/magiclight");
+const turso = require("../../lib/turso");
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -17,21 +15,44 @@ module.exports = async function handler(req, res) {
 
   try {
     const params = { ...(req.query || {}), ...(req.body || {}) };
-    const projectId = params.project_id || params.projectId || params.id;
-    const accountEmail = params.account || params.email;
+    const taskId = params.task_id || params.taskId || params.id || params.project_id;
 
-    if (!projectId) {
-      return res.status(400).json({ error: "Le paramètre 'project_id' est requis." });
+    if (!taskId) {
+      return res.status(400).json({ error: "Le paramètre 'task_id' est requis." });
     }
 
-    const statusResult = await engine.checkAndUpdateVideoStatus(projectId, accountEmail);
-
-    // Si format=mp4 et vidéo terminée, redirection directe
-    if (params.format === "mp4" && statusResult.status === "success" && statusResult.video_url) {
-      return res.redirect(302, statusResult.video_url);
+    const rows = await turso.execute(`SELECT * FROM video_tasks WHERE task_id = ?;`, [taskId]);
+    
+    if (!rows.length) {
+      return res.status(200).json({
+        status: "processing",
+        progress: 15,
+        step: "queued",
+        message: "Tâche en file d'attente sur les serveurs..."
+      });
     }
 
-    return res.status(200).json(statusResult);
+    const task = rows[0];
+
+    // Redirection directe si format=mp4 et vidéo prête
+    if (params.format === "mp4" && task.status === "completed" && task.video_url) {
+      return res.redirect(302, task.video_url);
+    }
+
+    return res.status(200).json({
+      status: task.status, // "queued" | "processing" | "completed" | "failed"
+      progress: parseInt(task.progress || 10, 10),
+      step: task.step,
+      message: task.message,
+      video_url: task.video_url || null,
+      cover_url: task.cover_url || null,
+      duration: parseFloat(task.duration || 0),
+      scenes_count: parseInt(task.scenes_count || 0, 10),
+      error: task.error || null,
+      created_at: task.created_at,
+      updated_at: task.updated_at
+    });
+
   } catch (err) {
     console.error("[API Status Error]", err);
     return res.status(500).json({ error: err.message });
