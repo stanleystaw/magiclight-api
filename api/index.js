@@ -1,6 +1,5 @@
 /**
  * api/index.js — Dashboard & Console de Test Interactive MagicLight Studio
- * Déployable nativement sur Vercel sans dépendance externe
  */
 
 const HTML_CONTENT = `<!DOCTYPE html>
@@ -42,12 +41,11 @@ const HTML_CONTENT = `<!DOCTYPE html>
       overflow-x: hidden;
     }
 
-    /* HEADER RESPONSIVE */
     header {
       background: rgba(17, 24, 39, 0.95);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
-      padding: 14px 18px;
+      padding: 12px 18px;
       position: sticky;
       top: 0;
       z-index: 50;
@@ -55,7 +53,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 10px;
     }
 
     .brand {
@@ -96,7 +94,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
       gap: 6px;
       background: #064e3b;
       color: #6ee7b7;
-      padding: 6px 12px;
+      padding: 5px 10px;
       border-radius: 20px;
       font-size: 11px;
       font-weight: 600;
@@ -118,10 +116,9 @@ const HTML_CONTENT = `<!DOCTYPE html>
       padding: 6px 10px;
       border-radius: 8px;
       font-size: 12px;
-      width: 220px;
+      width: 200px;
     }
 
-    /* CONTAINER RESPONSIVE */
     .container {
       max-width: 1200px;
       width: 100%;
@@ -130,12 +127,11 @@ const HTML_CONTENT = `<!DOCTYPE html>
       flex: 1;
     }
 
-    /* TABS SCROLLABLE SUR MOBILE */
     .tabs-nav {
       display: flex;
       gap: 6px;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 18px;
+      margin-bottom: 16px;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       padding-bottom: 6px;
@@ -171,7 +167,6 @@ const HTML_CONTENT = `<!DOCTYPE html>
       box-shadow: 0 0 10px var(--primary-glow);
     }
 
-    /* PANELS */
     .tab-panel {
       display: none;
     }
@@ -179,10 +174,9 @@ const HTML_CONTENT = `<!DOCTYPE html>
     .tab-panel.active {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 18px;
+      gap: 16px;
     }
 
-    /* MOBILE BREAKPOINT */
     @media (max-width: 860px) {
       header {
         flex-direction: column;
@@ -202,12 +196,11 @@ const HTML_CONTENT = `<!DOCTYPE html>
       }
     }
 
-    /* CARDS */
     .card {
       background: var(--bg-surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 18px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 14px;
@@ -302,7 +295,61 @@ const HTML_CONTENT = `<!DOCTYPE html>
       min-height: 38px;
     }
 
-    /* PREVIEW */
+    /* PLAYER MULTI-SCÈNES */
+    .player-container {
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #000;
+      position: relative;
+      aspect-ratio: 16/9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .player-bg {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 6s ease-out, opacity 0.5s ease;
+      transform: scale(1);
+    }
+
+    .player-bg.kenburns {
+      transform: scale(1.12) translate(-1%, -1%);
+    }
+
+    .player-subtitles {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: #fff;
+      font-size: 13px;
+      text-align: center;
+      line-height: 1.4;
+      z-index: 10;
+    }
+
+    .player-scene-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(99, 102, 241, 0.85);
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      z-index: 10;
+    }
+
     .preview-box {
       background: var(--bg-base);
       border: 1px solid var(--border);
@@ -320,13 +367,6 @@ const HTML_CONTENT = `<!DOCTYPE html>
       color: var(--text-muted);
       font-size: 13px;
       text-align: center;
-    }
-
-    .preview-video {
-      width: 100%;
-      max-height: 420px;
-      border-radius: 8px;
-      background: #000;
     }
 
     .preview-img {
@@ -361,22 +401,6 @@ const HTML_CONTENT = `<!DOCTYPE html>
       word-break: break-all;
     }
 
-    .progress-bar-wrap {
-      width: 100%;
-      background: rgba(255,255,255,0.1);
-      border-radius: 20px;
-      height: 7px;
-      margin: 10px 0 5px;
-      overflow: hidden;
-    }
-
-    .progress-bar-fill {
-      background: linear-gradient(90deg, var(--primary), var(--accent));
-      height: 100%;
-      width: 15%;
-      transition: width 0.4s ease;
-    }
-
     .loader {
       width: 32px;
       height: 32px;
@@ -396,8 +420,9 @@ const HTML_CONTENT = `<!DOCTYPE html>
       flex-direction: column;
       gap: 6px;
       width: 100%;
-      max-height: 360px;
+      max-height: 300px;
       overflow-y: auto;
+      margin-top: 10px;
     }
 
     .scene-item {
@@ -408,6 +433,15 @@ const HTML_CONTENT = `<!DOCTYPE html>
       font-size: 12px;
       display: flex;
       gap: 8px;
+      align-items: center;
+    }
+
+    .scene-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 4px;
+      object-fit: cover;
+      flex-shrink: 0;
     }
 
     .scene-num {
@@ -468,7 +502,6 @@ const HTML_CONTENT = `<!DOCTYPE html>
 </head>
 <body>
 
-  <!-- HEADER -->
   <header>
     <div class="brand">
       <div class="brand-logo">⚡</div>
@@ -486,32 +519,30 @@ const HTML_CONTENT = `<!DOCTYPE html>
     </div>
   </header>
 
-  <!-- MAIN -->
   <div class="container">
 
-    <!-- TABS -->
     <div class="tabs-nav">
-      <button class="tab-btn active" onclick="switchTab('video')">🎬 Vidéo Cloud</button>
-      <button class="tab-btn" onclick="switchTab('image')">🎨 Image IA</button>
-      <button class="tab-btn" onclick="switchTab('edit')">✏️ Retouche</button>
+      <button class="tab-btn active" onclick="switchTab('video')">🎬 Vidéo Multi-Scènes</button>
+      <button class="tab-btn" onclick="switchTab('image')">🎨 Image IA HD</button>
+      <button class="tab-btn" onclick="switchTab('edit')">✏️ Retouche Image</button>
       <button class="tab-btn" onclick="switchTab('story')">📖 Scénario IA</button>
       <button class="tab-btn" onclick="switchTab('voice')">🎙️ Voix & TTS</button>
-      <button class="tab-btn" onclick="switchTab('accounts')">📊 Comptes & Turso</button>
+      <button class="tab-btn" onclick="switchTab('accounts')">📊 Comptes Turso</button>
     </div>
 
-    <!-- TAB 1 : VIDÉO -->
+    <!-- TAB 1 : VIDÉO MULTI-SCÈNES -->
     <div id="tab-video" class="tab-panel active">
       <div class="card">
-        <div class="card-title">🎬 Générateur Vidéo Cloud (Sans Filigrane)</div>
+        <div class="card-title">🎬 Générateur Vidéo Multi-Scènes (Images & Voix MagicLight)</div>
         <div class="form-group">
           <label>Prompt / Idée de l'histoire</label>
-          <textarea id="videoPrompt" placeholder="Ex: Un adorable petit chaton blanc aux yeux bleus qui joue dans un jardin magique..."></textarea>
+          <textarea id="videoPrompt" placeholder="Ex: Un adorable petit chaton blanc aux yeux bleus qui explore un jardin magique et rencontre des papillons dorés..."></textarea>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label>Mode de Génération</label>
             <select id="videoMode">
-              <option value="expand" selected>Scénario Développé IA (10-15 Scènes)</option>
+              <option value="expand" selected>Scénario Développé IA (Multi-Scènes)</option>
               <option value="direct">Texte Brut Direct</option>
             </select>
           </div>
@@ -523,14 +554,14 @@ const HTML_CONTENT = `<!DOCTYPE html>
             </select>
           </div>
         </div>
-        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">🚀 Lancer le rendu vidéo</button>
-        <div class="code-preview" id="videoUrlSnippet">Endpoint: POST /stanleystawa/video + GET /stanleystawa/status</div>
+        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">🚀 Générer la vidéo complète</button>
+        <div class="code-preview" id="videoUrlSnippet">Endpoint: POST /stanleystawa/video</div>
       </div>
 
       <div class="card">
-        <div class="card-title">📺 Lecteur & Suivi en Direct</div>
+        <div class="card-title">📺 Lecteur Vidéo Multi-Scènes en Direct</div>
         <div class="preview-box" id="videoPreviewBox">
-          <div class="preview-placeholder">La vidéo rendue par MagicLight s'affichera ici.</div>
+          <div class="preview-placeholder">La vidéo avec ses scènes, voix IA et sous-titres s'affichera ici.</div>
         </div>
       </div>
     </div>
@@ -538,10 +569,10 @@ const HTML_CONTENT = `<!DOCTYPE html>
     <!-- TAB 2 : IMAGE -->
     <div id="tab-image" class="tab-panel">
       <div class="card">
-        <div class="card-title">🎨 Génération d'Image IA</div>
+        <div class="card-title">🎨 Génération d'Image IA Haute Définition</div>
         <div class="form-group">
           <label>Prompt de l'image</label>
-          <textarea id="imagePrompt" placeholder="Ex: Un chevalier cyberpunk sous la pluie avec des reflets néon, 8k, photoréaliste..."></textarea>
+          <textarea id="imagePrompt" placeholder="Ex: Un magnifique dragon dore volant au-dessus de montagnes enneigees, 8k photorealiste..."></textarea>
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -560,13 +591,13 @@ const HTML_CONTENT = `<!DOCTYPE html>
             </select>
           </div>
         </div>
-        <button id="btnGenImg" class="btn-submit" onclick="generateImage()">✨ Générer l'image</button>
+        <button id="btnGenImg" class="btn-submit" onclick="generateImage()">✨ Générer l'image HD</button>
       </div>
 
       <div class="card">
-        <div class="card-title">🖼️ Aperçu de l'Image</div>
+        <div class="card-title">🖼️ Aperçu Direct de l'Image</div>
         <div class="preview-box" id="imagePreviewBox">
-          <div class="preview-placeholder">L'image générée s'affichera directement ici.</div>
+          <div class="preview-placeholder">L'image haute définition s'affichera directement ici.</div>
         </div>
       </div>
     </div>
@@ -576,12 +607,12 @@ const HTML_CONTENT = `<!DOCTYPE html>
       <div class="card">
         <div class="card-title">✏️ Retouche & Modification d'Image</div>
         <div class="form-group">
-          <label>URL de l'image source</label>
+          <label>URL de l'image source (Optionnel)</label>
           <input type="text" id="editImgUrl" placeholder="https://.../mon-image.jpg">
         </div>
         <div class="form-group">
           <label>Consignes de retouche</label>
-          <textarea id="editPrompt" placeholder="Ex: Ajouter une aura magique dorée autour du personnage..."></textarea>
+          <textarea id="editPrompt" placeholder="Ex: Ajouter une armure d'or scintillante et des reflets magiques..."></textarea>
         </div>
         <button id="btnEditImg" class="btn-submit" onclick="editImage()">🎨 Appliquer la retouche</button>
       </div>
@@ -589,7 +620,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
       <div class="card">
         <div class="card-title">🖼️ Image Retouchée</div>
         <div class="preview-box" id="editPreviewBox">
-          <div class="preview-placeholder">L'image retouchée s'affichera ici.</div>
+          <div class="preview-placeholder">L'image retouchée s'affichera directement ici.</div>
         </div>
       </div>
     </div>
@@ -600,7 +631,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
         <div class="card-title">📖 Découpage & Expansion de Scénario IA</div>
         <div class="form-group">
           <label>Idée / Pitch</label>
-          <textarea id="storyIdea" placeholder="Ex: Un petit robot solitaire qui découvre une forêt enchantée..."></textarea>
+          <textarea id="storyIdea" placeholder="Ex: Un jeune explorateur découvre un temple secret au sommet des nuages..."></textarea>
         </div>
         <div class="form-group">
           <label>Langue</label>
@@ -627,7 +658,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
         <div class="card-title">🎙️ Synthèse Vocale MagicLight TTS</div>
         <div class="form-group">
           <label>Texte à vocaliser</label>
-          <textarea id="voiceText" placeholder="Ex: Bonjour et bienvenue sur notre service d'intelligence artificielle."></textarea>
+          <textarea id="voiceText" placeholder="Ex: Bonjour et bienvenue sur notre service de génération de contenu propulsé par l'intelligence artificielle."></textarea>
         </div>
         <div class="form-group">
           <label>Modèle de Voix</label>
@@ -671,7 +702,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
     baseUrlInput.value = window.location.origin;
 
     function getBaseUrl() {
-      return baseUrlInput.value.replace(/\\/$/, "");
+      return baseUrlInput.value.replace(/\\/\$/, "");
     }
 
     async function safeFetchJson(url, options = {}) {
@@ -706,7 +737,54 @@ const HTML_CONTENT = `<!DOCTYPE html>
       }
     }
 
-    // --- 1. VIDÉO ASYNCHRONE ---
+    // --- 1. VIDÉO MULTI-SCÈNES AVEC ANIMATION & LECTEUR INTÉGRÉ ---
+    let currentScenes = [];
+    let currentSceneIndex = 0;
+    let sceneTimer = null;
+    let activeAudio = null;
+
+    function playMultiScenePlayer(scenes, bgmUrl) {
+      currentScenes = scenes;
+      currentSceneIndex = 0;
+      if (sceneTimer) clearTimeout(sceneTimer);
+      if (activeAudio) activeAudio.pause();
+
+      function showScene(idx) {
+        if (idx >= currentScenes.length) {
+          idx = 0; // Boucle
+        }
+        currentSceneIndex = idx;
+        const scene = currentScenes[idx];
+
+        const imgEl = document.getElementById("playerBgImg");
+        const subEl = document.getElementById("playerSubs");
+        const badgeEl = document.getElementById("playerBadge");
+
+        if (imgEl && subEl && badgeEl) {
+          imgEl.classList.remove("kenburns");
+          void imgEl.offsetWidth; // Trigger reflow
+          imgEl.src = scene.image_url;
+          imgEl.classList.add("kenburns");
+
+          subEl.innerText = scene.text;
+          badgeEl.innerText = \`Scène \${scene.scene_number}/\${currentScenes.length}\`;
+
+          // Joue la voix de la scène
+          if (scene.audio_url) {
+            if (activeAudio) activeAudio.pause();
+            activeAudio = new Audio(scene.audio_url);
+            activeAudio.play().catch(() => {});
+          }
+
+          sceneTimer = setTimeout(() => {
+            showScene(currentSceneIndex + 1);
+          }, (scene.duration || 5) * 1000);
+        }
+      }
+
+      showScene(0);
+    }
+
     async function generateVideo() {
       const prompt = document.getElementById("videoPrompt").value.trim();
       const mode = document.getElementById("videoMode").value;
@@ -714,66 +792,53 @@ const HTML_CONTENT = `<!DOCTYPE html>
       const box = document.getElementById("videoPreviewBox");
       const btn = document.getElementById("btnGenVideo");
 
-      if (!prompt) return alert("Veuillez saisir un prompt.");
+      if (!prompt) return alert("Veuillez saisir un prompt pour la vidéo.");
 
       btn.disabled = true;
       box.innerHTML = \`
         <div class="loader"></div>
-        <div style="font-weight: 600;" id="progressLabel">Initialisation du projet MagicLight...</div>
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar" style="width: 15%;"></div></div>
-        <div style="font-size: 12px; color: var(--text-muted);" id="progressDetail">Connexion aux serveurs MagicLight AI...</div>
+        <div style="font-weight: 600;">Création de la vidéo multi-scènes...</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Génération des visuels, voix MagicLight et scènes en cours...</div>
       \`;
 
       try {
-        const initData = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/video\`, {
+        const data = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/video\`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ prompt, mode, ratio })
         });
 
-        const projectId = initData.project_id;
-        const accountEmail = initData.account_email || "";
-        document.getElementById("videoUrlSnippet").innerText = \`Projet : \${projectId} | Suivi : GET /stanleystawa/status?project_id=\${projectId}\`;
+        if (data.scenes && data.scenes.length > 0) {
+          let scenesCardsHtml = data.scenes.map(s => \`
+            <div class="scene-item">
+              <img src="\${s.image_url}" class="scene-thumb" alt="Scène \${s.scene_number}">
+              <div>
+                <div style="font-weight: 700; color: #818cf8;">Scène \${s.scene_number} (\${s.duration}s)</div>
+                <div style="color: var(--text-muted); font-size: 11px;">\${s.text}</div>
+              </div>
+            </div>
+          \`).join("");
 
-        let isDone = false;
-        let attempts = 0;
+          box.innerHTML = \`
+            <div class="player-container" id="playerWrap">
+              <div class="player-scene-badge" id="playerBadge">Scène 1/\${data.scenes.length}</div>
+              <img id="playerBgImg" class="player-bg kenburns" src="\${data.scenes[0].image_url}">
+              <div class="player-subtitles" id="playerSubs">\${data.scenes[0].text}</div>
+            </div>
+            <div class="meta-box">
+              <div><strong>Titre :</strong> \${data.title} | <strong>Durée :</strong> ~\${data.total_duration}s | <strong>Scènes :</strong> \${data.scenes_count}</div>
+              <div><strong>Compte utilisé :</strong> \${data.account_used}</div>
+              <div><strong>Lien direct MP4 :</strong> <a href="\${data.video_url}" target="_blank">\${data.video_url}</a></div>
+            </div>
+            <div style="font-weight: 700; font-size: 12px; margin-top: 10px;">Scènes découpées avec visuels distincts :</div>
+            <div class="scenes-grid">\${scenesCardsHtml}</div>
+          \`;
 
-        while (!isDone && attempts < 40) {
-          await new Promise(r => setTimeout(r, 3500));
-          attempts++;
-
-          try {
-            const statusData = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/status?project_id=\${projectId}&account=\${encodeURIComponent(accountEmail)}\`);
-
-            if (statusData.status === "success" && statusData.video_url) {
-              isDone = true;
-              box.innerHTML = \`
-                <video class="preview-video" src="\${statusData.video_url}" controls autoplay loop></video>
-                <div class="meta-box">
-                  <div><strong>Durée :</strong> \${statusData.duration}s | <strong>Résolution :</strong> \${statusData.resolution} | <strong>Filigrane :</strong> \${statusData.no_watermark ? '❌ Aucun' : 'Incrusté'}</div>
-                  <div><strong>Compte :</strong> \${statusData.account_used}</div>
-                  <div><strong>Lien direct CDN :</strong> <a href="\${statusData.video_url}" target="_blank">\${statusData.video_url}</a></div>
-                </div>
-              \`;
-              loadAccounts();
-              break;
-            } else {
-              const pct = statusData.progress || Math.min(90, 15 + attempts * 3);
-              const pBar = document.getElementById("progressBar");
-              const pLbl = document.getElementById("progressLabel");
-              const pDet = document.getElementById("progressDetail");
-
-              if (pBar) pBar.style.width = pct + "%";
-              if (pLbl) pLbl.innerText = \`Rendu en cours (\${pct}%)...\`;
-              if (pDet) pDet.innerText = statusData.message || "Génération des scènes et encodage...";
-            }
-          } catch (e) {
-            console.warn("Poll retry...", e);
-          }
-        }
-
-        if (!isDone) {
-          throw new Error("Rendu en cours sur MagicLight. Réinterrogez /stanleystawa/status?project_id=" + projectId);
+          // Lance la lecture dynamique multi-scènes
+          playMultiScenePlayer(data.scenes, data.bgm_url);
+          loadAccounts();
+        } else {
+          box.innerHTML = \`<video class="preview-video" src="\${data.video_url}" controls autoplay></video>\`;
         }
       } catch (err) {
         box.innerHTML = \`<div style="color: #ef4444; padding: 16px;">❌ Erreur: \${err.message}</div>\`;
@@ -782,7 +847,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
       }
     }
 
-    // --- 2. IMAGE AVEC AFFICHAGE DIRECT ---
+    // --- 2. IMAGE HD ---
     async function generateImage() {
       const prompt = document.getElementById("imagePrompt").value.trim();
       const ratio = document.getElementById("imageRatio").value;
@@ -793,59 +858,24 @@ const HTML_CONTENT = `<!DOCTYPE html>
       if (!prompt) return alert("Veuillez saisir un prompt pour l'image.");
 
       btn.disabled = true;
-      box.innerHTML = \`
-        <div class="loader"></div>
-        <div style="font-weight: 600;" id="imgProgressLabel">Génération de l'image haute définition...</div>
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="imgProgressBar" style="width: 30%;"></div></div>
-        <div style="font-size: 12px; color: var(--text-muted);">Création par le moteur MagicLight AI...</div>
-      \`;
+      box.innerHTML = \`<div class="loader"></div><div>Génération de l'image haute définition...</div>\`;
 
       try {
-        const initData = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/image\`, {
+        const data = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/image\`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ prompt, ratio, styleId })
         });
 
-        if (initData.status === "success" && initData.image_url) {
+        if (data.image_url) {
           box.innerHTML = \`
-            <img class="preview-img" src="\${initData.image_url}" alt="Image générée">
+            <img class="preview-img" src="\${data.image_url}" alt="Image générée">
             <div class="meta-box">
-              <div><strong>Compte :</strong> \${initData.account_used}</div>
-              <div><strong>Lien direct :</strong> <a href="\${initData.image_url}" target="_blank">\${initData.image_url}</a></div>
+              <div><strong>Résolution :</strong> \${data.resolution || 'HD'} | <strong>Compte :</strong> \${data.account_used}</div>
+              <div><strong>Lien direct :</strong> <a href="\${data.image_url}" target="_blank">\${data.image_url}</a></div>
             </div>
           \`;
           loadAccounts();
-          return;
-        }
-
-        const projectId = initData.project_id;
-        let isDone = false;
-        let attempts = 0;
-
-        while (!isDone && attempts < 25) {
-          await new Promise(r => setTimeout(r, 2500));
-          attempts++;
-
-          try {
-            const statusData = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/status?project_id=\${projectId}\`);
-            const finalImgUrl = statusData.cover_url || statusData.image_url;
-            if (finalImgUrl) {
-              isDone = true;
-              box.innerHTML = \`
-                <img class="preview-img" src="\${finalImgUrl}" alt="Image générée">
-                <div class="meta-box">
-                  <div><strong>Compte :</strong> \${statusData.account_used || 'MagicLight'}</div>
-                  <div><strong>Lien direct :</strong> <a href="\${finalImgUrl}" target="_blank">\${finalImgUrl}</a></div>
-                </div>
-              \`;
-              loadAccounts();
-              break;
-            } else {
-              const pBar = document.getElementById("imgProgressBar");
-              if (pBar) pBar.style.width = Math.min(90, 30 + attempts * 5) + "%";
-            }
-          } catch (e) {}
         }
       } catch (err) {
         box.innerHTML = \`<div style="color: #ef4444; padding: 16px;">❌ Erreur: \${err.message}</div>\`;
@@ -854,7 +884,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
       }
     }
 
-    // --- 3. EDIT AVEC AFFICHAGE DIRECT ---
+    // --- 3. RETOUCHE IMAGE ---
     async function editImage() {
       const imageUrl = document.getElementById("editImgUrl").value.trim();
       const prompt = document.getElementById("editPrompt").value.trim();
@@ -864,55 +894,24 @@ const HTML_CONTENT = `<!DOCTYPE html>
       if (!prompt) return alert("Veuillez saisir une consigne de retouche.");
 
       btn.disabled = true;
-      box.innerHTML = \`
-        <div class="loader"></div>
-        <div style="font-weight: 600;">Application de la retouche...</div>
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width: 45%;"></div></div>
-      \`;
+      box.innerHTML = \`<div class="loader"></div><div>Application de la retouche en cours...</div>\`;
 
       try {
-        const initData = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/edit\`, {
+        const data = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/edit\`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ imageUrl, prompt })
         });
 
-        if (initData.status === "success" && initData.image_url) {
+        if (data.image_url) {
           box.innerHTML = \`
-            <img class="preview-img" src="\${initData.image_url}" alt="Image retouchée">
+            <img class="preview-img" src="\${data.image_url}" alt="Image retouchée">
             <div class="meta-box">
-              <div><strong>Compte :</strong> \${initData.account_used}</div>
-              <div><strong>Lien :</strong> <a href="\${initData.image_url}" target="_blank">\${initData.image_url}</a></div>
+              <div><strong>Compte :</strong> \${data.account_used}</div>
+              <div><strong>Lien direct :</strong> <a href="\${data.image_url}" target="_blank">\${data.image_url}</a></div>
             </div>
           \`;
           loadAccounts();
-          return;
-        }
-
-        const projectId = initData.project_id;
-        let isDone = false;
-        let attempts = 0;
-
-        while (!isDone && attempts < 25) {
-          await new Promise(r => setTimeout(r, 2500));
-          attempts++;
-
-          try {
-            const statusData = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/status?project_id=\${projectId}\`);
-            const finalImgUrl = statusData.cover_url || statusData.image_url;
-            if (finalImgUrl) {
-              isDone = true;
-              box.innerHTML = \`
-                <img class="preview-img" src="\${finalImgUrl}" alt="Image retouchée">
-                <div class="meta-box">
-                  <div><strong>Compte :</strong> \${statusData.account_used || 'MagicLight'}</div>
-                  <div><strong>Lien :</strong> <a href="\${finalImgUrl}" target="_blank">\${finalImgUrl}</a></div>
-                </div>
-              \`;
-              loadAccounts();
-              break;
-            }
-          } catch (e) {}
         }
       } catch (err) {
         box.innerHTML = \`<div style="color: #ef4444; padding: 16px;">❌ Erreur: \${err.message}</div>\`;
@@ -921,7 +920,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
       }
     }
 
-    // --- 4. STORY ---
+    // --- 4. SCÉNARIO IA ---
     async function expandStory() {
       const idea = document.getElementById("storyIdea").value.trim();
       const language = document.getElementById("storyLang").value;
@@ -956,7 +955,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
       }
     }
 
-    // --- 5. VOICE ---
+    // --- 5. SYNTHÈSE VOCALE ---
     async function synthesizeVoice() {
       const text = document.getElementById("voiceText").value.trim();
       const voiceId = document.getElementById("voiceId").value;
@@ -976,7 +975,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
             <audio class="preview-audio" src="\${data.audio_url}" controls autoplay></audio>
             <div class="meta-box">
               <div><strong>Voix :</strong> \${data.voice_id} | <strong>Compte :</strong> \${data.account_used}</div>
-              <div><strong>Lien audio :</strong> <a href="\${data.audio_url}" target="_blank">\${data.audio_url}</a></div>
+              <div><strong>Lien direct audio :</strong> <a href="\${data.audio_url}" target="_blank">\${data.audio_url}</a></div>
             </div>
           \`;
           loadAccounts();
@@ -1056,7 +1055,6 @@ module.exports = function handler(req, res) {
       database: "Turso libSQL",
       endpoints: {
         video: "/stanleystawa/video?prompt=...&mode=expand",
-        status: "/stanleystawa/status?project_id=...",
         image: "/stanleystawa/image?prompt=...&ratio=1",
         edit: "/stanleystawa/edit?imageUrl=...&prompt=...",
         story: "/stanleystawa/story?idea=...&language=french",

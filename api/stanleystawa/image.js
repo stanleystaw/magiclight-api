@@ -1,7 +1,5 @@
 /**
- * api/stanleystawa/image.js — Génération d'images haute qualité MagicLight
- *
- * GET (ou POST JSON) /stanleystawa/image?prompt=...&ratio=1
+ * api/stanleystawa/image.js — Génération d'images HD
  */
 
 const engine = require("../../lib/magiclight");

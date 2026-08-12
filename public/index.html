@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>MagicLight AI Studio — Testeur d'API</title>
   <style>
     :root {
@@ -25,6 +25,7 @@
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
@@ -33,14 +34,14 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
     }
 
-    /* HEADER */
     header {
-      background: rgba(17, 24, 39, 0.85);
+      background: rgba(17, 24, 39, 0.95);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
-      padding: 16px 24px;
+      padding: 12px 18px;
       position: sticky;
       top: 0;
       z-index: 50;
@@ -48,38 +49,39 @@
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 16px;
+      gap: 10px;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .brand-logo {
-      font-size: 24px;
+      font-size: 20px;
       background: linear-gradient(135deg, var(--primary), var(--accent));
-      padding: 8px 12px;
-      border-radius: 10px;
-      box-shadow: 0 0 15px var(--primary-glow);
+      padding: 6px 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 12px var(--primary-glow);
     }
 
     .brand-title h1 {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.3px;
     }
 
     .brand-title p {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-muted);
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     .badge-turso {
@@ -88,64 +90,66 @@
       gap: 6px;
       background: #064e3b;
       color: #6ee7b7;
-      padding: 6px 12px;
+      padding: 5px 10px;
       border-radius: 20px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       border: 1px solid #059669;
     }
 
     .badge-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       background: #10b981;
       border-radius: 50%;
-      box-shadow: 0 0 8px #10b981;
+      box-shadow: 0 0 6px #10b981;
     }
 
     .base-url-input {
       background: var(--bg-surface);
       border: 1px solid var(--border);
       color: var(--text-main);
-      padding: 6px 12px;
+      padding: 6px 10px;
       border-radius: 8px;
       font-size: 12px;
-      width: 260px;
+      width: 200px;
     }
 
-    /* MAIN CONTAINER */
     .container {
       max-width: 1200px;
       width: 100%;
       margin: 0 auto;
-      padding: 24px 16px;
+      padding: 16px;
       flex: 1;
     }
 
-    /* TABS */
     .tabs-nav {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 24px;
+      margin-bottom: 16px;
       overflow-x: auto;
-      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 6px;
+      scrollbar-width: none;
+    }
+
+    .tabs-nav::-webkit-scrollbar {
+      display: none;
     }
 
     .tab-btn {
       background: none;
       border: none;
       color: var(--text-muted);
-      padding: 10px 18px;
-      font-size: 14px;
+      padding: 9px 14px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       border-radius: 8px;
       transition: all 0.2s ease;
       white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      flex-shrink: 0;
     }
 
     .tab-btn:hover {
@@ -156,10 +160,9 @@
     .tab-btn.active {
       color: #fff;
       background: var(--primary);
-      box-shadow: 0 0 12px var(--primary-glow);
+      box-shadow: 0 0 10px var(--primary-glow);
     }
 
-    /* TAB PANELS */
     .tab-panel {
       display: none;
     }
@@ -167,44 +170,56 @@
     .tab-panel.active {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 24px;
+      gap: 16px;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 860px) {
+      header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .header-actions {
+        justify-content: space-between;
+      }
+      .base-url-input {
+        width: 100%;
+      }
       .tab-panel.active {
         grid-template-columns: 1fr;
       }
+      .form-row {
+        grid-template-columns: 1fr !important;
+      }
     }
 
-    /* CARDS & FORMS */
     .card {
       background: var(--bg-surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 24px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 14px;
     }
 
     .card-title {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       display: flex;
       align-items: center;
       gap: 8px;
       border-bottom: 1px solid var(--border);
-      padding-bottom: 12px;
+      padding-bottom: 10px;
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
 
     .form-group label {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       color: var(--text-muted);
     }
@@ -213,10 +228,11 @@
       background: var(--bg-base);
       border: 1px solid var(--border);
       color: var(--text-main);
-      padding: 10px 14px;
+      padding: 10px 12px;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: 13px;
       outline: none;
+      width: 100%;
       transition: border 0.2s;
     }
 
@@ -227,20 +243,20 @@
 
     textarea {
       resize: vertical;
-      min-height: 90px;
+      min-height: 80px;
     }
 
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 10px;
     }
 
     .btn-submit {
       background: linear-gradient(135deg, var(--primary), var(--primary-hover));
       color: #fff;
       border: none;
-      padding: 12px 20px;
+      padding: 12px 18px;
       font-size: 14px;
       font-weight: 700;
       border-radius: 8px;
@@ -249,75 +265,116 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      min-height: 44px;
       transition: all 0.2s;
-      box-shadow: 0 4px 14px var(--primary-glow);
+      box-shadow: 0 4px 12px var(--primary-glow);
     }
 
     .btn-submit:hover {
       filter: brightness(1.1);
-      transform: translateY(-1px);
     }
 
     .btn-submit:disabled {
       opacity: 0.6;
       cursor: not-allowed;
-      transform: none;
     }
 
     .btn-secondary {
       background: var(--bg-card);
       border: 1px solid var(--border);
       color: var(--text-main);
-      padding: 8px 14px;
+      padding: 8px 12px;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 12px;
       cursor: pointer;
       font-weight: 600;
-      transition: all 0.2s;
+      min-height: 38px;
     }
 
-    .btn-secondary:hover {
-      background: var(--border);
+    /* PLAYER MULTI-SCÈNES */
+    .player-container {
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #000;
+      position: relative;
+      aspect-ratio: 16/9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    /* RESULT PREVIEW */
+    .player-bg {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 6s ease-out, opacity 0.5s ease;
+      transform: scale(1);
+    }
+
+    .player-bg.kenburns {
+      transform: scale(1.12) translate(-1%, -1%);
+    }
+
+    .player-subtitles {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: #fff;
+      font-size: 13px;
+      text-align: center;
+      line-height: 1.4;
+      z-index: 10;
+    }
+
+    .player-scene-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(99, 102, 241, 0.85);
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      z-index: 10;
+    }
+
     .preview-box {
       background: var(--bg-base);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 16px;
-      min-height: 240px;
+      padding: 14px;
+      min-height: 220px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       position: relative;
-      overflow: hidden;
     }
 
     .preview-placeholder {
       color: var(--text-muted);
-      font-size: 14px;
+      font-size: 13px;
       text-align: center;
-    }
-
-    .preview-video {
-      width: 100%;
-      max-height: 480px;
-      border-radius: 8px;
-      background: #000;
     }
 
     .preview-img {
       max-width: 100%;
-      max-height: 420px;
+      max-height: 380px;
       border-radius: 8px;
       object-fit: contain;
     }
 
     .preview-audio {
       width: 100%;
-      margin-top: 12px;
+      margin-top: 10px;
     }
 
     .meta-box {
@@ -325,9 +382,9 @@
       background: rgba(0,0,0,0.3);
       border: 1px solid rgba(255,255,255,0.05);
       border-radius: 8px;
-      padding: 12px;
-      margin-top: 12px;
-      font-size: 12px;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 11px;
       color: var(--text-muted);
       display: flex;
       flex-direction: column;
@@ -340,81 +397,70 @@
       word-break: break-all;
     }
 
-    .meta-box a:hover {
-      text-decoration: underline;
-    }
-
-    .progress-bar-wrap {
-      width: 100%;
-      background: rgba(255,255,255,0.1);
-      border-radius: 20px;
-      height: 8px;
-      margin: 12px 0 6px;
-      overflow: hidden;
-    }
-
-    .progress-bar-fill {
-      background: linear-gradient(90deg, var(--primary), var(--accent));
-      height: 100%;
-      width: 15%;
-      transition: width 0.4s ease;
-    }
-
     .loader {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border: 3px solid rgba(99, 102, 241, 0.2);
       border-top-color: var(--primary);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    /* SCENE CARDS */
     .scenes-grid {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       width: 100%;
-      max-height: 400px;
+      max-height: 300px;
       overflow-y: auto;
+      margin-top: 10px;
     }
 
     .scene-item {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 13px;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12px;
       display: flex;
-      gap: 10px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .scene-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 4px;
+      object-fit: cover;
+      flex-shrink: 0;
     }
 
     .scene-num {
       color: #818cf8;
       font-weight: 700;
-      min-width: 24px;
+      min-width: 22px;
     }
 
-    /* TABLE (ACCOUNTS) */
     .table-container {
       width: 100%;
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
-      text-align: left;
+      font-size: 12px;
+      min-width: 480px;
     }
 
     th, td {
-      padding: 12px 14px;
+      padding: 10px 12px;
       border-bottom: 1px solid var(--border);
     }
 
@@ -426,9 +472,9 @@
 
     .badge-status {
       display: inline-block;
-      padding: 3px 8px;
-      border-radius: 12px;
-      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-size: 10px;
       font-weight: 600;
     }
 
@@ -441,9 +487,9 @@
       background: #000;
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 12px;
+      padding: 10px;
       font-family: monospace;
-      font-size: 12px;
+      font-size: 11px;
       color: #34d399;
       white-space: pre-wrap;
       word-break: break-all;
@@ -452,13 +498,12 @@
 </head>
 <body>
 
-  <!-- HEADER -->
   <header>
     <div class="brand">
       <div class="brand-logo">⚡</div>
       <div class="brand-title">
         <h1>MagicLight AI Studio</h1>
-        <p>Console de Test des API Déployées — stanleystawa</p>
+        <p>Console de Test des API — stanleystawa</p>
       </div>
     </div>
     <div class="header-actions">
@@ -470,32 +515,30 @@
     </div>
   </header>
 
-  <!-- MAIN -->
   <div class="container">
 
-    <!-- TABS NAVIGATION -->
     <div class="tabs-nav">
-      <button class="tab-btn active" onclick="switchTab('video')">🎬 Vidéo Cloud</button>
-      <button class="tab-btn" onclick="switchTab('image')">🎨 Génération Image</button>
+      <button class="tab-btn active" onclick="switchTab('video')">🎬 Vidéo Multi-Scènes</button>
+      <button class="tab-btn" onclick="switchTab('image')">🎨 Image IA HD</button>
       <button class="tab-btn" onclick="switchTab('edit')">✏️ Retouche Image</button>
       <button class="tab-btn" onclick="switchTab('story')">📖 Scénario IA</button>
       <button class="tab-btn" onclick="switchTab('voice')">🎙️ Voix & TTS</button>
-      <button class="tab-btn" onclick="switchTab('accounts')">📊 Comptes & Turso DB</button>
+      <button class="tab-btn" onclick="switchTab('accounts')">📊 Comptes Turso</button>
     </div>
 
-    <!-- TAB 1 : VIDÉO -->
+    <!-- TAB 1 : VIDÉO MULTI-SCÈNES -->
     <div id="tab-video" class="tab-panel active">
       <div class="card">
-        <div class="card-title">🎬 Générateur Vidéo Cloud (100% Sans Filigrane)</div>
+        <div class="card-title">🎬 Générateur Vidéo Multi-Scènes (Images & Voix MagicLight)</div>
         <div class="form-group">
           <label>Prompt / Idée de l'histoire</label>
-          <textarea id="videoPrompt" placeholder="Ex: Un petit chaton blanc aux yeux bleus qui joue joyeusement avec un papillon magique sous le soleil..."></textarea>
+          <textarea id="videoPrompt" placeholder="Ex: Un adorable petit chaton blanc aux yeux bleus qui explore un jardin magique et rencontre des papillons dorés..."></textarea>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label>Mode de Génération</label>
             <select id="videoMode">
-              <option value="expand" selected>Scénario Développé IA (10-15 Scènes)</option>
+              <option value="expand" selected>Scénario Développé IA (Multi-Scènes)</option>
               <option value="direct">Texte Brut Direct</option>
             </select>
           </div>
@@ -503,18 +546,18 @@
             <label>Ratio Vidéo</label>
             <select id="videoRatio">
               <option value="1" selected>16:9 Paysage</option>
-              <option value="2">9:16 Vertical (TikTok/Reels)</option>
+              <option value="2">9:16 Vertical (Reels/TikTok)</option>
             </select>
           </div>
         </div>
-        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">🚀 Lancer le rendu vidéo</button>
-        <div class="code-preview" id="videoUrlSnippet">Endpoint: POST/GET /stanleystawa/video + GET /stanleystawa/status</div>
+        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">🚀 Générer la vidéo complète</button>
+        <div class="code-preview" id="videoUrlSnippet">Endpoint: POST /stanleystawa/video</div>
       </div>
 
       <div class="card">
-        <div class="card-title">📺 Lecteur & Suivi en Direct</div>
+        <div class="card-title">📺 Lecteur Vidéo Multi-Scènes en Direct</div>
         <div class="preview-box" id="videoPreviewBox">
-          <div class="preview-placeholder">La vidéo rendue par MagicLight s'affichera ici après génération.</div>
+          <div class="preview-placeholder">La vidéo avec ses scènes, voix IA et sous-titres s'affichera ici.</div>
         </div>
       </div>
     </div>
@@ -522,10 +565,10 @@
     <!-- TAB 2 : IMAGE -->
     <div id="tab-image" class="tab-panel">
       <div class="card">
-        <div class="card-title">🎨 Génération d'Image IA</div>
+        <div class="card-title">🎨 Génération d'Image IA Haute Définition</div>
         <div class="form-group">
           <label>Prompt de l'image</label>
-          <textarea id="imagePrompt" placeholder="Ex: Un adorable petit chaton blanc aux yeux bleus dans un jardin féerique, 8k, photoréaliste..."></textarea>
+          <textarea id="imagePrompt" placeholder="Ex: Un magnifique dragon dore volant au-dessus de montagnes enneigees, 8k photorealiste..."></textarea>
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -544,13 +587,13 @@
             </select>
           </div>
         </div>
-        <button id="btnGenImg" class="btn-submit" onclick="generateImage()">✨ Générer l'image</button>
+        <button id="btnGenImg" class="btn-submit" onclick="generateImage()">✨ Générer l'image HD</button>
       </div>
 
       <div class="card">
-        <div class="card-title">🖼️ Aperçu de l'Image</div>
+        <div class="card-title">🖼️ Aperçu Direct de l'Image</div>
         <div class="preview-box" id="imagePreviewBox">
-          <div class="preview-placeholder">L'image générée s'affichera ici.</div>
+          <div class="preview-placeholder">L'image haute définition s'affichera directement ici.</div>
         </div>
       </div>
     </div>
@@ -560,12 +603,12 @@
       <div class="card">
         <div class="card-title">✏️ Retouche & Modification d'Image</div>
         <div class="form-group">
-          <label>URL de l'image source</label>
+          <label>URL de l'image source (Optionnel)</label>
           <input type="text" id="editImgUrl" placeholder="https://.../mon-image.jpg">
         </div>
         <div class="form-group">
           <label>Consignes de retouche</label>
-          <textarea id="editPrompt" placeholder="Ex: Ajouter une aura magique dorée autour du personnage..."></textarea>
+          <textarea id="editPrompt" placeholder="Ex: Ajouter une armure d'or scintillante et des reflets magiques..."></textarea>
         </div>
         <button id="btnEditImg" class="btn-submit" onclick="editImage()">🎨 Appliquer la retouche</button>
       </div>
@@ -573,7 +616,7 @@
       <div class="card">
         <div class="card-title">🖼️ Image Retouchée</div>
         <div class="preview-box" id="editPreviewBox">
-          <div class="preview-placeholder">L'image retouchée s'affichera ici.</div>
+          <div class="preview-placeholder">L'image retouchée s'affichera directement ici.</div>
         </div>
       </div>
     </div>
@@ -583,11 +626,11 @@
       <div class="card">
         <div class="card-title">📖 Découpage & Expansion de Scénario IA</div>
         <div class="form-group">
-          <label>Pitch / Idée de base</label>
-          <textarea id="storyIdea" placeholder="Ex: Un petit robot solitaire qui découvre une forêt enchantée et se lie d'amitié avec un renard..."></textarea>
+          <label>Idée / Pitch</label>
+          <textarea id="storyIdea" placeholder="Ex: Un jeune explorateur découvre un temple secret au sommet des nuages..."></textarea>
         </div>
         <div class="form-group">
-          <label>Langue de narration</label>
+          <label>Langue</label>
           <select id="storyLang">
             <option value="french" selected>Français</option>
             <option value="english">Anglais</option>
@@ -600,7 +643,7 @@
       <div class="card">
         <div class="card-title">📑 Scènes & Storyboard Découpé</div>
         <div class="preview-box" id="storyPreviewBox" style="align-items: flex-start;">
-          <div class="preview-placeholder">Le scénario développé et ses 10 à 20 scènes s'afficheront ici.</div>
+          <div class="preview-placeholder">Le scénario et ses scènes s'afficheront ici.</div>
         </div>
       </div>
     </div>
@@ -611,7 +654,7 @@
         <div class="card-title">🎙️ Synthèse Vocale MagicLight TTS</div>
         <div class="form-group">
           <label>Texte à vocaliser</label>
-          <textarea id="voiceText" placeholder="Ex: Bienvenue sur notre service d'intelligence artificielle. Voici une démonstration de synthèse vocale de haute qualité."></textarea>
+          <textarea id="voiceText" placeholder="Ex: Bonjour et bienvenue sur notre service de génération de contenu propulsé par l'intelligence artificielle."></textarea>
         </div>
         <div class="form-group">
           <label>Modèle de Voix</label>
@@ -635,15 +678,15 @@
     <!-- TAB 6 : COMPTES & TURSO DB -->
     <div id="tab-accounts" class="tab-panel">
       <div class="card" style="grid-column: 1 / -1;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
           <div class="card-title" style="border: none; padding: 0;">📊 Pool de Comptes & Crédits (Turso DB)</div>
           <div style="display: flex; gap: 8px;">
             <button class="btn-secondary" onclick="loadAccounts()">🔄 Actualiser</button>
-            <button class="btn-submit" style="padding: 8px 14px; font-size: 13px;" onclick="refillAccount()">+ Créer un nouveau compte auto</button>
+            <button class="btn-submit" style="padding: 6px 12px; font-size: 12px; min-height: 38px;" onclick="refillAccount()">+ Compte auto</button>
           </div>
         </div>
         <div class="table-container" id="accountsTableContainer">
-          <div style="text-align: center; color: var(--text-muted); padding: 24px;">Chargement des données Turso...</div>
+          <div style="text-align: center; color: var(--text-muted); padding: 20px;">Chargement des données Turso...</div>
         </div>
       </div>
     </div>
@@ -660,17 +703,19 @@
 
     async function safeFetchJson(url, options = {}) {
       const res = await fetch(url, options);
-      const contentType = res.headers.get("content-type") || "";
-      if (!res.ok) {
-        if (contentType.includes("application/json")) {
-          const errData = await res.json();
-          throw new Error(errData.error || errData.message || JSON.stringify(errData));
-        } else {
-          const text = await res.text();
-          throw new Error(`Erreur ${res.status}: ${text.slice(0, 150)}`);
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        if (!res.ok) {
+          throw new Error(json.error || json.message || `Erreur ${res.status}`);
         }
+        return json;
+      } catch (err) {
+        if (!res.ok) {
+          throw new Error(`Erreur ${res.status}: ${text.slice(0, 100)}`);
+        }
+        throw err;
       }
-      return res.json();
     }
 
     function switchTab(tabId) {
@@ -688,7 +733,54 @@
       }
     }
 
-    // --- 1. VIDÉO ASYNCHRONE VERCEL-RESILIENT ---
+    // --- 1. VIDÉO MULTI-SCÈNES AVEC ANIMATION & LECTEUR INTÉGRÉ ---
+    let currentScenes = [];
+    let currentSceneIndex = 0;
+    let sceneTimer = null;
+    let activeAudio = null;
+
+    function playMultiScenePlayer(scenes, bgmUrl) {
+      currentScenes = scenes;
+      currentSceneIndex = 0;
+      if (sceneTimer) clearTimeout(sceneTimer);
+      if (activeAudio) activeAudio.pause();
+
+      function showScene(idx) {
+        if (idx >= currentScenes.length) {
+          idx = 0; // Boucle
+        }
+        currentSceneIndex = idx;
+        const scene = currentScenes[idx];
+
+        const imgEl = document.getElementById("playerBgImg");
+        const subEl = document.getElementById("playerSubs");
+        const badgeEl = document.getElementById("playerBadge");
+
+        if (imgEl && subEl && badgeEl) {
+          imgEl.classList.remove("kenburns");
+          void imgEl.offsetWidth; // Trigger reflow
+          imgEl.src = scene.image_url;
+          imgEl.classList.add("kenburns");
+
+          subEl.innerText = scene.text;
+          badgeEl.innerText = `Scène ${scene.scene_number}/${currentScenes.length}`;
+
+          // Joue la voix de la scène
+          if (scene.audio_url) {
+            if (activeAudio) activeAudio.pause();
+            activeAudio = new Audio(scene.audio_url);
+            activeAudio.play().catch(() => {});
+          }
+
+          sceneTimer = setTimeout(() => {
+            showScene(currentSceneIndex + 1);
+          }, (scene.duration || 5) * 1000);
+        }
+      }
+
+      showScene(0);
+    }
+
     async function generateVideo() {
       const prompt = document.getElementById("videoPrompt").value.trim();
       const mode = document.getElementById("videoMode").value;
@@ -696,66 +788,53 @@
       const box = document.getElementById("videoPreviewBox");
       const btn = document.getElementById("btnGenVideo");
 
-      if (!prompt) return alert("Veuillez saisir un prompt ou une idée de vidéo.");
+      if (!prompt) return alert("Veuillez saisir un prompt pour la vidéo.");
 
       btn.disabled = true;
       box.innerHTML = `
         <div class="loader"></div>
-        <div style="font-weight: 600;" id="progressLabel">Initialisation du projet MagicLight...</div>
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar" style="width: 15%;"></div></div>
-        <div style="font-size: 12px; color: var(--text-muted);" id="progressDetail">Connexion aux serveurs MagicLight AI...</div>
+        <div style="font-weight: 600;">Création de la vidéo multi-scènes...</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Génération des visuels, voix MagicLight et scènes en cours...</div>
       `;
 
       try {
-        const initData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/video`, {
+        const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/video`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ prompt, mode, ratio })
         });
 
-        const projectId = initData.project_id;
-        const accountEmail = initData.account_email || "";
-        document.getElementById("videoUrlSnippet").innerText = `Projet ID : ${projectId} | Suivi : GET /stanleystawa/status?project_id=${projectId}`;
+        if (data.scenes && data.scenes.length > 0) {
+          let scenesCardsHtml = data.scenes.map(s => `
+            <div class="scene-item">
+              <img src="${s.image_url}" class="scene-thumb" alt="Scène ${s.scene_number}">
+              <div>
+                <div style="font-weight: 700; color: #818cf8;">Scène ${s.scene_number} (${s.duration}s)</div>
+                <div style="color: var(--text-muted); font-size: 11px;">${s.text}</div>
+              </div>
+            </div>
+          `).join("");
 
-        let isDone = false;
-        let attempts = 0;
+          box.innerHTML = `
+            <div class="player-container" id="playerWrap">
+              <div class="player-scene-badge" id="playerBadge">Scène 1/${data.scenes.length}</div>
+              <img id="playerBgImg" class="player-bg kenburns" src="${data.scenes[0].image_url}">
+              <div class="player-subtitles" id="playerSubs">${data.scenes[0].text}</div>
+            </div>
+            <div class="meta-box">
+              <div><strong>Titre :</strong> ${data.title} | <strong>Durée :</strong> ~${data.total_duration}s | <strong>Scènes :</strong> ${data.scenes_count}</div>
+              <div><strong>Compte utilisé :</strong> ${data.account_used}</div>
+              <div><strong>Lien direct MP4 :</strong> <a href="${data.video_url}" target="_blank">${data.video_url}</a></div>
+            </div>
+            <div style="font-weight: 700; font-size: 12px; margin-top: 10px;">Scènes découpées avec visuels distincts :</div>
+            <div class="scenes-grid">${scenesCardsHtml}</div>
+          `;
 
-        while (!isDone && attempts < 40) {
-          await new Promise(r => setTimeout(r, 3500));
-          attempts++;
-
-          try {
-            const statusData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/status?project_id=${projectId}&account=${encodeURIComponent(accountEmail)}`);
-
-            if (statusData.status === "success" && statusData.video_url) {
-              isDone = true;
-              box.innerHTML = `
-                <video class="preview-video" src="${statusData.video_url}" controls autoplay loop></video>
-                <div class="meta-box">
-                  <div><strong>Durée :</strong> ${statusData.duration}s | <strong>Résolution :</strong> ${statusData.resolution} | <strong>Filigrane :</strong> ${statusData.no_watermark ? '❌ Aucun (Watermark-Free)' : 'Incrusté'}</div>
-                  <div><strong>Compte :</strong> ${statusData.account_used}</div>
-                  <div><strong>Lien direct CDN :</strong> <a href="${statusData.video_url}" target="_blank">${statusData.video_url}</a></div>
-                </div>
-              `;
-              loadAccounts();
-              break;
-            } else {
-              const pct = statusData.progress || Math.min(90, 15 + attempts * 3);
-              const pBar = document.getElementById("progressBar");
-              const pLbl = document.getElementById("progressLabel");
-              const pDet = document.getElementById("progressDetail");
-
-              if (pBar) pBar.style.width = pct + "%";
-              if (pLbl) pLbl.innerText = `Rendu en cours (${pct}%)...`;
-              if (pDet) pDet.innerText = statusData.message || "Génération des scènes et encodage MagicLight...";
-            }
-          } catch (e) {
-            console.warn("Poll status check retry...", e);
-          }
-        }
-
-        if (!isDone) {
-          throw new Error("Rendu en cours sur MagicLight. Vous pouvez réinterroger /stanleystawa/status?project_id=" + projectId);
+          // Lance la lecture dynamique multi-scènes
+          playMultiScenePlayer(data.scenes, data.bgm_url);
+          loadAccounts();
+        } else {
+          box.innerHTML = `<video class="preview-video" src="${data.video_url}" controls autoplay></video>`;
         }
       } catch (err) {
         box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;
@@ -764,7 +843,7 @@
       }
     }
 
-    // --- 2. IMAGE AVEC AFFICHAGE DIRECT ---
+    // --- 2. IMAGE HD ---
     async function generateImage() {
       const prompt = document.getElementById("imagePrompt").value.trim();
       const ratio = document.getElementById("imageRatio").value;
@@ -775,67 +854,24 @@
       if (!prompt) return alert("Veuillez saisir un prompt pour l'image.");
 
       btn.disabled = true;
-      box.innerHTML = `
-        <div class="loader"></div>
-        <div style="font-weight: 600;" id="imgProgressLabel">Génération de l'image haute définition...</div>
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="imgProgressBar" style="width: 30%;"></div></div>
-        <div style="font-size: 12px; color: var(--text-muted);">Création par le moteur MagicLight AI...</div>
-      `;
+      box.innerHTML = `<div class="loader"></div><div>Génération de l'image haute définition...</div>`;
 
       try {
-        const initData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/image`, {
+        const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/image`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ prompt, ratio, styleId })
         });
 
-        // Si l'image est déjà disponible immédiatement
-        if (initData.status === "success" && initData.image_url) {
+        if (data.image_url) {
           box.innerHTML = `
-            <img class="preview-img" src="${initData.image_url}" alt="Image générée">
+            <img class="preview-img" src="${data.image_url}" alt="Image générée">
             <div class="meta-box">
-              <div><strong>Compte :</strong> ${initData.account_used}</div>
-              <div><strong>Lien direct :</strong> <a href="${initData.image_url}" target="_blank">${initData.image_url}</a></div>
+              <div><strong>Résolution :</strong> ${data.resolution || 'HD'} | <strong>Compte :</strong> ${data.account_used}</div>
+              <div><strong>Lien direct :</strong> <a href="${data.image_url}" target="_blank">${data.image_url}</a></div>
             </div>
           `;
           loadAccounts();
-          return;
-        }
-
-        // Sinon polling progressif jusqu'à l'image prête
-        const projectId = initData.project_id;
-        let isDone = false;
-        let attempts = 0;
-
-        while (!isDone && attempts < 25) {
-          await new Promise(r => setTimeout(r, 2500));
-          attempts++;
-
-          try {
-            const statusData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/status?project_id=${projectId}`);
-            if (statusData.cover_url || statusData.image_url) {
-              const finalImgUrl = statusData.cover_url || statusData.image_url;
-              isDone = true;
-              box.innerHTML = `
-                <img class="preview-img" src="${finalImgUrl}" alt="Image générée">
-                <div class="meta-box">
-                  <div><strong>Compte :</strong> ${statusData.account_used || 'MagicLight'}</div>
-                  <div><strong>Lien direct :</strong> <a href="${finalImgUrl}" target="_blank">${finalImgUrl}</a></div>
-                </div>
-              `;
-              loadAccounts();
-              break;
-            } else {
-              const pBar = document.getElementById("imgProgressBar");
-              if (pBar) pBar.style.width = Math.min(90, 30 + attempts * 5) + "%";
-            }
-          } catch (e) {
-            console.warn("Poll image retry...", e);
-          }
-        }
-
-        if (!isDone) {
-          throw new Error("L'image met plus de temps que prévu à s'afficher.");
         }
       } catch (err) {
         box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;
@@ -844,7 +880,7 @@
       }
     }
 
-    // --- 3. EDIT AVEC AFFICHAGE DIRECT ---
+    // --- 3. RETOUCHE IMAGE ---
     async function editImage() {
       const imageUrl = document.getElementById("editImgUrl").value.trim();
       const prompt = document.getElementById("editPrompt").value.trim();
@@ -854,55 +890,24 @@
       if (!prompt) return alert("Veuillez saisir une consigne de retouche.");
 
       btn.disabled = true;
-      box.innerHTML = `
-        <div class="loader"></div>
-        <div style="font-weight: 600;">Application de la retouche...</div>
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width: 45%;"></div></div>
-      `;
+      box.innerHTML = `<div class="loader"></div><div>Application de la retouche en cours...</div>`;
 
       try {
-        const initData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/edit`, {
+        const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/edit`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ imageUrl, prompt })
         });
 
-        if (initData.status === "success" && initData.image_url) {
+        if (data.image_url) {
           box.innerHTML = `
-            <img class="preview-img" src="${initData.image_url}" alt="Image retouchée">
+            <img class="preview-img" src="${data.image_url}" alt="Image retouchée">
             <div class="meta-box">
-              <div><strong>Compte :</strong> ${initData.account_used}</div>
-              <div><strong>Lien :</strong> <a href="${initData.image_url}" target="_blank">${initData.image_url}</a></div>
+              <div><strong>Compte :</strong> ${data.account_used}</div>
+              <div><strong>Lien direct :</strong> <a href="${data.image_url}" target="_blank">${data.image_url}</a></div>
             </div>
           `;
           loadAccounts();
-          return;
-        }
-
-        const projectId = initData.project_id;
-        let isDone = false;
-        let attempts = 0;
-
-        while (!isDone && attempts < 25) {
-          await new Promise(r => setTimeout(r, 2500));
-          attempts++;
-
-          try {
-            const statusData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/status?project_id=${projectId}`);
-            const finalImgUrl = statusData.cover_url || statusData.image_url;
-            if (finalImgUrl) {
-              isDone = true;
-              box.innerHTML = `
-                <img class="preview-img" src="${finalImgUrl}" alt="Image retouchée">
-                <div class="meta-box">
-                  <div><strong>Compte :</strong> ${statusData.account_used || 'MagicLight'}</div>
-                  <div><strong>Lien :</strong> <a href="${finalImgUrl}" target="_blank">${finalImgUrl}</a></div>
-                </div>
-              `;
-              loadAccounts();
-              break;
-            }
-          } catch (e) {}
         }
       } catch (err) {
         box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;
@@ -911,14 +916,14 @@
       }
     }
 
-    // --- 4. STORY ---
+    // --- 4. SCÉNARIO IA ---
     async function expandStory() {
       const idea = document.getElementById("storyIdea").value.trim();
       const language = document.getElementById("storyLang").value;
       const box = document.getElementById("storyPreviewBox");
       const btn = document.getElementById("btnStory");
 
-      if (!idea) return alert("Veuillez saisir une idée de scénario.");
+      if (!idea) return alert("Veuillez saisir une idée.");
 
       btn.disabled = true;
       box.innerHTML = `<div class="loader"></div><div>Expansion du scénario et découpage multi-scènes...</div>`;
@@ -934,9 +939,9 @@
         `).join("");
 
         box.innerHTML = `
-          <div style="font-weight: 700; font-size: 16px; margin-bottom: 8px; color: #818cf8;">${data.title}</div>
-          <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">${data.expanded_story}</div>
-          <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">Scènes découpées (${data.scenes.length}) :</div>
+          <div style="font-weight: 700; font-size: 15px; margin-bottom: 6px; color: #818cf8;">${data.title}</div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">${data.expanded_story}</div>
+          <div style="font-weight: 600; font-size: 12px; margin-bottom: 6px;">Scènes découpées (${data.scenes.length}) :</div>
           <div class="scenes-grid">${scenesHtml}</div>
         `;
       } catch (err) {
@@ -946,7 +951,7 @@
       }
     }
 
-    // --- 5. VOICE ---
+    // --- 5. SYNTHÈSE VOCALE ---
     async function synthesizeVoice() {
       const text = document.getElementById("voiceText").value.trim();
       const voiceId = document.getElementById("voiceId").value;
@@ -966,7 +971,7 @@
             <audio class="preview-audio" src="${data.audio_url}" controls autoplay></audio>
             <div class="meta-box">
               <div><strong>Voix :</strong> ${data.voice_id} | <strong>Compte :</strong> ${data.account_used}</div>
-              <div><strong>Lien audio :</strong> <a href="${data.audio_url}" target="_blank">${data.audio_url}</a></div>
+              <div><strong>Lien direct audio :</strong> <a href="${data.audio_url}" target="_blank">${data.audio_url}</a></div>
             </div>
           `;
           loadAccounts();
@@ -981,7 +986,7 @@
     // --- 6. ACCOUNTS & TURSO ---
     async function loadAccounts() {
       const container = document.getElementById("accountsTableContainer");
-      container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 24px;"><div class="loader" style="margin: 0 auto 12px;"></div>Chargement des données Turso DB...</div>`;
+      container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 16px;"><div class="loader" style="margin: 0 auto 8px;"></div>Chargement des données Turso DB...</div>`;
 
       try {
         const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/accounts`);
@@ -1013,7 +1018,7 @@
           </table>
         `;
       } catch (err) {
-        container.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur chargement Turso : ${err.message}</div>`;
+        container.innerHTML = `<div style="color: #ef4444; padding: 12px;">❌ Erreur chargement Turso : ${err.message}</div>`;
       }
     }
 

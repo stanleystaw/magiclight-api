@@ -1,5 +1,5 @@
 /**
- * api/stanleystawa/edit.js — Retouche et modification d'image
+ * api/stanleystawa/edit.js — Retouche et modification d'images
  */
 
 const engine = require("../../lib/magiclight");
@@ -15,17 +15,17 @@ module.exports = async function handler(req, res) {
 
   try {
     const params = { ...(req.query || {}), ...(req.body || {}) };
-    const prompt = params.prompt || params.instructions;
-
-    if (!prompt) {
-      return res.status(400).json({ error: "Le paramètre 'prompt' est requis pour la retouche." });
-    }
+    const prompt = params.prompt || params.instructions || "Amélioration des détails";
 
     const result = await engine.editImage({
       imageUrl: params.imageUrl || params.image_url,
       prompt,
       styleId: params.styleId || params.style_id || "5001"
     });
+
+    if (params.format === "image" && result.image_url) {
+      return res.redirect(302, result.image_url);
+    }
 
     return res.status(200).json(result);
   } catch (err) {
