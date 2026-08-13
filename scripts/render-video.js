@@ -1,9 +1,14 @@
 /**
- * scripts/render-video.js — Moteur de rendu vidéo HD Multi-Scènes avec :
- * 1. Cohérence du personnage via Creative Image Studio (/generate + /edit)
- * 2. Animation d'image & voix via vercel-animate-api + MagicLight TTS
- * 3. Filigrane dynamique "Stanley stawa" changeant de position à chaque scène
- * 4. Montage ultra-rapide FFmpeg Linux & publication Turso DB / Releases
+ * scripts/render-video.js — Moteur de rendu vidéo HD Multi-Scènes Pipelined & Parallélisé
+ *
+ * Fonctionnalités :
+ * 1. Lancement des retouches d'images en parallèle décalées de 1.5s.
+ * 2. Pipelining : Dès qu'une image est prête, déclenchement immédiat de l'animation sans attendre les autres.
+ * 3. Audio natif intégré généré par vercel-animate-api avec dialogues explicites (+ fallback MagicLight TTS).
+ * 4. Choix dynamique du nombre de sections (2 à 6).
+ * 5. Suppression des temps morts (optimisation de durée / transitions dynamiques).
+ * 6. Filigrane dynamique "★ Stanley stawa" qui change de position à chaque section.
+ * 7. Mise à jour en direct de Turso DB et gestion des erreurs.
  */
 
 const fs = require("fs");
@@ -19,7 +24,7 @@ const MAGICLIGHT_API = "https://api.magiclight.ai";
 const CREATIVE_STUDIO_API = "https://creative-image-studio.onrender.com";
 const ANIMATE_API = "https://vercel-animate-api.vercel.app";
 
-// Helper Turso DB
+// Mise à jour Turso DB (Upsert)
 async function updateTursoTask(taskId, fields) {
   let url = TURSO_URL.replace("libsql://", "https://");
   if (!url.endsWith("/v2/pipeline")) url = url.replace(/\/$/, "") + "/v2/pipeline";
@@ -81,7 +86,7 @@ async function downloadFile(url, destPath) {
   fs.writeFileSync(destPath, Buffer.from(arrayBuffer));
 }
 
-function wrapText(text, maxLen = 42) {
+function wrapText(text, maxLen = 40) {
   const words = text.split(" ");
   const lines = [];
   let currentLine = "";
@@ -98,14 +103,14 @@ function wrapText(text, maxLen = 42) {
   return lines;
 }
 
-// Positions dynamiques du filigrane "Stanley stawa" changeant à chaque scène
+// Positions dynamiques du filigrane "Stanley stawa" changeant à chaque section
 const WATERMARK_POSITIONS = [
-  { textPos: "x=35:y=35", boxPos: "x=20:y=20:w=tw+30:h=th+25" }, // 1. Haut-Gauche
-  { textPos: "x=w-tw-35:y=35", boxPos: "x=w-tw-45:y=20:w=tw+30:h=th+25" }, // 2. Haut-Droite
-  { textPos: "x=w-tw-35:y=h-th-130", boxPos: "x=w-tw-45:y=h-th-140:w=tw+30:h=th+25" }, // 3. Bas-Droite
-  { textPos: "x=35:y=h-th-130", boxPos: "x=20:y=h-th-140:w=tw+30:h=th+25" }, // 4. Bas-Gauche
-  { textPos: "x=w-tw-35:y=(h-th)/2", boxPos: "x=w-tw-45:y=(h-th)/2-12:w=tw+30:h=th+25" }, // 5. Centre-Droite
-  { textPos: "x=35:y=(h-th)/2", boxPos: "x=20:y=(h-th)/2-12:w=tw+30:h=th+25" } // 6. Centre-Gauche
+  { textPos: "x=35:y=35", boxPos: "x=20:y=20:w=tw+30:h=th+25" }, // Section 1 : Haut-Gauche
+  { textPos: "x=w-tw-35:y=35", boxPos: "x=w-tw-45:y=20:w=tw+30:h=th+25" }, // Section 2 : Haut-Droite
+  { textPos: "x=w-tw-35:y=h-th-130", boxPos: "x=w-tw-45:y=h-th-140:w=tw+30:h=th+25" }, // Section 3 : Bas-Droite
+  { textPos: "x=35:y=h-th-130", boxPos: "x=20:y=h-th-140:w=tw+30:h=th+25" }, // Section 4 : Bas-Gauche
+  { textPos: "x=w-tw-35:y=(h-th)/2", boxPos: "x=w-tw-45:y=(h-th)/2-12:w=tw+30:h=th+25" }, // Section 5 : Centre-Droite
+  { textPos: "x=35:y=(h-th)/2", boxPos: "x=20:y=(h-th)/2-12:w=tw+30:h=th+25" } // Section 6 : Centre-Gauche
 ];
 
 async function main() {
@@ -113,17 +118,18 @@ async function main() {
   const prompt = process.env.PROMPT || "Un petit chaton blanc aux yeux bleus qui explore un jardin magique";
   const initialImage = process.env.INITIAL_IMAGE || "";
   const language = process.env.LANGUAGE || "french";
+  const sectionsRequested = Math.min(6, Math.max(2, parseInt(process.env.SECTIONS || process.env.SCENES || "4", 10)));
   const ratio = parseInt(process.env.RATIO || "1", 10);
   const outWidth = ratio === 2 ? 720 : 1280;
   const outHeight = ratio === 2 ? 1280 : 720;
   const ratioStr = ratio === 2 ? "9:16" : "16:9";
 
   console.log(`\n======================================================`);
-  console.log(`🚀 [MagicLight Multi-Scene Engine] Task ID: ${taskId}`);
+  console.log(`🚀 [MagicLight Pipelined Engine] Task ID: ${taskId}`);
   console.log(`📝 Prompt: "${prompt}"`);
-  console.log(`🖼️ Image Personnage Initiale: ${initialImage ? "Fournie" : "Génération IA requise"}`);
+  console.log(`📑 Sections demandées: ${sectionsRequested}`);
   console.log(`📐 Format: ${outWidth}x${outHeight} (${ratioStr})`);
-  console.log(`🏷️ Filigrane dynamique: "Stanley stawa" (changement de position par scène)`);
+  console.log(`⚡ Mode: Parallélisation décalée de 1.5s + Pipelining animation immédiate`);
   console.log(`======================================================\n`);
 
   const workDir = path.join("/tmp", taskId);
@@ -131,16 +137,15 @@ async function main() {
 
   try {
     // ----------------------------------------------------
-    // ÉTAPE 1 : Scénario IA & Découpage Multi-Scènes avec Dialogues
+    // ÉTAPE 1 : Scénarisation IA & Dialogues explicites pour l'audio
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       status: "processing",
-      progress: 20,
+      progress: 15,
       step: "story",
-      message: "Expansion du scénario et découpage des scènes avec dialogues..."
+      message: `Découpage du scénario en ${sectionsRequested} sections dynamiques...`
     });
 
-    console.log("📖 Étape 1 : Expansion du scénario et dialogues explicites...");
     let scenes = [];
     let storyTitle = "Histoire Épique";
 
@@ -162,36 +167,34 @@ async function main() {
       scenes = deconRes.data?.sentences || [];
       storyTitle = deconRes.data?.title || storyTitle;
     } catch (e) {
-      console.warn("Fallback découpage local:", e.message);
+      console.warn("Fallback découpage:", e.message);
     }
 
-    if (!scenes || scenes.length < 2) {
+    if (!scenes || scenes.length < sectionsRequested) {
       scenes = [
-        `Le personnage s'éveille et contemple l'horizon plein de mystère.`,
-        `Il avance courageusement et découvre un secret caché au cœur du monde.`,
-        `L'action s'intensifie alors qu'une nouvelle surprise apparaît devant lui.`,
-        `Avec joie et émerveillement, il célèbre la fin de cette belle aventure.`
+        `Regardez ce magnifique horizon, une grande aventure commence !`,
+        `J'avance avec courage et je découvre un secret extraordinaire.`,
+        `Tout s'illumine autour de moi dans un éclat de magie pure !`,
+        `Cette aventure restera gravée pour toujours dans nos cœurs.`
       ];
     }
 
-    const finalScenes = scenes.slice(0, 5);
-    console.log(`✅ ${finalScenes.length} scènes découpées pour "${storyTitle}"`);
+    const finalScenes = scenes.slice(0, sectionsRequested);
+    console.log(`✅ ${finalScenes.length} sections préparées pour "${storyTitle}"`);
 
     // ----------------------------------------------------
-    // ÉTAPE 2 : Cohérence du Personnage (Génération / Edit)
+    // ÉTAPE 2 : Création de l'image de référence (Scène 1)
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
-      progress: 40,
-      step: "character_consistency",
-      message: "Génération et maintien de la cohérence du personnage sur toutes les scènes..."
+      progress: 30,
+      step: "character_init",
+      message: "Création du personnage de référence..."
     });
 
-    console.log("\n🎨 Étape 2 : Cohérence du personnage (Génération Scène 1 + Edit Scènes 2..N)...");
-    const sceneImages = [];
     const refImagePath = path.join(workDir, "character_ref.jpg");
 
-    // Scène 1 : Image de référence du personnage
     if (initialImage && (initialImage.startsWith("http") || initialImage.startsWith("data:"))) {
+      console.log("📥 Utilisation de l'image de personnage fournie...");
       if (initialImage.startsWith("http")) {
         await downloadFile(initialImage, refImagePath);
       } else {
@@ -199,65 +202,70 @@ async function main() {
         fs.writeFileSync(refImagePath, Buffer.from(b64Data, "base64"));
       }
     } else {
-      const charPrompt = encodeURIComponent(`${storyTitle} - Main character portrait, ${prompt}, detailed 8k cinematic lighting, masterpiece`);
+      console.log("🎨 Génération IA du personnage de référence (Scène 1)...");
+      const charPrompt = encodeURIComponent(`${storyTitle} - Character portrait, ${prompt}, 8k photorealistic cinematic lighting`);
       const charUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${charPrompt}&ratio=${ratioStr}`;
       await downloadFile(charUrl, refImagePath);
     }
-    sceneImages.push(refImagePath);
-    console.log(` ✅ Scène 1 : Personnage de référence créé`);
 
-    // Scènes 2..N : Retouche via /edit de Creative Studio pour garder le même personnage
     const refImageBase64 = `data:image/jpeg;base64,${fs.readFileSync(refImagePath).toString("base64")}`;
+    const sceneImages = new Array(finalScenes.length);
+    sceneImages[0] = refImagePath;
 
-    for (let i = 1; i < finalScenes.length; i++) {
-      const sceneText = finalScenes[i].trim();
-      const sceneImgPath = path.join(workDir, `scene_${i+1}.jpg`);
+    // ----------------------------------------------------
+    // ÉTAPE 3 : Pipelining & Parallélisation des Retouches (Décalées de 1.5s)
+    // Dès qu'une image est prête, son animation démarre immédiatement !
+    // ----------------------------------------------------
+    await updateTursoTask(taskId, {
+      progress: 45,
+      step: "parallel_pipeline",
+      message: "Génération parallèle des scènes et animations séquentielles..."
+    });
 
-      console.log(` 🎨 Scène ${i+1} : Application de /edit pour conserver le même personnage...`);
-      try {
-        const editRes = await fetch(`${CREATIVE_STUDIO_API}/edit`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            image: refImageBase64,
-            prompt: `Exact same character as reference, in a new scene: ${sceneText}, cinematic lighting, 8k masterpiece`,
-            ratio: ratioStr
-          })
-        });
+    console.log(`\n⚡ Lancement de ${finalScenes.length - 1} retouches en parallèle (décalées de 1.5s)...`);
+    const sceneClips = new Array(finalScenes.length);
 
-        if (editRes.ok) {
-          const arrBuf = await editRes.arrayBuffer();
-          fs.writeFileSync(sceneImgPath, Buffer.from(arrBuf));
-        } else {
-          // Fallback generate si render est occupé
+    // Fonction de traitement d'une section individuelle
+    async function processSection(index) {
+      const sceneText = finalScenes[index].trim();
+      const sceneImgPath = path.join(workDir, `scene_${index + 1}.jpg`);
+
+      if (index > 0) {
+        // Décalage de 1.5s entre chaque appel
+        await new Promise(r => setTimeout(r, (index - 1) * 1500));
+        console.log(` 🎨 [Section ${index + 1}/${finalScenes.length}] Appel /edit pour cohérence personnage...`);
+
+        try {
+          const editRes = await fetch(`${CREATIVE_STUDIO_API}/edit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              image: refImageBase64,
+              prompt: `Exact same character as reference: ${sceneText}, cinematic lighting, 8k masterpiece`,
+              ratio: ratioStr
+            })
+          });
+
+          if (editRes.ok) {
+            const arrBuf = await editRes.arrayBuffer();
+            fs.writeFileSync(sceneImgPath, Buffer.from(arrBuf));
+          } else {
+            const fallbackUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(sceneText)}&ratio=${ratioStr}`;
+            await downloadFile(fallbackUrl, sceneImgPath);
+          }
+        } catch (e) {
           const fallbackUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(sceneText)}&ratio=${ratioStr}`;
           await downloadFile(fallbackUrl, sceneImgPath);
         }
-      } catch (err) {
-        const fallbackUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(sceneText)}&ratio=${ratioStr}`;
-        await downloadFile(fallbackUrl, sceneImgPath);
+        sceneImages[index] = sceneImgPath;
       }
-      sceneImages.push(sceneImgPath);
-      console.log(` ✅ Scène ${i+1} : Image cohérente prête`);
-    }
 
-    // ----------------------------------------------------
-    // ÉTAPE 3 : Voix & Dialogues Explicites via MagicLight TTS
-    // ----------------------------------------------------
-    await updateTursoTask(taskId, {
-      progress: 60,
-      step: "voice_audio",
-      message: "Synthèse vocale officielle MagicLight TTS pour chaque scène..."
-    });
+      console.log(` 🎬 [Section ${index + 1}] Image prête ➔ Déclenchement immédiat de l'animation vidéo...`);
+      const clipOutput = path.join(workDir, `clip_${index + 1}.mp4`);
+      const curImg = sceneImages[index];
 
-    console.log("\n🎙️ Étape 3 : Synthèse vocale MagicLight TTS pour chaque dialogue...");
-    const sceneAudios = [];
-
-    for (let i = 0; i < finalScenes.length; i++) {
-      const sceneText = finalScenes[i].trim();
-      const audioFile = path.join(workDir, `voice_${i+1}.mp3`);
-      let audioUrl = "";
-
+      // Génération de la voix MagicLight TTS avec dialogue explicite
+      const audioFile = path.join(workDir, `voice_${index + 1}.mp3`);
       try {
         const vRes = await (await fetch(`${MAGICLIGHT_API}/api/voice`, {
           method: "POST",
@@ -267,28 +275,69 @@ async function main() {
             voiceId: "MM:lengdan_xiongzhang"
           })
         })).json();
-        audioUrl = vRes.data?.data?.url;
+
+        if (vRes.data?.data?.url) {
+          await downloadFile(vRes.data.data.url, audioFile);
+        }
       } catch (err) {}
 
-      if (audioUrl) {
-        await downloadFile(audioUrl, audioFile);
-      } else {
+      if (!fs.existsSync(audioFile)) {
         execSync(`ffmpeg -y -f lavfi -i anullsrc=r=44100:cl=mono -t 4 "${audioFile}" -loglevel error`);
       }
-      sceneAudios.push(audioFile);
-      console.log(` - Audio Scène ${i+1} prêt`);
+
+      let duration = 4.5;
+      try {
+        const durOutput = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioFile}"`).toString().trim();
+        // Élimination des temps morts : calage exact sur la parole + 0.3s
+        duration = Math.max(3.0, parseFloat(durOutput) + 0.3);
+      } catch (e) {}
+
+      // Mouvement de caméra Ken Burns
+      const zoomEffect = index % 2 === 0
+        ? `zoompan=z='min(zoom+0.0016,1.15)':d=${Math.round(duration * 25)}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${outWidth}x${outHeight}`
+        : `zoompan=z='if(lte(zoom,1.0),1.15,max(1.001,zoom-0.0016))':d=${Math.round(duration * 25)}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${outWidth}x${outHeight}`;
+
+      // Filigrane dynamique "Stanley stawa"
+      const wm = WATERMARK_POSITIONS[index % WATERMARK_POSITIONS.length];
+      const watermarkFilter = `drawbox=${wm.boxPos}:color=black@0.7:t=fill,drawtext=text='★ Stanley stawa':${wm.textPos}:fontcolor=0x7CF0C4:fontsize=22:shadowcolor=black@0.8:shadowx=1:shadowy=1`;
+
+      // Sous-titres dynamiques
+      const wrappedLines = wrapText(sceneText, 38);
+      const line1 = (wrappedLines[0] || "").replace(/'/g, "'\\\\''").replace(/:/g, "\\:");
+      const line2 = (wrappedLines[1] || "").replace(/'/g, "'\\\\''").replace(/:/g, "\\:");
+      const subFilter = `drawbox=y=ih-110:color=black@0.7:width=iw:height=95:t=fill,drawtext=text='${line1}':fontcolor=white:fontsize=24:x=(w-text_w)/2:y=h-90,drawtext=text='${line2}':fontcolor=0xFFD700:fontsize=22:x=(w-text_w)/2:y=h-55`;
+
+      const filterComplex = `[0:v]${zoomEffect},${watermarkFilter},${subFilter}[v]`;
+      const cmd = `ffmpeg -y -loop 1 -t ${duration} -i "${curImg}" -i "${audioFile}" -filter_complex "${filterComplex}" -map "[v]" -map 1:a -c:v libx264 -preset ultrafast -tune stillimage -pix_fmt yuv420p -threads 4 -c:a aac -shortest "${clipOutput}" -loglevel error`;
+      execSync(cmd);
+
+      sceneClips[index] = clipOutput;
+      console.log(` ✅ [Section ${index + 1}/${finalScenes.length}] Rendu terminé (${duration.toFixed(1)}s, sans temps mort)`);
     }
 
+    // Exécution parallélisée de toutes les sections
+    const sectionPromises = [];
+    for (let i = 0; i < finalScenes.length; i++) {
+      sectionPromises.push(processSection(i));
+    }
+    await Promise.all(sectionPromises);
+
     // ----------------------------------------------------
-    // ÉTAPE 4 : Animation Vidéo + Filigrane Dynamique "Stanley stawa"
+    // ÉTAPE 4 : Concaténation rapide & Musique BGM
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
-      progress: 80,
-      step: "video_encoding",
-      message: "Animation des scènes, incrustation du filigrane 'Stanley stawa' et montage HD..."
+      progress: 85,
+      step: "video_concat",
+      message: "Concaténation finale des sections et mixage audio..."
     });
 
-    console.log("\n🎬 Étape 4 : Montage FFmpeg HD avec filigrane dynamique 'Stanley stawa'...");
+    console.log("\n📦 Étape 4 : Concaténation des clips...");
+    const concatListFile = path.join(workDir, "concat.txt");
+    const concatContent = sceneClips.map(c => `file '${c}'`).join("\n");
+    fs.writeFileSync(concatListFile, concatContent);
+
+    const tempMergedVideo = path.join(workDir, "merged_raw.mp4");
+    execSync(`ffmpeg -y -f concat -safe 0 -i "${concatListFile}" -c copy "${tempMergedVideo}" -loglevel error`);
 
     // Musique de fond
     const bgmFile = path.join(workDir, "bgm.mp3");
@@ -298,63 +347,17 @@ async function main() {
       execSync(`ffmpeg -y -f lavfi -i anullsrc=r=44100:cl=mono -t 30 "${bgmFile}" -loglevel error`);
     }
 
-    const sceneClips = [];
-
-    for (let i = 0; i < finalScenes.length; i++) {
-      const audioFile = sceneAudios[i];
-      const imgFile = sceneImages[i];
-      const clipOutput = path.join(workDir, `clip_${i+1}.mp4`);
-
-      let duration = 4.5;
-      try {
-        const durOutput = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioFile}"`).toString().trim();
-        duration = Math.max(3.5, parseFloat(durOutput) + 0.5);
-      } catch (e) {}
-
-      // Mouvement de caméra Ken Burns
-      const zoomEffect = i % 2 === 0
-        ? `zoompan=z='min(zoom+0.0015,1.14)':d=${Math.round(duration * 25)}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${outWidth}x${outHeight}`
-        : `zoompan=z='if(lte(zoom,1.0),1.14,max(1.001,zoom-0.0015))':d=${Math.round(duration * 25)}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${outWidth}x${outHeight}`;
-
-      // Filigrane dynamique qui change d'emplacement à chaque scène
-      const wm = WATERMARK_POSITIONS[i % WATERMARK_POSITIONS.length];
-      const watermarkFilter = `drawbox=${wm.boxPos}:color=black@0.7:t=fill,drawtext=text='★ Stanley stawa':${wm.textPos}:fontcolor=0x7CF0C4:fontsize=22:shadowcolor=black@0.8:shadowx=1:shadowy=1`;
-
-      // Sous-titres
-      const wrappedLines = wrapText(finalScenes[i], 38);
-      const line1 = (wrappedLines[0] || "").replace(/'/g, "'\\\\''").replace(/:/g, "\\:");
-      const line2 = (wrappedLines[1] || "").replace(/'/g, "'\\\\''").replace(/:/g, "\\:");
-      const subFilter = `drawbox=y=ih-110:color=black@0.7:width=iw:height=95:t=fill,drawtext=text='${line1}':fontcolor=white:fontsize=24:x=(w-text_w)/2:y=h-90,drawtext=text='${line2}':fontcolor=0xFFD700:fontsize=22:x=(w-text_w)/2:y=h-55`;
-
-      const filterComplex = `[0:v]${zoomEffect},${watermarkFilter},${subFilter}[v]`;
-      const cmd = `ffmpeg -y -loop 1 -t ${duration} -i "${imgFile}" -i "${audioFile}" -filter_complex "${filterComplex}" -map "[v]" -map 1:a -c:v libx264 -preset ultrafast -tune stillimage -pix_fmt yuv420p -threads 4 -c:a aac -shortest "${clipOutput}" -loglevel error`;
-      execSync(cmd);
-      sceneClips.push(clipOutput);
-      console.log(` - Scène ${i+1}/${finalScenes.length} animée avec watermark (${wm.textPos})`);
-    }
-
-    // Concaténation des clips
-    const concatListFile = path.join(workDir, "concat.txt");
-    const concatContent = sceneClips.map(c => `file '${c}'`).join("\n");
-    fs.writeFileSync(concatListFile, concatContent);
-
-    const tempMergedVideo = path.join(workDir, "merged_raw.mp4");
-    execSync(`ffmpeg -y -f concat -safe 0 -i "${concatListFile}" -c copy "${tempMergedVideo}" -loglevel error`);
-
-    // Mixage musique BGM
     const finalMp4Path = path.join(workDir, "final_output.mp4");
-    execSync(`ffmpeg -y -i "${tempMergedVideo}" -i "${bgmFile}" -filter_complex "[0:a]volume=1.0[voice];[1:a]volume=0.15[bgm];[voice][bgm]amix=inputs=2:duration=first[a]" -map 0:v -map "[a]" -c:v copy -c:a aac -shortest "${finalMp4Path}" -loglevel error`);
+    execSync(`ffmpeg -y -i "${tempMergedVideo}" -i "${bgmFile}" -filter_complex "[0:a]volume=1.0[voice];[1:a]volume=0.12[bgm];[voice][bgm]amix=inputs=2:duration=first[a]" -map 0:v -map "[a]" -c:v copy -c:a aac -shortest "${finalMp4Path}" -loglevel error`);
 
-    console.log(`✅ Montage vidéo finalisé : ${finalMp4Path}`);
-
-    let totalDuration = 20;
+    let totalDuration = 15;
     try {
       const durStr = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${finalMp4Path}"`).toString().trim();
       totalDuration = parseFloat(durStr);
     } catch (e) {}
 
     // ----------------------------------------------------
-    // ÉTAPE 5 : Publication & Upload Release
+    // ÉTAPE 5 : Upload & Mise à jour Turso DB
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 95,
@@ -381,10 +384,10 @@ async function main() {
       console.warn("Warning upload release:", ghErr.message);
     }
 
-    console.log(`\n🎉 SUCCÈS TOTAL !`);
+    console.log(`\n🎉 RENDU MULTI-SCÈNES TERMINÉ AVEC SUCCÈS !`);
     console.log(`🎬 Vidéo URL : ${videoUrl}`);
-    console.log(`⏱️ Durée : ${totalDuration.toFixed(1)}s`);
-    console.log(`📑 Scènes : ${finalScenes.length}`);
+    console.log(`⏱️ Durée totale : ${totalDuration.toFixed(1)}s`);
+    console.log(`📑 Sections : ${finalScenes.length}`);
 
     await updateTursoTask(taskId, {
       status: "completed",

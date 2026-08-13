@@ -409,33 +409,6 @@ const HTML_CONTENT = `<!DOCTYPE html>
       to { transform: rotate(360deg); }
     }
 
-    .scenes-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      width: 100%;
-      max-height: 300px;
-      overflow-y: auto;
-      margin-top: 10px;
-    }
-
-    .scene-item {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 12px;
-      font-size: 12px;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .scene-num {
-      color: #818cf8;
-      font-weight: 700;
-      min-width: 22px;
-    }
-
     .table-container {
       width: 100%;
       overflow-x: auto;
@@ -519,7 +492,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
     <!-- TAB 1 : VIDÉO MULTI-SCÈNES -->
     <div id="tab-video" class="tab-panel active">
       <div class="card">
-        <div class="card-title">🎬 Générateur Vidéo Multi-Scènes (FFmpeg + Voix MagicLight)</div>
+        <div class="card-title">🎬 Générateur Vidéo Multi-Scènes Pipelined (FFmpeg + MagicLight)</div>
         
         <div class="form-group">
           <label>Prompt / Idée de l'histoire</label>
@@ -539,24 +512,26 @@ const HTML_CONTENT = `<!DOCTYPE html>
 
         <div class="form-row">
           <div class="form-group">
+            <label>Nombre de Sections</label>
+            <select id="videoSections">
+              <option value="2">2 Sections (~10-12s)</option>
+              <option value="3">3 Sections (~15-18s)</option>
+              <option value="4" selected>4 Sections (~20-25s)</option>
+              <option value="5">5 Sections (~25-30s)</option>
+              <option value="6">6 Sections (~30-35s)</option>
+            </select>
+          </div>
+          <div class="form-group">
             <label>Format Ratio</label>
             <select id="videoRatio">
               <option value="1" selected>16:9 Paysage</option>
               <option value="2">9:16 Vertical (Reels/TikTok)</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Langue</label>
-            <select id="videoLang">
-              <option value="french" selected>Français</option>
-              <option value="english">Anglais</option>
-              <option value="spanish">Espagnol</option>
-            </select>
-          </div>
         </div>
 
         <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">🚀 Générer la vidéo HD complète</button>
-        <div class="code-preview" id="videoUrlSnippet">Filigrane dynamique : ★ Stanley stawa (changement d'angle à chaque scène)</div>
+        <div class="code-preview" id="videoUrlSnippet">Filigrane dynamique : ★ Stanley stawa (changement d'angle à chaque section)</div>
       </div>
 
       <div class="card">
@@ -761,8 +736,8 @@ const HTML_CONTENT = `<!DOCTYPE html>
     async function generateVideo() {
       const prompt = document.getElementById("videoPrompt").value.trim();
       const initialImage = document.getElementById("videoCharData").value;
+      const sections = document.getElementById("videoSections").value;
       const ratio = document.getElementById("videoRatio").value;
-      const language = document.getElementById("videoLang").value;
       const box = document.getElementById("videoPreviewBox");
       const btn = document.getElementById("btnGenVideo");
 
@@ -780,7 +755,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
         const initData = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/video\`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, initialImage, ratio, language })
+          body: JSON.stringify({ prompt, initialImage, sections, ratio })
         });
 
         const taskId = initData.task_id;
@@ -801,7 +776,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
               box.innerHTML = \`
                 <video class="preview-video" src="\${statusData.video_url}" controls autoplay loop></video>
                 <div class="meta-box">
-                  <div><strong>Durée :</strong> \${statusData.duration}s | <strong>Scènes :</strong> \${statusData.scenes_count} | <strong>Filigrane :</strong> ★ Stanley stawa (Dynamique)</div>
+                  <div><strong>Durée :</strong> \${statusData.duration}s | <strong>Sections :</strong> \${statusData.scenes_count} | <strong>Filigrane :</strong> ★ Stanley stawa (Dynamique)</div>
                   <div><strong>Lien direct MP4 :</strong> <a href="\${statusData.video_url}" target="_blank">\${statusData.video_url}</a></div>
                 </div>
               \`;
@@ -1044,7 +1019,7 @@ module.exports = function handler(req, res) {
       database: "Turso libSQL",
       engine: "GitHub Actions + FFmpeg + MagicLight TTS",
       endpoints: {
-        video: "/stanleystawa/video?prompt=...",
+        video: "/stanleystawa/video?prompt=...&sections=4",
         status: "/stanleystawa/status?task_id=...",
         image: "/stanleystawa/image?prompt=...&ratio=16:9",
         edit: "/stanleystawa/edit",

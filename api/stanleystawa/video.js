@@ -1,5 +1,5 @@
 /**
- * api/stanleystawa/video.js — Déclencheur vidéo avec support personnage initial et cohérence
+ * api/stanleystawa/video.js — Déclencheur vidéo avec choix du nombre de sections
  */
 
 const turso = require("../../lib/turso");
@@ -21,14 +21,15 @@ module.exports = async function handler(req, res) {
     const params = { ...(req.query || {}), ...(req.body || {}) };
     const prompt = (params.prompt || params.text || params.idea || "").trim();
     const initialImage = (params.initialImage || params.image || params.imageUrl || "").trim();
+    const sections = String(params.sections || params.scenes || "4");
+    const ratio = params.ratio || "1";
+    const language = params.language || "french";
 
     if (!prompt) {
       return res.status(400).json({ error: "Le paramètre 'prompt' ou 'text' est requis." });
     }
 
     const taskId = `vid_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-    const ratio = params.ratio || "1";
-    const language = params.language || "french";
 
     // 1. Enregistrement dans Turso DB
     const sql = `
@@ -37,7 +38,7 @@ module.exports = async function handler(req, res) {
     `;
     await turso.execute(sql, [taskId, prompt]);
 
-    // 2. Déclenchement du worker GitHub Actions
+    // 2. Déclenchement du worker GitHub Actions avec le nombre de sections choisi
     const ghHeaders = {
       "Authorization": `token ${GITHUB_TOKEN}`,
       "Accept": "application/vnd.github.v3+json",
@@ -55,7 +56,8 @@ module.exports = async function handler(req, res) {
             task_id: taskId,
             prompt,
             ratio: String(ratio),
-            language
+            language,
+            sections: String(sections)
           }
         })
       });
@@ -70,8 +72,9 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       status: "queued",
       task_id: taskId,
+      sections: parseInt(sections, 10),
       check_url: checkUrl,
-      message: "Rendu vidéo multi-scènes lancé avec filigrane dynamique 'Stanley stawa' et cohérence de personnage."
+      message: `Rendu de ${sections} sections initié avec parallélisation 1.5s, filigrane dynamique 'Stanley stawa' et audio explicite.`
     });
 
   } catch (err) {
