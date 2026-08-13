@@ -466,18 +466,6 @@
       background: #064e3b;
       color: #6ee7b7;
     }
-
-    .code-preview {
-      background: #000;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px;
-      font-family: monospace;
-      font-size: 11px;
-      color: #34d399;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
   </style>
 </head>
 <body>
@@ -512,10 +500,10 @@
     <!-- 1. TAB VIDEO -->
     <div id="tab-video" class="tab-panel active">
       <div class="card">
-        <div class="card-title">🚀 Génération Vidéo IA Multi-Scènes (Optimisée)</div>
+        <div class="card-title">🚀 Génération Vidéo IA Multi-Scènes (Cohérence 100%)</div>
         <div class="form-group">
           <label>Histoire / Scénario / Prompt Vidéo</label>
-          <textarea id="videoPrompt" placeholder="Décrivez l'histoire (ex: Un petit renard curieux explore une forêt scintillante)">Un petit chaton blanc aux yeux bleus qui explore un jardin magique</textarea>
+          <textarea id="videoPrompt" placeholder="Décrivez l'histoire (ex: Un jeune aventurier découvre un grimoire magique)">Un jeune aventurier courageux avec une cape rouge découvre un grimoire magique dans une bibliothèque antique</textarea>
         </div>
 
         <div class="form-group">
@@ -530,12 +518,15 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label>Nombre de Sections (2 à 6)</label>
+            <label>Nombre de Sections (2 à 10+)</label>
             <select id="videoSections">
-              <option value="2" selected>2 Sections (Recommandé ~1.5 Mo)</option>
+              <option value="2" selected>2 Sections (~1.5 Mo)</option>
               <option value="3">3 Sections (~2.2 Mo)</option>
               <option value="4">4 Sections (~2.9 Mo)</option>
+              <option value="5">5 Sections (~3.5 Mo)</option>
               <option value="6">6 Sections (Film complet ~4 Mo)</option>
+              <option value="8">8 Sections (Histoire longue)</option>
+              <option value="10">10 Sections (Épisode complet)</option>
             </select>
           </div>
           <div class="form-group">
@@ -571,7 +562,7 @@
       <div class="card">
         <div class="card-title">📺 Lecteur & Résultat Vidéo</div>
         <div id="videoPreviewBox" class="preview-box">
-          <div class="preview-placeholder">La vidéo finale s'affichera ici dès la fin du rendu.<br>Filigrane dynamique <strong>★ Stanley stawa</strong> et streaming instantané.</div>
+          <div class="preview-placeholder">La vidéo finale s'affichera ici dès la fin du rendu.<br>Cohérence personnage 100% avec filigrane dynamique <strong>★ Stanley stawa</strong>.</div>
         </div>
       </div>
     </div>
@@ -606,7 +597,7 @@
     <!-- 3. TAB EDIT -->
     <div id="tab-edit" class="tab-panel">
       <div class="card">
-        <div class="card-title">✨ Retouche d'Image & Cohérence Visuelle</div>
+        <div class="card-title">✨ Retouche d'Image & Cohérence Visuelle (/edit)</div>
         <div class="form-group">
           <label>Image Source (Upload ou URL)</label>
           <div class="upload-box" onclick="document.getElementById('editFile').click()">
@@ -634,7 +625,7 @@
     <!-- 4. TAB STORY -->
     <div id="tab-story" class="tab-panel">
       <div class="card">
-        <div class="card-title">📖 Découpage & Expansion de Scénario IA</div>
+        <div class="card-title">📖 Découpage & Expansion de Scénario IA (MagicLight)</div>
         <div class="form-group">
           <label>Idée ou Résumé</label>
           <textarea id="storyIdea" placeholder="Une courte idée d'histoire...">Une aventure magique dans un château volant dans les nuages</textarea>
@@ -736,7 +727,7 @@
       return data;
     }
 
-    // --- 1. VIDEO PIPELINED GENERATION ---
+    // --- 1. VIDEO GENERATION ---
     async function generateVideo() {
       const prompt = document.getElementById("videoPrompt").value.trim();
       const initialImage = document.getElementById("videoCharData").value;
@@ -752,8 +743,8 @@
       btn.disabled = true;
       box.innerHTML = `
         <div class="loader"></div>
-        <div id="progressLabel" style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">Initialisation du rendu vidéo...</div>
-        <div id="progressDetail" style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Préparation des sections animées et compression ultra-légère...</div>
+        <div id="progressLabel" style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">Initialisation de la production vidéo...</div>
+        <div id="progressDetail" style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Scénarisation MagicLight IA & cohérence personnage...</div>
         <div class="progress-bar-wrap"><div id="progressBar" class="progress-bar-fill" style="width: 15%"></div></div>
       `;
 
@@ -767,7 +758,7 @@
         const taskId = initRes.task_id;
         let isDone = false;
 
-        for (let attempts = 0; attempts < 120; attempts++) {
+        for (let attempts = 0; attempts < 140; attempts++) {
           await new Promise(r => setTimeout(r, 4000));
 
           try {

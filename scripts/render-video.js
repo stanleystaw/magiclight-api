@@ -1,11 +1,11 @@
 /**
- * scripts/render-video.js — Moteur de rendu vidéo Ultra-Optimisé Multi-Scènes avec :
- * 1. Animation IA Text-to-Video via vercel-animate-api (attente complète du rendu avec voix intégrée)
- * 2. Cohérence absolue du personnage (image uploadée obligatoire en référence ou générée en Scène 1)
- * 3. Parallélisation décalée de 1.5s pour les retouches d'images (/edit)
- * 4. Pipelining : Dès qu'une image est prête, déclenchement immédiat de l'animation vercel-animate-api
- * 5. Compression H.264 haute efficacité (-crf 27, -movflags +faststart) pour un poids plume (< 2 MB par défaut)
- * 6. Filigrane dynamique "★ Stanley stawa" par superposition PNG alpha (100% universel et non rognable)
+ * scripts/render-video.js — Moteur de rendu vidéo IA Multi-Scènes avec :
+ * 1. Scénario IA & Découpage officiel via MagicLight API (avec Token Turso Pool)
+ * 2. Cohérence absolue du personnage via Creative Studio /edit (Image Uploadée ou Scène 1)
+ * 3. Proxy d'images public Vercel pour alimenter vercel-animate-api même sur dépôt privé
+ * 4. Animation pipelinée vercel-animate-api avec audio vocal natif synchronisé
+ * 5. Filigrane dynamique "★ Stanley stawa" par superposition PNG alpha (6 positions rotatives)
+ * 6. Compression H.264 ultra-optimisée (< 2 Mo par défaut) et FastStart Web
  */
 
 const fs = require("fs");
@@ -20,6 +20,7 @@ const REPO = process.env.GITHUB_REPOSITORY || "foctaveluka-eng/magiclight-api";
 const MAGICLIGHT_API = "https://api.magiclight.ai";
 const CREATIVE_STUDIO_API = "https://creative-image-studio.onrender.com";
 const ANIMATE_API = "https://vercel-animate-api.vercel.app";
+const VERCEL_PUBLIC_HOST = "https://magiclight-api.vercel.app";
 
 async function executeTurso(sql, args = []) {
   let url = TURSO_URL.replace("libsql://", "https://");
@@ -48,6 +49,19 @@ async function executeTurso(sql, args = []) {
     row.forEach((cell, idx) => obj[cols[idx]] = cell.value);
     return obj;
   });
+}
+
+async function getMagicLightToken() {
+  try {
+    const rows = await executeTurso("SELECT access_token, email FROM magiclight_accounts WHERE status = 'active' AND credits > 0 ORDER BY credits DESC LIMIT 1;");
+    if (rows.length && rows[0].access_token) {
+      console.log(`🔑 [Auth MagicLight] Utilisation du compte pool: ${rows[0].email}`);
+      return rows[0].access_token;
+    }
+  } catch (err) {
+    console.warn("Erreur lecture token Turso:", err.message);
+  }
+  return null;
 }
 
 async function updateTursoTask(taskId, fields) {
@@ -87,6 +101,94 @@ async function downloadFile(url, destPath) {
   fs.writeFileSync(destPath, Buffer.from(arrayBuffer));
 }
 
+// Upload d'un asset (vidéo ou image) sur GitHub Releases
+async function uploadReleaseAsset(assetName, filePath, mimeType = "application/octet-stream") {
+  try {
+    // 1. Récupération de la release
+    const relRes = await (await fetch(`https://api.github.com/repos/${REPO}/releases/tags/v1.0.0-videos`, {
+      headers: { "Authorization": `token ${GITHUB_TOKEN}`, "User-Agent": "MagicLight-Pipeline" }
+    })).json();
+
+    if (!relRes.id) {
+      execSync(`gh release view v1.0.0-videos --repo ${REPO} || gh release create v1.0.0-videos --repo ${REPO} --title "MagicLight AI Storage" --notes "Secure Video & Image Assets"`, {
+        env: { ...process.env, GH_TOKEN: GITHUB_TOKEN }
+      });
+    }
+
+    // 2. Suppression de l'asset si existant
+    const existing = (relRes.assets || []).find(a => a.name === assetName);
+    if (existing) {
+      await fetch(`https://api.github.com/repos/${REPO}/releases/assets/${existing.id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `token ${GITHUB_TOKEN}`, "User-Agent": "MagicLight-Pipeline" }
+      });
+    }
+
+    // 3. Upload du binaire
+    const uploadUrl = `https://uploads.github.com/repos/${REPO}/releases/${relRes.id}/assets?name=${encodeURIComponent(assetName)}`;
+    const fileBuf = fs.readFileSync(filePath);
+
+    const upRes = await fetch(uploadUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `token ${GITHUB_TOKEN}`,
+        "Content-Type": mimeType,
+        "Content-Length": fileBuf.length,
+        "User-Agent": "MagicLight-Pipeline"
+      },
+      body: fileBuf
+    });
+
+    if (upRes.ok) {
+      console.log(` ☁️ Asset [${assetName}] synchronisé sur GitHub Storage.`);
+      return true;
+    }
+  } catch (err) {
+    // Fallback CLI
+    try {
+      execSync(`gh release upload v1.0.0-videos "${filePath}" --repo ${REPO} --clobber`, {
+        env: { ...process.env, GH_TOKEN: GITHUB_TOKEN }
+      });
+      console.log(` ☁️ Asset [${assetName}] uploadé via gh CLI.`);
+      return true;
+    } catch (e) {
+      console.warn(`Erreur upload asset ${assetName}:`, e.message);
+    }
+  }
+  return false;
+}
+
+// Partitionnement des phrases générées par MagicLight en N sections équilibrées
+function partitionSentences(sentences, n) {
+  if (!sentences || !sentences.length) return [];
+  if (sentences.length <= n) {
+    const result = [...sentences];
+    while (result.length < n) {
+      let longestIdx = 0;
+      for (let i = 1; i < result.length; i++) {
+        if (result[i].length > result[longestIdx].length) longestIdx = i;
+      }
+      const words = result[longestIdx].split(" ");
+      if (words.length <= 4) break;
+      const mid = Math.floor(words.length / 2);
+      const part1 = words.slice(0, mid).join(" ");
+      const part2 = words.slice(mid).join(" ");
+      result.splice(longestIdx, 1, part1, part2);
+    }
+    return result.slice(0, n);
+  }
+
+  const sections = [];
+  const chunkSize = sentences.length / n;
+  for (let i = 0; i < n; i++) {
+    const start = Math.floor(i * chunkSize);
+    const end = Math.floor((i + 1) * chunkSize);
+    const chunk = sentences.slice(start, end);
+    sections.push(chunk.join(" "));
+  }
+  return sections;
+}
+
 // Création de l'overlay PNG (Filigrane Stanley stawa + Sous-titres) via Python Pillow avec polices TrueType
 function createOverlayPng(width, height, sectionIndex, sceneText, outputPath) {
   const pyScript = `
@@ -109,6 +211,7 @@ try:
 except Exception:
     font_wm = font_sub1 = font_sub2 = ImageFont.load_default()
 
+# 6 positions alternées pour filigrane dynamique
 positions = ['top-left', 'top-right', 'bottom-right', 'bottom-left', 'center-right', 'center-left']
 pos = positions[idx % len(positions)]
 
@@ -119,9 +222,11 @@ elif pos == 'bottom-left': x, y = 30, h - 160
 elif pos == 'center-right': x, y = w - 280, h // 2 - 25
 else: x, y = 30, h // 2 - 25
 
+# Badge Filigrane Stanley stawa
 d.rounded_rectangle([x, y, x + 250, y + 46], radius=10, fill=(10, 15, 25, 220), outline=(124, 240, 196, 255), width=2)
 d.text((x + 125, y + 23), '★ Stanley stawa', fill=(124, 240, 196, 255), font=font_wm, anchor='mm')
 
+# Barre de Sous-titres
 sub_y = h - 120
 d.rounded_rectangle([30, sub_y, w - 30, sub_y + 90], radius=14, fill=(0, 0, 0, 210), outline=(255, 255, 255, 50), width=1)
 
@@ -144,14 +249,14 @@ img.save(out, 'PNG', optimize=True)
 
 async function main() {
   const taskId = process.env.TASK_ID || `vid_${Date.now()}`;
-  const prompt = process.env.PROMPT || "Un petit chaton blanc aux yeux bleus qui explore un jardin magique";
+  const prompt = process.env.PROMPT || "Un jeune aventurier courageux avec une cape rouge découvre un grimoire magique dans une bibliothèque antique";
   const language = process.env.LANGUAGE || "french";
-  const sectionsRequested = Math.min(6, Math.max(2, parseInt(process.env.SECTIONS || process.env.SCENES || "2", 10)));
+  const sectionsRequested = Math.max(2, parseInt(process.env.SECTIONS || process.env.SCENES || "2", 10));
   const quality = process.env.QUALITY || "medium"; // low, medium, high
   const animDuration = parseInt(process.env.DURATION || "5", 10);
   const ratio = parseInt(process.env.RATIO || "1", 10);
 
-  // Configuration de résolution et encodage ultra-optimisé en Mo
+  // Configuration de compression haute efficacité
   let outWidth = ratio === 2 ? 720 : 1280;
   let outHeight = ratio === 2 ? 1280 : 720;
   let encCrf = "27";
@@ -189,13 +294,13 @@ async function main() {
   } catch (err) {}
 
   console.log(`\n======================================================`);
-  console.log(`🚀 [MagicLight Pipelined Engine] Task ID: ${taskId}`);
+  console.log(`🚀 [MagicLight Multi-Scene Engine] Task ID: ${taskId}`);
   console.log(`📝 Prompt: "${prompt}"`);
   console.log(`📑 Sections demandées: ${sectionsRequested}`);
   console.log(`🎯 Qualité: ${quality} (CRF: ${encCrf}, MaxRate: ${encMaxrate}) | Durée/sec: ${animDuration}s`);
-  console.log(`🖼️ Personnage: ${initialImage ? "Image fournie (obligatoire)" : "Génération IA requise"}`);
+  console.log(`🖼️ Personnage: ${initialImage ? "Image fournie (référence obligatoire)" : "Génération IA requise"}`);
   console.log(`📐 Format: ${outWidth}x${outHeight} (${ratioStr})`);
-  console.log(`⚡ Streaming: FastStart Moov Atom + MP4 YUV420P`);
+  console.log(`🔒 Dépôt GitHub Privé — Streaming via Proxy Vercel`);
   console.log(`======================================================\n`);
 
   const workDir = path.join("/tmp", taskId);
@@ -203,52 +308,69 @@ async function main() {
 
   try {
     // ----------------------------------------------------
-    // ÉTAPE 1 : Scénarisation IA & Dialogues explicites
+    // ÉTAPE 1 : Scénarisation IA MagicLight Authentifiée
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       status: "processing",
       progress: 15,
       step: "story",
-      message: `Découpage du scénario en ${sectionsRequested} sections et dialogues pour l'animation IA...`
+      message: `Génération du scénario et dialogues IA (${sectionsRequested} sections)...`
     });
 
+    const mlToken = await getMagicLightToken();
     let scenes = [];
     let storyTitle = "Aventure Magique";
 
-    try {
-      const expRes = await (await fetch(`${MAGICLIGHT_API}/api/project/story-expand`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "User-Agent": "Mozilla/5.0" },
-        body: JSON.stringify({ text: prompt, language })
-      })).json();
+    if (mlToken) {
+      try {
+        console.log("📜 1. Expansion du scénario via MagicLight IA...");
+        const expRes = await (await fetch(`${MAGICLIGHT_API}/api/project/story-expand`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${mlToken}`,
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0"
+          },
+          body: JSON.stringify({ text: prompt, language })
+        })).json();
 
-      const expandedText = expRes.data?.expanded_story || prompt;
+        const expandedStory = expRes.data?.expanded_story || prompt;
+        console.log(` ✨ Histoire développée : "${expandedStory.slice(0, 120)}..."`);
 
-      const deconRes = await (await fetch(`${MAGICLIGHT_API}/api/project/deconstruction`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "User-Agent": "Mozilla/5.0" },
-        body: JSON.stringify({ text: expandedText, language, styleId: "5001" })
-      })).json();
+        console.log("📑 2. Déconstruction multi-scènes via MagicLight IA...");
+        const deconRes = await (await fetch(`${MAGICLIGHT_API}/api/project/deconstruction`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${mlToken}`,
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0"
+          },
+          body: JSON.stringify({ text: expandedStory, language, styleId: "5001" })
+        })).json();
 
-      scenes = deconRes.data?.sentences || [];
-      storyTitle = deconRes.data?.title || storyTitle;
-    } catch (e) {
-      console.warn("Fallback découpage:", e.message);
+        if (deconRes.data?.sentences && deconRes.data.sentences.length) {
+          scenes = deconRes.data.sentences;
+          storyTitle = deconRes.data.title || storyTitle;
+          console.log(` ✅ ${scenes.length} phrases brutes extraites par MagicLight IA pour "${storyTitle}"`);
+        }
+      } catch (mlErr) {
+        console.warn("Erreur API MagicLight:", mlErr.message);
+      }
     }
 
-    if (!scenes || scenes.length < sectionsRequested) {
+    if (!scenes || !scenes.length) {
       scenes = [
-        `Regardez ce magnifique jardin, une grande aventure commence !`,
+        `Regardez ce magnifique spectacle, une grande aventure commence !`,
         `J'avance avec courage et je découvre un secret extraordinaire.`,
         `Tout s'illumine autour de moi dans un éclat de magie pure !`,
-        `Cette aventure restera gravée pour toujours dans nos cœurs.`,
-        `Le soleil se couche doucement sur ce lieu enchanté.`,
-        `Nous reviendrons très bientôt pour de nouvelles découvertes.`
+        `Cette aventure restera gravée pour toujours dans nos mémoires.`
       ];
     }
 
-    const finalScenes = scenes.slice(0, sectionsRequested);
-    console.log(`✅ ${finalScenes.length} sections préparées pour "${storyTitle}"`);
+    // Partitionnement en exactement N sections demandées
+    const finalScenes = partitionSentences(scenes, sectionsRequested);
+    console.log(`\n🎬 ${finalScenes.length} sections finales prêtes pour la production :`);
+    finalScenes.forEach((s, i) => console.log(`   [Section ${i + 1}] ${s}`));
 
     // ----------------------------------------------------
     // ÉTAPE 2 : Création du Personnage de Référence (Scène 1)
@@ -256,15 +378,14 @@ async function main() {
     await updateTursoTask(taskId, {
       progress: 30,
       step: "character_init",
-      message: "Préparation du personnage de référence obligatoire pour le projet..."
+      message: "Préparation du personnage de référence (cohérence 100%)..."
     });
 
     const refImagePath = path.join(workDir, "ref_character.jpg");
-    let refImageUrl = "";
     let refImageBase64 = "";
 
     if (initialImage) {
-      console.log("📥 Utilisation de l'image de personnage fournie par l'utilisateur...");
+      console.log("\n📥 Utilisation de l'image de personnage fournie en entrée...");
       if (initialImage.startsWith("data:image")) {
         const b64Data = initialImage.replace(/^data:image\/\w+;base64,/, "");
         fs.writeFileSync(refImagePath, Buffer.from(b64Data, "base64"));
@@ -273,21 +394,25 @@ async function main() {
         await downloadFile(initialImage, refImagePath);
         refImageBase64 = `data:image/jpeg;base64,${fs.readFileSync(refImagePath).toString("base64")}`;
       }
-      refImageUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(prompt)}&ratio=${ratioStr}`;
     } else {
-      console.log("🎨 Génération du personnage de référence (Scène 1) via Creative Studio...");
-      refImageUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(prompt + ", single character, portrait cinematic masterpiece, 8k")}&ratio=${ratioStr}`;
-      await downloadFile(refImageUrl, refImagePath);
+      console.log("\n🎨 Génération du personnage de référence (Scène 1) via Creative Studio...");
+      const genUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(prompt + ", single character portrait, cinematic lighting, 8k masterpiece")}&ratio=${ratioStr}`;
+      await downloadFile(genUrl, refImagePath);
       refImageBase64 = `data:image/jpeg;base64,${fs.readFileSync(refImagePath).toString("base64")}`;
     }
 
+    // Upload du personnage Scène 1 sur Release pour proxy public Vercel
+    const scene1AssetName = `${taskId}_scene_1.jpg`;
+    await uploadReleaseAsset(scene1AssetName, refImagePath, "image/jpeg");
+    const scene1PublicUrl = `${VERCEL_PUBLIC_HOST}/stanleystawa/download?name=${scene1AssetName}`;
+
     // ----------------------------------------------------
-    // ÉTAPE 3 : Pipeline Parallélisé & Animation avec Voix
+    // ÉTAPE 3 : Pipeline de Retouche (/edit) & Animation
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 45,
       step: "animation_pipeline",
-      message: `Animation de ${finalScenes.length} sections avec vercel-animate-api et filigrane Stanley stawa...`
+      message: `Production de ${finalScenes.length} scènes avec cohérence personnage et filigrane Stanley stawa...`
     });
 
     console.log(`\n⚡ Lancement de ${finalScenes.length} sections pipelinées...`);
@@ -297,7 +422,7 @@ async function main() {
     const sceneClips = new Array(finalScenes.length);
 
     sceneImages[0] = refImagePath;
-    sceneImageUrls[0] = refImageUrl;
+    sceneImageUrls[0] = scene1PublicUrl;
 
     async function processSection(index) {
       const sceneText = finalScenes[index].trim();
@@ -305,10 +430,13 @@ async function main() {
       let sceneImgUrl = "";
 
       if (index === 0) {
-        sceneImgUrl = refImageUrl;
+        sceneImgUrl = scene1PublicUrl;
       } else {
-        await new Promise(r => setTimeout(r, (index - 1) * 1500));
-        console.log(` 🎨 [Section ${index + 1}/${finalScenes.length}] Retouche /edit pour cohérence personnage...`);
+        // Décalage pour respecter le serveur Creative Studio
+        await new Promise(r => setTimeout(r, (index - 1) * 2000));
+        console.log(` 🎨 [Section ${index + 1}/${finalScenes.length}] Retouche /edit pour cohérence du personnage...`);
+
+        const visualEditPrompt = `Exact same character as in reference image: ${sceneText}, cinematic lighting, highly detailed environment, 8k masterpiece`;
 
         try {
           const editRes = await fetch(`${CREATIVE_STUDIO_API}/edit`, {
@@ -316,7 +444,7 @@ async function main() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               image: refImageBase64,
-              prompt: `Exact same character as in reference: ${sceneText}, cinematic lighting, 8k masterpiece`,
+              prompt: visualEditPrompt,
               ratio: ratioStr
             })
           });
@@ -324,15 +452,23 @@ async function main() {
           if (editRes.ok) {
             const arrBuf = await editRes.arrayBuffer();
             fs.writeFileSync(sceneImgPath, Buffer.from(arrBuf));
-            sceneImgUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(sceneText)}&ratio=${ratioStr}`;
+            console.log(` ✨ [Section ${index + 1}] Image retouchée avec succès (même personnage) !`);
           } else {
-            sceneImgUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(sceneText)}&ratio=${ratioStr}`;
-            await downloadFile(sceneImgUrl, sceneImgPath);
+            console.warn(` [Section ${index + 1}] Retouche échouée (${editRes.status}), génération visuelle...`);
+            const fallbackUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(visualEditPrompt)}&ratio=${ratioStr}`;
+            await downloadFile(fallbackUrl, sceneImgPath);
           }
         } catch (e) {
-          sceneImgUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(sceneText)}&ratio=${ratioStr}`;
-          await downloadFile(sceneImgUrl, sceneImgPath);
+          console.warn(` [Section ${index + 1}] Exception retouche:`, e.message);
+          const fallbackUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(visualEditPrompt)}&ratio=${ratioStr}`;
+          await downloadFile(fallbackUrl, sceneImgPath);
         }
+
+        // Upload de l'image de scène sur release pour proxy public
+        const sceneAssetName = `${taskId}_scene_${index + 1}.jpg`;
+        await uploadReleaseAsset(sceneAssetName, sceneImgPath, "image/jpeg");
+        sceneImgUrl = `${VERCEL_PUBLIC_HOST}/stanleystawa/download?name=${sceneAssetName}`;
+
         sceneImages[index] = sceneImgPath;
         sceneImageUrls[index] = sceneImgUrl;
       }
@@ -347,7 +483,8 @@ async function main() {
 
       // Appel de vercel-animate-api et attente complète
       try {
-        const animRes = await (await fetch(`${ANIMATE_API}/stanleystawa/video?imageUrl=${encodeURIComponent(sceneImageUrls[index])}&prompt=${encodeURIComponent(explicitSpeechPrompt)}&duration=${animDuration}&quality=${quality}&format=json`)).json();
+        const animReqUrl = `${ANIMATE_API}/stanleystawa/video?imageUrl=${encodeURIComponent(sceneImageUrls[index])}&prompt=${encodeURIComponent(explicitSpeechPrompt)}&duration=${animDuration}&quality=${quality}&format=json`;
+        const animRes = await (await fetch(animReqUrl)).json();
 
         if (animRes.checkUrl) {
           console.log(` ⏳ [Section ${index + 1}] Animation en cours sur vercel-animate-api...`);
@@ -355,7 +492,7 @@ async function main() {
             await new Promise(r => setTimeout(r, 3000));
             const pollData = await (await fetch(animRes.checkUrl)).json();
             if (pollData.status === "READY" && pollData.videoUrl) {
-              console.log(` 🎉 [Section ${index + 1}] Vidéo IA avec audio générée par vercel-animate-api !`);
+              console.log(` 🎉 [Section ${index + 1}] Vidéo IA avec voix générée par vercel-animate-api !`);
               await downloadFile(pollData.videoUrl, rawClipDownloaded);
               animatedVideoDownloaded = true;
               break;
@@ -368,21 +505,27 @@ async function main() {
         console.warn(`[Section ${index + 1}] Erreur appel animate-api:`, animErr.message);
       }
 
-      // Fallback fluide si animate-api échoue
+      // Fallback fluide : Zoompan IA + Voix TTS MagicLight
       if (!animatedVideoDownloaded) {
         console.log(` ⚙️ [Section ${index + 1}] Fallback animation fluide + MagicLight TTS...`);
         const audioFile = path.join(workDir, `voice_${index + 1}.mp3`);
-        try {
-          const vRes = await (await fetch(`${MAGICLIGHT_API}/api/voice`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "User-Agent": "Mozilla/5.0" },
-            body: JSON.stringify({ text: sceneText, voiceId: "MM:lengdan_xiongzhang" })
-          })).json();
+        if (mlToken) {
+          try {
+            const vRes = await (await fetch(`${MAGICLIGHT_API}/api/voice`, {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${mlToken}`,
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0"
+              },
+              body: JSON.stringify({ text: sceneText, voiceId: "MM:lengdan_xiongzhang" })
+            })).json();
 
-          if (vRes.data?.data?.url) {
-            await downloadFile(vRes.data.data.url, audioFile);
-          }
-        } catch (err) {}
+            if (vRes.data?.data?.url) {
+              await downloadFile(vRes.data.data.url, audioFile);
+            }
+          } catch (err) {}
+        }
 
         if (!fs.existsSync(audioFile)) {
           execSync(`ffmpeg -y -f lavfi -i anullsrc=r=44100:cl=mono -t ${animDuration} "${audioFile}" -loglevel error`);
@@ -450,7 +593,7 @@ async function main() {
     const finalSizeMb = (fs.statSync(finalMp4Path).size / (1024 * 1024)).toFixed(2);
     console.log(`✅ Montage vidéo finalisé : ${finalMp4Path} (Poids: ${finalSizeMb} Mo)`);
 
-    let totalDuration = 20.0;
+    let totalDuration = 10.0;
     try {
       const durStr = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${finalMp4Path}"`).toString().trim();
       totalDuration = parseFloat(durStr);
@@ -465,24 +608,13 @@ async function main() {
       message: `Publication de la vidéo finale (${finalSizeMb} Mo)...`
     });
 
-    const releaseTag = "v1.0.0-videos";
     const assetName = `${taskId}.mp4`;
     const finalAssetPath = path.join(workDir, assetName);
     fs.copyFileSync(finalMp4Path, finalAssetPath);
 
-    const videoUrl = `https://magiclight-api.vercel.app/stanleystawa/download?task_id=${taskId}`;
+    await uploadReleaseAsset(assetName, finalAssetPath, "video/mp4");
 
-    try {
-      execSync(`gh release view ${releaseTag} --repo ${REPO} || gh release create ${releaseTag} --repo ${REPO} --title "MagicLight AI Videos" --notes "Public video storage"`, {
-        env: { ...process.env, GH_TOKEN: GITHUB_TOKEN }
-      });
-      execSync(`gh release upload ${releaseTag} "${finalAssetPath}" --repo ${REPO} --clobber`, {
-        env: { ...process.env, GH_TOKEN: GITHUB_TOKEN }
-      });
-      console.log("✅ Asset MP4 uploadé sur GitHub Releases !");
-    } catch (ghErr) {
-      console.warn("Warning upload release:", ghErr.message);
-    }
+    const videoUrl = `${VERCEL_PUBLIC_HOST}/stanleystawa/download?task_id=${taskId}`;
 
     console.log(`\n🎉 RENDU MULTI-SCÈNES TERMINÉ AVEC SUCCÈS !`);
     console.log(`🎬 Vidéo URL : ${videoUrl}`);
