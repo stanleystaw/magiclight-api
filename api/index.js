@@ -1,5 +1,5 @@
 /**
- * api/index.js — Dashboard & Console de Test Interactive MagicLight Studio
+ * api/index.js — Dashboard & Console de Test Interactive Stanley Stawa AI Studio
  */
 
 const HTML_CONTENT = `<!DOCTYPE html>
@@ -7,7 +7,19 @@ const HTML_CONTENT = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>MagicLight AI Studio — Testeur d'API</title>
+  <title>★ Stanley Stawa — MagicLight AI Studio</title>
+  
+  <!-- Meta tags de partage (Facebook, Messenger, WhatsApp, Twitter) -->
+  <meta name="description" content="Stanley Stawa AI Studio — Plateforme de Génération Vidéo IA Multi-Scènes, Synthèse Vocale et Création Visuelle HD par Stanley Stawa.">
+  <meta name="author" content="Stanley Stawa">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="★ Stanley Stawa — MagicLight AI Studio">
+  <meta property="og:description" content="Créez des films IA complets avec dialogues parlés, cohérence du personnage et filigrane officiel ★ Stanley stawa.">
+  <meta property="og:site_name" content="Stanley Stawa AI Studio">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="★ Stanley Stawa — MagicLight AI Studio">
+  <meta name="twitter:description" content="Plateforme de Génération Vidéo et Création IA par Stanley Stawa.">
+
   <style>
     :root {
       --bg-base: #0b0f19;
@@ -19,6 +31,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
       --primary-glow: rgba(99, 102, 241, 0.25);
       --accent: #ec4899;
       --success: #10b981;
+      --stanley-neon: #7cf0c4;
       --text-main: #f9fafb;
       --text-muted: #9ca3af;
       --radius: 12px;
@@ -72,8 +85,13 @@ const HTML_CONTENT = `<!DOCTYPE html>
 
     .brand-title h1 {
       font-size: 16px;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: -0.3px;
+      color: #fff;
+    }
+
+    .brand-title h1 span {
+      color: var(--stanley-neon);
     }
 
     .brand-title p {
@@ -88,25 +106,26 @@ const HTML_CONTENT = `<!DOCTYPE html>
       flex-wrap: wrap;
     }
 
-    .badge-turso {
+    .badge-stanley {
       display: flex;
       align-items: center;
       gap: 6px;
-      background: #064e3b;
-      color: #6ee7b7;
-      padding: 5px 10px;
+      background: rgba(124, 240, 196, 0.1);
+      color: var(--stanley-neon);
+      padding: 5px 12px;
       border-radius: 20px;
       font-size: 11px;
-      font-weight: 600;
-      border: 1px solid #059669;
+      font-weight: 700;
+      border: 1px solid rgba(124, 240, 196, 0.4);
+      box-shadow: 0 0 10px rgba(124, 240, 196, 0.15);
     }
 
     .badge-dot {
       width: 7px;
       height: 7px;
-      background: #10b981;
+      background: var(--stanley-neon);
       border-radius: 50%;
-      box-shadow: 0 0 6px #10b981;
+      box-shadow: 0 0 6px var(--stanley-neon);
     }
 
     .base-url-input {
@@ -125,6 +144,41 @@ const HTML_CONTENT = `<!DOCTYPE html>
       margin: 0 auto;
       padding: 16px;
       flex: 1;
+    }
+
+    .hero-banner {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(236, 72, 153, 0.1));
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .hero-banner-text h2 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .hero-banner-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .hero-signature {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--stanley-neon);
+      background: rgba(0,0,0,0.3);
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(124, 240, 196, 0.2);
     }
 
     .tabs-nav {
@@ -338,6 +392,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
       color: var(--text-muted);
       font-size: 13px;
       text-align: center;
+      line-height: 1.5;
     }
 
     .preview-video {
@@ -470,6 +525,21 @@ const HTML_CONTENT = `<!DOCTYPE html>
       background: #064e3b;
       color: #6ee7b7;
     }
+
+    footer {
+      background: rgba(17, 24, 39, 0.95);
+      border-top: 1px solid var(--border);
+      padding: 14px 18px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: auto;
+    }
+
+    footer span {
+      color: var(--stanley-neon);
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
@@ -478,20 +548,29 @@ const HTML_CONTENT = `<!DOCTYPE html>
     <div class="brand">
       <div class="brand-logo">⚡</div>
       <div class="brand-title">
-        <h1>MagicLight AI Studio</h1>
-        <p>Console de Test des API — stanleystawa</p>
+        <h1>★ Stanley Stawa <span>AI Studio</span></h1>
+        <p>Console Officielle de Création & Rendu Vidéo — Stanley Stawa</p>
       </div>
     </div>
     <div class="header-actions">
-      <div class="badge-turso">
+      <div class="badge-stanley">
         <div class="badge-dot"></div>
-        <span id="tursoStats">Turso DB : Actif</span>
+        <span id="tursoStats">★ Stanley Stawa Neural Core</span>
       </div>
       <input type="text" id="apiBaseUrl" class="base-url-input" value="" placeholder="Base URL">
     </div>
   </header>
 
   <div class="container">
+
+    <div class="hero-banner">
+      <div class="hero-banner-text">
+        <h2>🎬 Stanley Stawa Multi-Scene Video Production Engine</h2>
+        <p>Création de films complets par IA avec voix parlée, cohérence personnage absolue et filigrane dynamique.</p>
+      </div>
+      <div class="hero-signature">★ Stanley stawa Verified</div>
+    </div>
+
     <div class="tabs-nav">
       <button class="tab-btn active" onclick="switchTab('video')">🎬 Vidéo Multi-Scènes</button>
       <button class="tab-btn" onclick="switchTab('image')">🎨 Image HD</button>
@@ -504,7 +583,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
     <!-- 1. TAB VIDEO -->
     <div id="tab-video" class="tab-panel active">
       <div class="card">
-        <div class="card-title">🚀 Génération Vidéo IA Multi-Scènes (Cohérence 100%)</div>
+        <div class="card-title">🚀 Génération Vidéo IA par Stanley Stawa</div>
         <div class="form-group">
           <label>Histoire / Scénario / Prompt Vidéo</label>
           <textarea id="videoPrompt" placeholder="Décrivez l'histoire (ex: Un jeune aventurier découvre un grimoire magique)">Un jeune aventurier courageux avec une cape rouge découvre un grimoire magique dans une bibliothèque antique</textarea>
@@ -530,7 +609,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
               <option value="5">5 Sections (~3.5 Mo)</option>
               <option value="6" selected>6 Sections (Film complet ~4 Mo)</option>
               <option value="8">8 Sections (Histoire longue)</option>
-              <option value="10" selected>10 Sections (Épisode complet)</option>
+              <option value="10">10 Sections (Épisode complet)</option>
             </select>
           </div>
           <div class="form-group">
@@ -554,8 +633,8 @@ const HTML_CONTENT = `<!DOCTYPE html>
           <div class="form-group">
             <label>Durée par Section</label>
             <select id="videoDuration">
-              <option value="5">5 secondes (Rapide & Économique)</option>
-              <option value="10">10 secondes</option>
+              <option value="5">5 secondes</option>
+              <option value="10" selected>10 secondes</option>
             </select>
           </div>
         </div>
@@ -566,7 +645,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
       <div class="card">
         <div class="card-title">📺 Lecteur & Résultat Vidéo</div>
         <div id="videoPreviewBox" class="preview-box">
-          <div class="preview-placeholder">La vidéo finale s'affichera ici dès la fin du rendu.<br>Cohérence personnage 100% avec filigrane dynamique <strong>★ Stanley stawa</strong>.</div>
+          <div class="preview-placeholder">La vidéo finale s'affichera ici dès la fin du rendu.<br>Cohérence personnage 100% avec filigrane dynamique officiel <strong>★ Stanley stawa</strong>.</div>
         </div>
       </div>
     </div>
@@ -574,7 +653,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
     <!-- 2. TAB IMAGE -->
     <div id="tab-image" class="tab-panel">
       <div class="card">
-        <div class="card-title">🎨 Génération d'Image Haute Définition</div>
+        <div class="card-title">🎨 Génération d'Image HD — Stanley Stawa Vision</div>
         <div class="form-group">
           <label>Prompt Image</label>
           <textarea id="imagePrompt" placeholder="Description visuelle détaillée">A majestic futuristic cyberpunk warrior with glowing neon armor, 8k masterpiece</textarea>
@@ -593,7 +672,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
       <div class="card">
         <div class="card-title">🖼️ Aperçu de l'Image</div>
         <div id="imagePreviewBox" class="preview-box">
-          <div class="preview-placeholder">L'image générée s'affichera ici.</div>
+          <div class="preview-placeholder">L'image générée par le moteur Stanley Stawa s'affichera ici.</div>
         </div>
       </div>
     </div>
@@ -601,7 +680,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
     <!-- 3. TAB EDIT -->
     <div id="tab-edit" class="tab-panel">
       <div class="card">
-        <div class="card-title">✨ Retouche d'Image & Cohérence Visuelle (/edit)</div>
+        <div class="card-title">✨ Retouche & Cohérence Visuelle — Stanley Stawa</div>
         <div class="form-group">
           <label>Image Source (Upload ou URL)</label>
           <div class="upload-box" onclick="document.getElementById('editFile').click()">
@@ -629,7 +708,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
     <!-- 4. TAB STORY -->
     <div id="tab-story" class="tab-panel">
       <div class="card">
-        <div class="card-title">📖 Découpage & Expansion de Scénario IA (MagicLight)</div>
+        <div class="card-title">📖 Scénarisation IA — Stanley Stawa Story Engine</div>
         <div class="form-group">
           <label>Idée ou Résumé</label>
           <textarea id="storyIdea" placeholder="Une courte idée d'histoire...">Une aventure magique dans un château volant dans les nuages</textarea>
@@ -656,18 +735,18 @@ const HTML_CONTENT = `<!DOCTYPE html>
     <!-- 5. TAB VOICE -->
     <div id="tab-voice" class="tab-panel">
       <div class="card">
-        <div class="card-title">🎙️ Synthèse Vocale Studio Voice IA</div>
+        <div class="card-title">🎙️ Synthèse Vocale HD — Stanley Stawa Voice Core</div>
         <div class="form-group">
           <label>Texte à Synthétiser</label>
-          <textarea id="voiceText" placeholder="Entrez le texte parlé...">Bienvenue dans le studio MagicLight AI. Voici une voix naturelle et ultra-réaliste pour vos projets vidéo.</textarea>
+          <textarea id="voiceText" placeholder="Entrez le texte parlé...">Bienvenue dans le studio Stanley Stawa AI. Voici une voix naturelle et ultra-réaliste pour vos projets vidéo.</textarea>
         </div>
         <div class="form-group">
-          <label>Voix MagicLight</label>
+          <label>Profil Vocal</label>
           <select id="voiceId">
-            <option value="MM:lengdan_xiongzhang" selected>MM:lengdan_xiongzhang (Français / Narration Neutre)</option>
-            <option value="MM:qingse_xuedi">MM:qingse_xuedi (Jeune / Dynamique)</option>
-            <option value="MM:wenrou_xuejie">MM:wenrou_xuejie (Voix Féminine Douce)</option>
-            <option value="MM:baqi_zongcai">MM:baqi_zongcai (Grave / Cinématique)</option>
+            <option value="MM:lengdan_xiongzhang" selected>Voix Principale (Français / Narration Neutre)</option>
+            <option value="MM:qingse_xuedi">Voix Dynamique (Jeune & Expressive)</option>
+            <option value="MM:wenrou_xuejie">Voix Douce (Féminine & Chaleureuse)</option>
+            <option value="MM:baqi_zongcai">Voix Profonde (Grave / Cinématique)</option>
           </select>
         </div>
         <button id="btnVoice" class="btn-submit" onclick="synthesizeVoice()">🔊 Générer la Voix</button>
@@ -684,16 +763,20 @@ const HTML_CONTENT = `<!DOCTYPE html>
     <div id="tab-accounts" class="tab-panel">
       <div class="card" style="grid-column: 1 / -1;">
         <div class="card-title" style="justify-content: space-between;">
-          <span>👥 Pool de Comptes MagicLight (Turso DB)</span>
-          <button class="btn-secondary" onclick="refillAccount()">⚡ Créer un nouveau compte auto (+800 crédits)</button>
+          <span>👥 Pool de Serveurs — Stanley Stawa Engine</span>
+          <button class="btn-secondary" onclick="refillAccount()">⚡ Recharger le Pool (+800 crédits)</button>
         </div>
         <div class="table-container" id="accountsTableContainer">
-          <div style="text-align: center; color: var(--text-muted); padding: 16px;">Chargement des données Turso DB...</div>
+          <div style="text-align: center; color: var(--text-muted); padding: 16px;">Chargement des données...</div>
         </div>
       </div>
     </div>
 
   </div>
+
+  <footer>
+    Plateforme de Génération IA développée par <span>★ Stanley stawa</span> • Tous droits réservés • Moteur Neural v2.5
+  </footer>
 
   <script>
     function getBaseUrl() {
@@ -747,8 +830,8 @@ const HTML_CONTENT = `<!DOCTYPE html>
       btn.disabled = true;
       box.innerHTML = \\`
         <div class="loader"></div>
-        <div id="progressLabel" style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">Initialisation de la production vidéo...</div>
-        <div id="progressDetail" style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Scénarisation MagicLight IA & cohérence personnage...</div>
+        <div id="progressLabel" style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">Initialisation par Stanley Stawa Engine...</div>
+        <div id="progressDetail" style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Scénarisation & cohérence personnage...</div>
         <div class="progress-bar-wrap"><div id="progressBar" class="progress-bar-fill" style="width: 15%"></div></div>
       \\`;
 
@@ -794,7 +877,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
 
               if (pBar) pBar.style.width = pct + "%";
               if (pLbl) pLbl.innerText = \\`Rendu en cours (\\${pct}%)...\\`;
-              if (pDet) pDet.innerText = statusData.message || "Animation des scènes avec FFmpeg...";
+              if (pDet) pDet.innerText = statusData.message || "Animation des scènes avec filigrane Stanley stawa...";
             }
           } catch (e) {
             console.warn("Poll retry...", e);
@@ -821,7 +904,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
       if (!prompt) return alert("Veuillez saisir un prompt pour l'image.");
 
       btn.disabled = true;
-      box.innerHTML = \\`<div class="loader"></div><div>Génération de l'image haute définition via MagicLight Studio AI...</div>\\`;
+      box.innerHTML = \\`<div class="loader"></div><div>Génération de l'image par Stanley Stawa Vision...</div>\\`;
 
       try {
         const data = await safeFetchJson(\\`\\${getBaseUrl()}/stanleystawa/image\\`, {
@@ -834,7 +917,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
           box.innerHTML = \\`
             <img class="preview-img" src="\\${data.image_url}" alt="Image générée">
             <div class="meta-box">
-              <div><strong>Ratio :</strong> \\${data.ratio} | <strong>Moteur :</strong> MagicLight Studio AI</div>
+              <div><strong>Ratio :</strong> \\${data.ratio} | <strong>Moteur :</strong> Stanley Stawa Neural Vision</div>
               <div><strong>Lien direct :</strong> <a href="\\${data.image_url}" target="_blank">\\${data.image_url}</a></div>
             </div>
           \\`;
@@ -860,7 +943,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
       if (!prompt) return alert("Veuillez saisir une consigne de retouche.");
 
       btn.disabled = true;
-      box.innerHTML = \\`<div class="loader"></div><div>Application de la retouche en cours via MagicLight Studio AI...</div>\\`;
+      box.innerHTML = \\`<div class="loader"></div><div>Application de la retouche par Stanley Stawa AI...</div>\\`;
 
       try {
         const data = await safeFetchJson(\\`\\${getBaseUrl()}/stanleystawa/edit\\`, {
@@ -896,20 +979,20 @@ const HTML_CONTENT = `<!DOCTYPE html>
       if (!idea) return alert("Veuillez saisir une idée.");
 
       btn.disabled = true;
-      box.innerHTML = \\`<div class="loader"></div><div>Expansion du scénario et découpage multi-scènes...</div>\\`;
+      box.innerHTML = \\`<div class="loader"></div><div>Scénarisation par Stanley Stawa Story Engine...</div>\\`;
 
       try {
         const data = await safeFetchJson(\\`\\${getBaseUrl()}/stanleystawa/story?idea=\\${encodeURIComponent(idea)}&language=\\${language}\\`);
 
         let scenesHtml = data.scenes.map((s, i) => \\`
-          <div class="scene-item" style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; border-left: 3px solid var(--primary);">
-            <div style="font-weight: 700; color: #818cf8; margin-bottom: 2px;">Section #\\${i+1}</div>
+          <div class="scene-item" style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; border-left: 3px solid var(--stanley-neon);">
+            <div style="font-weight: 700; color: var(--stanley-neon); margin-bottom: 2px;">Section #\\${i+1}</div>
             <div>\\${s}</div>
           </div>
         \\`).join("");
 
         box.innerHTML = \\`
-          <div style="font-weight: 700; font-size: 15px; margin-bottom: 6px; color: #818cf8;">\\${data.title}</div>
+          <div style="font-weight: 700; font-size: 15px; margin-bottom: 6px; color: var(--stanley-neon);">\\${data.title}</div>
           <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">\\${data.expanded_story}</div>
           <div style="font-weight: 600; font-size: 12px; margin-bottom: 6px;">Sections découpées (\\${data.scenes.length}) :</div>
           <div class="scenes-grid">\\${scenesHtml}</div>
@@ -931,7 +1014,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
       if (!text) return alert("Veuillez saisir un texte.");
 
       btn.disabled = true;
-      box.innerHTML = \\`<div class="loader"></div><div>Synthèse vocale en cours...</div>\\`;
+      box.innerHTML = \\`<div class="loader"></div><div>Synthèse vocale en cours par Stanley Stawa Voice Core...</div>\\`;
 
       try {
         const data = await safeFetchJson(\\`\\${getBaseUrl()}/stanleystawa/voice?text=\\${encodeURIComponent(text)}&voice_id=\\${voiceId}\\`);
@@ -940,7 +1023,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
           box.innerHTML = \\`
             <audio class="preview-audio" src="\\${data.audio_url}" controls autoplay></audio>
             <div class="meta-box">
-              <div><strong>Voix :</strong> \\${data.voice_id} | <strong>Compte :</strong> \\${data.account_used}</div>
+              <div><strong>Moteur :</strong> Stanley Stawa Neural Voice HD</div>
               <div><strong>Lien direct audio :</strong> <a href="\\${data.audio_url}" target="_blank">\\${data.audio_url}</a></div>
             </div>
           \\`;
@@ -956,18 +1039,18 @@ const HTML_CONTENT = `<!DOCTYPE html>
     // --- 6. ACCOUNTS & TURSO ---
     async function loadAccounts() {
       const container = document.getElementById("accountsTableContainer");
-      container.innerHTML = \\`<div style="text-align: center; color: var(--text-muted); padding: 16px;"><div class="loader" style="margin: 0 auto 8px;"></div>Chargement des données Turso DB...</div>\\`;
+      container.innerHTML = \\`<div style="text-align: center; color: var(--text-muted); padding: 16px;"><div class="loader" style="margin: 0 auto 8px;"></div>Chargement du cluster Stanley Stawa...</div>\\`;
 
       try {
         const data = await safeFetchJson(\\`\\${getBaseUrl()}/stanleystawa/accounts\\`);
 
-        document.getElementById("tursoStats").innerText = \\`Turso DB : \\${data.total_credits_pool} Crédits (\\${data.active_accounts_count} Comptes)\\`;
+        document.getElementById("tursoStats").innerText = \\`★ Stanley Stawa : \\${data.total_credits_pool} Crédits (\\${data.active_accounts_count} Nœuds)\\`;
 
-        let rowsHtml = data.accounts.map(acc => \\`
+        let rowsHtml = data.accounts.map((acc, idx) => \\`
           <tr>
-            <td><strong>\\${acc.email}</strong></td>
+            <td><strong>Nœud AI #\\${idx + 1}</strong></td>
             <td><span style="font-weight: 700; color: #34d399;">\\${acc.credits}</span> crédits</td>
-            <td><span class="badge-status status-active">\\${acc.status}</span></td>
+            <td><span class="badge-status status-active">Actif & Sécurisé</span></td>
             <td style="color: var(--text-muted);">\\${acc.created_at || '—'}</td>
           </tr>
         \\`).join("");
@@ -976,7 +1059,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
           <table>
             <thead>
               <tr>
-                <th>Adresse E-mail</th>
+                <th>Instance Serveur</th>
                 <th>Solde Crédits</th>
                 <th>Statut</th>
                 <th>Date d'ajout</th>
@@ -988,15 +1071,15 @@ const HTML_CONTENT = `<!DOCTYPE html>
           </table>
         \\`;
       } catch (err) {
-        container.innerHTML = \\`<div style="color: #ef4444; padding: 12px;">❌ Erreur chargement Turso : \\${err.message}</div>\\`;
+        container.innerHTML = \\`<div style="color: #ef4444; padding: 12px;">❌ Erreur chargement : \\${err.message}</div>\\`;
       }
     }
 
     async function refillAccount() {
-      if (!confirm("Voulez-vous créer automatiquement un nouveau compte MagicLight et l'ajouter à Turso ?")) return;
+      if (!confirm("Voulez-vous ajouter un nouveau nœud de calcul au cluster Stanley Stawa ?")) return;
       try {
         const data = await safeFetchJson(\\`\\${getBaseUrl()}/stanleystawa/refill\\`);
-        alert(\\`✅ Compte créé avec succès !\\nE-mail : \\${data.account.email}\\nCrédits : \\${data.account.credits}\\`);
+        alert(\\`✅ Nœud de calcul ajouté avec succès (+\\${data.account.credits} crédits) !\\`);
         loadAccounts();
       } catch (err) {
         alert(\\`❌ Erreur refill: \\${err.message}\\`);
@@ -1015,10 +1098,12 @@ module.exports = function handler(req, res) {
   const accept = req.headers["accept"] || "";
   if (accept.includes("application/json") && !accept.includes("text/html")) {
     return res.status(200).json({
-      name: "MagicLight AI Studio API",
+      name: "★ Stanley Stawa AI Studio API",
+      description: "Plateforme de Génération Vidéo IA Multi-Scènes, Synthèse Vocale et Création Visuelle HD par Stanley Stawa.",
       status: "online",
-      author: "stanleystawa",
+      author: "Stanley Stawa",
       version: "2.5.0",
+      watermark: "★ Stanley stawa",
       endpoints: {
         video: "/stanleystawa/video?prompt=...&imageUrl=...&sections=6&duration=10&quality=medium&format=json",
         status: "/stanleystawa/status?task_id=...",
