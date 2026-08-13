@@ -20,7 +20,7 @@ on:
       sections:
         description: "Number of sections (2 to 6)"
         required: false
-        default: "4"
+        default: "2"
       quality:
         description: "Quality (low, medium, high)"
         required: false
@@ -28,7 +28,7 @@ on:
       duration:
         description: "Duration per section (5 or 10)"
         required: false
-        default: "10"
+        default: "5"
       ratio:
         description: "Ratio (1 for 16:9, 2 for 9:16)"
         required: false
@@ -68,9 +68,9 @@ jobs:
           TASK_ID: ${{ github.event.client_payload.task_id || github.event.inputs.task_id }}
           PROMPT: ${{ github.event.client_payload.prompt || github.event.inputs.prompt }}
           INITIAL_IMAGE: ${{ github.event.client_payload.initial_image || github.event.inputs.initial_image || '' }}
-          SECTIONS: ${{ github.event.client_payload.sections || github.event.inputs.sections || '4' }}
+          SECTIONS: ${{ github.event.client_payload.sections || github.event.inputs.sections || '2' }}
           QUALITY: ${{ github.event.client_payload.quality || github.event.inputs.quality || 'medium' }}
-          DURATION: ${{ github.event.client_payload.duration || github.event.inputs.duration || '10' }}
+          DURATION: ${{ github.event.client_payload.duration || github.event.inputs.duration || '5' }}
           RATIO: ${{ github.event.client_payload.ratio || github.event.inputs.ratio || '1' }}
           LANGUAGE: ${{ github.event.client_payload.language || github.event.inputs.language || 'french' }}
           TURSO_DATABASE_URL: "https://magicligth-stanleystawa354.aws-eu-west-1.turso.io"

@@ -21,9 +21,9 @@ module.exports = async function handler(req, res) {
     const params = { ...(req.query || {}), ...(req.body || {}) };
     const prompt = (params.prompt || params.text || params.idea || "").trim();
     const initialImage = (params.initialImage || params.initial_image || params.image || params.imageUrl || "").trim();
-    const sections = String(params.sections || params.scenes || "4");
+    const sections = String(params.sections || params.scenes || "2"); // 2 sections par défaut pour un poids ultra-léger et un rendu rapide
     const quality = String(params.quality || "medium"); // low, medium, high
-    const duration = String(params.duration || "10");
+    const duration = String(params.duration || "5"); // 5s par section par défaut
     const ratio = params.ratio || "1";
     const language = params.language || "french";
 
@@ -36,7 +36,7 @@ module.exports = async function handler(req, res) {
     // 1. Enregistrement sécurisé dans Turso DB (avec l'image initiale, même en base64 volumineuse)
     const sql = `
       INSERT INTO video_tasks (task_id, prompt, initial_image, status, progress, step, message)
-      VALUES (?, ?, ?, 'queued', 10, 'queued', 'Initialisation du rendu vidéo...');
+      VALUES (?, ?, ?, 'queued', 10, 'queued', 'Initialisation du rendu vidéo ultra-léger...');
     `;
     await turso.execute(sql, [taskId, prompt, initialImage]);
 
@@ -48,7 +48,6 @@ module.exports = async function handler(req, res) {
       "Content-Type": "application/json"
     };
 
-    // Si initialImage est une URL http courte, on la passe dans les inputs, sinon chaîne vide (le worker la lit depuis Turso DB)
     const inputImageUrl = initialImage.startsWith("http") ? initialImage : "";
 
     try {
@@ -90,7 +89,7 @@ module.exports = async function handler(req, res) {
       duration_per_section: parseInt(duration, 10),
       character_image: initialImage ? "Fournie (obligatoire pour le projet)" : "Génération IA",
       check_url: checkUrl,
-      message: `Rendu initié (${sections} sections, qualité ${quality}) avec animation Text-to-Video et filigrane dynamique 'Stanley stawa'.`
+      message: `Rendu initié (${sections} sections, qualité ${quality}) avec compression optimisée et filigrane dynamique 'Stanley stawa'.`
     });
 
   } catch (err) {

@@ -370,13 +370,38 @@ const HTML_CONTENT = `<!DOCTYPE html>
       color: var(--text-muted);
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
     }
 
     .meta-box a {
       color: #818cf8;
       text-decoration: none;
       word-break: break-all;
+    }
+
+    .meta-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .action-pill {
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid var(--primary);
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .action-pill:hover {
+      background: var(--primary);
     }
 
     .progress-bar-wrap {
@@ -472,167 +497,151 @@ const HTML_CONTENT = `<!DOCTYPE html>
     <div class="header-actions">
       <div class="badge-turso">
         <div class="badge-dot"></div>
-        <span id="tursoStats">Turso DB Connecté</span>
+        <span id="tursoStats">Turso DB : Actif</span>
       </div>
-      <input type="text" id="baseUrl" class="base-url-input" placeholder="Base URL de l'API..." value="">
+      <input type="text" id="apiBaseUrl" class="base-url-input" value="" placeholder="Base URL">
     </div>
   </header>
 
   <div class="container">
-
     <div class="tabs-nav">
-      <button class="tab-btn active" onclick="switchTab('video')">🎬 Vidéo Multi-Scènes (HD)</button>
-      <button class="tab-btn" onclick="switchTab('image')">🎨 Image IA HD</button>
-      <button class="tab-btn" onclick="switchTab('edit')">✏️ Retouche Image</button>
+      <button class="tab-btn active" onclick="switchTab('video')">🎬 Vidéo Multi-Scènes</button>
+      <button class="tab-btn" onclick="switchTab('image')">🎨 Image HD</button>
+      <button class="tab-btn" onclick="switchTab('edit')">✨ Retouche & Cohérence</button>
       <button class="tab-btn" onclick="switchTab('story')">📖 Scénario IA</button>
-      <button class="tab-btn" onclick="switchTab('voice')">🎙️ Voix & TTS</button>
-      <button class="tab-btn" onclick="switchTab('accounts')">📊 Comptes Turso</button>
+      <button class="tab-btn" onclick="switchTab('voice')">🎙️ Voix TTS</button>
+      <button class="tab-btn" onclick="switchTab('accounts')">👥 Comptes & Pool</button>
     </div>
 
-    <!-- TAB 1 : VIDÉO MULTI-SCÈNES -->
+    <!-- 1. TAB VIDEO -->
     <div id="tab-video" class="tab-panel active">
       <div class="card">
-        <div class="card-title">🎬 Générateur Vidéo Multi-Scènes (vercel-animate-api + MagicLight)</div>
-        
+        <div class="card-title">🚀 Génération Vidéo IA Multi-Scènes (Optimisée)</div>
         <div class="form-group">
-          <label>Prompt / Idée de l'histoire</label>
-          <textarea id="videoPrompt" placeholder="Ex: Un jeune héros courageux qui explore un temple antique et découvre un trésor magique..."></textarea>
+          <label>Histoire / Scénario / Prompt Vidéo</label>
+          <textarea id="videoPrompt" placeholder="Décrivez l'histoire (ex: Un petit renard curieux explore une forêt scintillante)">Un petit chaton blanc aux yeux bleus qui explore un jardin magique</textarea>
         </div>
 
         <div class="form-group">
-          <label>Image de départ du Personnage (Optionnel)</label>
+          <label>Personnage de Référence (Optionnel — Cohérence garantie 100%)</label>
           <div class="upload-box" onclick="document.getElementById('videoCharFile').click()">
-            <span style="font-size: 18px;">📁</span>
-            <span style="font-size: 12px; color: var(--text-muted);">Cliquez pour uploader une image de personnage (ou laissez vide pour génération IA auto)</span>
-            <img id="videoCharThumb" class="upload-preview-thumb" alt="Aperçu personnage">
+            <input type="file" id="videoCharFile" accept="image/*" style="display:none" onchange="handleImageUpload(event, 'videoCharPreview', 'videoCharData')">
+            <span id="videoCharPlaceholder">📁 Cliquez pour uploader l'image du personnage</span>
+            <img id="videoCharPreview" class="upload-preview-thumb" alt="Aperçu">
           </div>
-          <input type="file" id="videoCharFile" accept="image/*" style="display: none;" onchange="handleFileSelect(event, 'videoCharThumb', 'videoCharData')">
-          <input type="hidden" id="videoCharData" value="">
+          <input type="hidden" id="videoCharData">
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label>Nombre de Sections</label>
+            <label>Nombre de Sections (2 à 6)</label>
             <select id="videoSections">
-              <option value="2">2 Sections</option>
-              <option value="3">3 Sections</option>
-              <option value="4" selected>4 Sections</option>
-              <option value="5">5 Sections</option>
-              <option value="6">6 Sections</option>
+              <option value="2" selected>2 Sections (Recommandé ~1.5 Mo)</option>
+              <option value="3">3 Sections (~2.2 Mo)</option>
+              <option value="4">4 Sections (~2.9 Mo)</option>
+              <option value="6">6 Sections (Film complet ~4 Mo)</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Qualité Vidéo</label>
+            <label>Qualité Vidéo (Compression)</label>
             <select id="videoQuality">
-              <option value="low">Rapide (Low)</option>
-              <option value="medium" selected>Équilibré (Medium)</option>
-              <option value="high">Haute Définition (High)</option>
+              <option value="medium" selected>Medium HD (CRF 27 — Ultra-léger)</option>
+              <option value="low">Low (CRF 29 — Poids plume &lt; 1 Mo)</option>
+              <option value="high">High (CRF 23 — Qualité maximale)</option>
             </select>
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label>Format Ratio</label>
+            <label>Format Vidéo</label>
             <select id="videoRatio">
-              <option value="1" selected>16:9 Paysage</option>
-              <option value="2">9:16 Vertical (Reels/TikTok)</option>
+              <option value="1" selected>16:9 Paysage (YouTube / TV)</option>
+              <option value="2">9:16 Portrait (TikTok / Shorts / Reels)</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Langue</label>
-            <select id="videoLang">
-              <option value="french" selected>Français</option>
-              <option value="english">Anglais</option>
-              <option value="spanish">Espagnol</option>
+            <label>Durée par Section</label>
+            <select id="videoDuration">
+              <option value="5" selected>5 secondes (Rapide & Économique)</option>
+              <option value="10">10 secondes</option>
             </select>
           </div>
         </div>
 
-        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">🚀 Générer la vidéo HD complète</button>
-        <div class="code-preview" id="videoUrlSnippet">Filigrane dynamique : ★ Stanley stawa (changement d'angle à chaque section)</div>
+        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">⚡ Lancer la Génération Vidéo</button>
       </div>
 
       <div class="card">
-        <div class="card-title">📺 Lecteur Vidéo HD & Suivi en Direct</div>
-        <div class="preview-box" id="videoPreviewBox">
-          <div class="preview-placeholder">La vidéo finale avec ses scènes, voix MagicLight TTS et filigrane "Stanley stawa" s'affichera ici.</div>
+        <div class="card-title">📺 Lecteur & Résultat Vidéo</div>
+        <div id="videoPreviewBox" class="preview-box">
+          <div class="preview-placeholder">La vidéo finale s'affichera ici dès la fin du rendu.<br>Filigrane dynamique <strong>★ Stanley stawa</strong> et streaming instantané.</div>
         </div>
       </div>
     </div>
 
-    <!-- TAB 2 : IMAGE -->
+    <!-- 2. TAB IMAGE -->
     <div id="tab-image" class="tab-panel">
       <div class="card">
-        <div class="card-title">🎨 Génération d'Image IA (Creative Studio)</div>
+        <div class="card-title">🎨 Génération d'Image Haute Définition</div>
         <div class="form-group">
-          <label>Prompt de l'image</label>
-          <textarea id="imagePrompt" placeholder="Ex: Un magnifique dragon dore volant au-dessus de montagnes enneigees, 8k photorealiste..."></textarea>
+          <label>Prompt Image</label>
+          <textarea id="imagePrompt" placeholder="Description visuelle détaillée">A majestic futuristic cyberpunk warrior with glowing neon armor, 8k masterpiece</textarea>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Format Ratio</label>
-            <select id="imageRatio">
-              <option value="16:9" selected>16:9 Paysage</option>
-              <option value="9:16">9:16 Vertical</option>
-              <option value="1:1">1:1 Carré</option>
-            </select>
-          </div>
+        <div class="form-group">
+          <label>Format / Ratio</label>
+          <select id="imageRatio">
+            <option value="16:9" selected>16:9 (Paysage)</option>
+            <option value="9:16">9:16 (Portrait)</option>
+            <option value="1:1">1:1 (Carré)</option>
+            <option value="4:3">4:3</option>
+          </select>
         </div>
-        <button id="btnGenImg" class="btn-submit" onclick="generateImage()">✨ Générer l'image HD</button>
+        <button id="btnGenImg" class="btn-submit" onclick="generateImage()">✨ Générer l'Image HD</button>
       </div>
-
       <div class="card">
-        <div class="card-title">🖼️ Aperçu Direct de l'Image</div>
-        <div class="preview-box" id="imagePreviewBox">
-          <div class="preview-placeholder">L'image haute définition s'affichera directement ici.</div>
+        <div class="card-title">🖼️ Aperçu de l'Image</div>
+        <div id="imagePreviewBox" class="preview-box">
+          <div class="preview-placeholder">L'image générée s'affichera ici.</div>
         </div>
       </div>
     </div>
 
-    <!-- TAB 3 : EDIT -->
+    <!-- 3. TAB EDIT -->
     <div id="tab-edit" class="tab-panel">
       <div class="card">
-        <div class="card-title">✏️ Retouche & Modification d'Image (Upload & URL)</div>
-        
+        <div class="card-title">✨ Retouche d'Image & Cohérence Visuelle</div>
         <div class="form-group">
-          <label>Uploader une Image Source</label>
+          <label>Image Source (Upload ou URL)</label>
           <div class="upload-box" onclick="document.getElementById('editFile').click()">
-            <span style="font-size: 18px;">📁</span>
-            <span style="font-size: 12px; color: var(--text-muted);">Cliquez pour choisir une image locale à retoucher</span>
-            <img id="editThumb" class="upload-preview-thumb" alt="Aperçu retouche">
+            <input type="file" id="editFile" accept="image/*" style="display:none" onchange="handleImageUpload(event, 'editPreview', 'editData')">
+            <span id="editPlaceholder">📁 Cliquez pour uploader l'image à retoucher</span>
+            <img id="editPreview" class="upload-preview-thumb" alt="Aperçu">
           </div>
-          <input type="file" id="editFile" accept="image/*" style="display: none;" onchange="handleFileSelect(event, 'editThumb', 'editData')">
-          <input type="hidden" id="editData" value="">
+          <input type="hidden" id="editData">
+          <input type="text" id="editImgUrl" placeholder="Ou collez l'URL d'une image existante" style="margin-top: 6px;">
         </div>
-
         <div class="form-group">
-          <label>OU URL de l'image</label>
-          <input type="text" id="editImgUrl" placeholder="https://.../mon-image.jpg">
+          <label>Consigne de Retouche (Prompt)</label>
+          <textarea id="editPrompt" placeholder="Ex: Change the background into a snowy mountain, add sunglasses">Change the background into an enchanted forest with bioluminescent mushrooms</textarea>
         </div>
-
-        <div class="form-group">
-          <label>Consignes de retouche</label>
-          <textarea id="editPrompt" placeholder="Ex: Ajouter une armure d'or scintillante et des reflets magiques..."></textarea>
-        </div>
-        <button id="btnEditImg" class="btn-submit" onclick="editImage()">🎨 Appliquer la retouche</button>
+        <button id="btnEditImg" class="btn-submit" onclick="editImage()">🪄 Appliquer la Retouche</button>
       </div>
-
       <div class="card">
-        <div class="card-title">🖼️ Image Retouchée</div>
-        <div class="preview-box" id="editPreviewBox">
-          <div class="preview-placeholder">L'image retouchée s'affichera directement ici.</div>
+        <div class="card-title">🖼️ Résultat de la Retouche</div>
+        <div id="editPreviewBox" class="preview-box">
+          <div class="preview-placeholder">L'image retouchée avec le même personnage apparaîtra ici.</div>
         </div>
       </div>
     </div>
 
-    <!-- TAB 4 : STORY -->
+    <!-- 4. TAB STORY -->
     <div id="tab-story" class="tab-panel">
       <div class="card">
         <div class="card-title">📖 Découpage & Expansion de Scénario IA</div>
         <div class="form-group">
-          <label>Idée / Pitch</label>
-          <textarea id="storyIdea" placeholder="Ex: Un jeune explorateur découvre un temple secret au sommet des nuages..."></textarea>
+          <label>Idée ou Résumé</label>
+          <textarea id="storyIdea" placeholder="Une courte idée d'histoire...">Une aventure magique dans un château volant dans les nuages</textarea>
         </div>
         <div class="form-group">
           <label>Langue</label>
@@ -640,58 +649,55 @@ const HTML_CONTENT = `<!DOCTYPE html>
             <option value="french" selected>Français</option>
             <option value="english">Anglais</option>
             <option value="spanish">Espagnol</option>
+            <option value="german">Allemand</option>
           </select>
         </div>
-        <button id="btnStory" class="btn-submit" onclick="expandStory()">⚡ Développer le scénario</button>
+        <button id="btnStory" class="btn-submit" onclick="expandStory()">📝 Découper en Scènes</button>
       </div>
-
       <div class="card">
-        <div class="card-title">📑 Scènes & Storyboard Découpé</div>
-        <div class="preview-box" id="storyPreviewBox" style="align-items: flex-start;">
-          <div class="preview-placeholder">Le scénario et ses scènes s'afficheront ici.</div>
+        <div class="card-title">📑 Scènes & Dialogues Découpés</div>
+        <div id="storyPreviewBox" class="preview-box">
+          <div class="preview-placeholder">Les scènes découpées apparaîtront ici.</div>
         </div>
       </div>
     </div>
 
-    <!-- TAB 5 : VOIX & TTS -->
+    <!-- 5. TAB VOICE -->
     <div id="tab-voice" class="tab-panel">
       <div class="card">
-        <div class="card-title">🎙️ Synthèse Vocale MagicLight TTS</div>
+        <div class="card-title">🎙️ Synthèse Vocale Officielle MagicLight TTS</div>
         <div class="form-group">
-          <label>Texte à vocaliser</label>
-          <textarea id="voiceText" placeholder="Ex: Bonjour et bienvenue sur notre service de génération vidéo automatique."></textarea>
+          <label>Texte à Synthétiser</label>
+          <textarea id="voiceText" placeholder="Entrez le texte parlé...">Bienvenue dans le studio MagicLight AI. Voici une voix naturelle et ultra-réaliste pour vos projets vidéo.</textarea>
         </div>
         <div class="form-group">
-          <label>Modèle de Voix</label>
+          <label>Voix MagicLight</label>
           <select id="voiceId">
-            <option value="MM:lengdan_xiongzhang" selected>Narrateur Français Standard</option>
-            <option value="MM:English_radiant_girl">Chloe (Anglais Féminin)</option>
-            <option value="MM:English_Trustworthy_Man">David (Anglais Masculin)</option>
+            <option value="MM:lengdan_xiongzhang" selected>MM:lengdan_xiongzhang (Français / Narration Neutre)</option>
+            <option value="MM:qingse_xuedi">MM:qingse_xuedi (Jeune / Dynamique)</option>
+            <option value="MM:wenrou_xuejie">MM:wenrou_xuejie (Voix Féminine Douce)</option>
+            <option value="MM:baqi_zongcai">MM:baqi_zongcai (Grave / Cinématique)</option>
           </select>
         </div>
-        <button id="btnVoice" class="btn-submit" onclick="synthesizeVoice()">🔊 Synthétiser la voix</button>
+        <button id="btnVoice" class="btn-submit" onclick="synthesizeVoice()">🔊 Générer la Voix</button>
       </div>
-
       <div class="card">
         <div class="card-title">🎧 Lecteur Audio</div>
-        <div class="preview-box" id="voicePreviewBox">
-          <div class="preview-placeholder">L'extrait audio synthétisé s'affichera ici.</div>
+        <div id="voicePreviewBox" class="preview-box">
+          <div class="preview-placeholder">Le fichier audio MP3 généré apparaîtra ici.</div>
         </div>
       </div>
     </div>
 
-    <!-- TAB 6 : COMPTES & TURSO DB -->
+    <!-- 6. TAB ACCOUNTS -->
     <div id="tab-accounts" class="tab-panel">
       <div class="card" style="grid-column: 1 / -1;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-          <div class="card-title" style="border: none; padding: 0;">📊 Pool de Comptes & Crédits (Turso DB)</div>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn-secondary" onclick="loadAccounts()">🔄 Actualiser</button>
-            <button class="btn-submit" style="padding: 6px 12px; font-size: 12px; min-height: 38px;" onclick="refillAccount()">+ Compte auto</button>
-          </div>
+        <div class="card-title" style="justify-content: space-between;">
+          <span>👥 Pool de Comptes MagicLight (Turso DB)</span>
+          <button class="btn-secondary" onclick="refillAccount()">⚡ Créer un nouveau compte auto (+800 crédits)</button>
         </div>
         <div class="table-container" id="accountsTableContainer">
-          <div style="text-align: center; color: var(--text-muted); padding: 20px;">Chargement des données Turso...</div>
+          <div style="text-align: center; color: var(--text-muted); padding: 16px;">Chargement des données Turso DB...</div>
         </div>
       </div>
     </div>
@@ -699,108 +705,92 @@ const HTML_CONTENT = `<!DOCTYPE html>
   </div>
 
   <script>
-    const baseUrlInput = document.getElementById("baseUrl");
-    baseUrlInput.value = window.location.origin;
-
     function getBaseUrl() {
-      return baseUrlInput.value.replace(/\\/\$/, "");
+      const custom = document.getElementById("apiBaseUrl").value.trim();
+      return custom ? custom.replace(/\\/\\$/, "") : window.location.origin;
     }
 
-    function handleFileSelect(event, thumbId, hiddenId) {
-      const file = event.target.files[0];
+    document.getElementById("apiBaseUrl").value = window.location.origin;
+
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      event.target.classList.add("active");
+      document.getElementById("tab-" + tabId).classList.add("active");
+    }
+
+    function handleImageUpload(e, previewId, dataId) {
+      const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const thumb = document.getElementById(thumbId);
-        thumb.src = e.target.result;
-        thumb.style.display = "block";
-        document.getElementById(hiddenId).value = e.target.result;
+      reader.onload = function(evt) {
+        const base64 = evt.target.result;
+        document.getElementById(dataId).value = base64;
+        const prev = document.getElementById(previewId);
+        prev.src = base64;
+        prev.style.display = "block";
       };
       reader.readAsDataURL(file);
     }
 
     async function safeFetchJson(url, options = {}) {
       const res = await fetch(url, options);
-      const text = await res.text();
-      try {
-        const json = JSON.parse(text);
-        if (!res.ok) {
-          throw new Error(json.error || json.message || \`Erreur \${res.status}\`);
-        }
-        return json;
-      } catch (err) {
-        if (!res.ok) {
-          throw new Error(\`Erreur \${res.status}: \${text.slice(0, 100)}\`);
-        }
-        throw err;
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erreur serveur " + res.status);
+      return data;
     }
 
-    function switchTab(tabId) {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
-
-      const targetBtn = Array.from(document.querySelectorAll(".tab-btn")).find(b => b.getAttribute("onclick").includes(tabId));
-      if (targetBtn) targetBtn.classList.add("active");
-
-      const targetPanel = document.getElementById(\`tab-\${tabId}\`);
-      if (targetPanel) targetPanel.classList.add("active");
-
-      if (tabId === "accounts") {
-        loadAccounts();
-      }
-    }
-
-    // --- 1. VIDÉO MULTI-SCÈNES (GITHUB ACTIONS + TURSO DB) ---
+    // --- 1. VIDEO PIPELINED GENERATION ---
     async function generateVideo() {
       const prompt = document.getElementById("videoPrompt").value.trim();
       const initialImage = document.getElementById("videoCharData").value;
       const sections = document.getElementById("videoSections").value;
       const quality = document.getElementById("videoQuality").value;
       const ratio = document.getElementById("videoRatio").value;
-      const language = document.getElementById("videoLang").value;
+      const duration = document.getElementById("videoDuration").value;
       const box = document.getElementById("videoPreviewBox");
       const btn = document.getElementById("btnGenVideo");
 
-      if (!prompt) return alert("Veuillez saisir un prompt pour la vidéo.");
+      if (!prompt) return alert("Veuillez saisir un scénario / prompt.");
 
       btn.disabled = true;
-      box.innerHTML = \`
+      box.innerHTML = \\`
         <div class="loader"></div>
-        <div style="font-weight: 600;" id="progressLabel">Initialisation du rendu vidéo...</div>
-        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar" style="width: 15%;"></div></div>
-        <div style="font-size: 12px; color: var(--text-muted);" id="progressDetail">Déclenchement du moteur avec filigrane dynamique 'Stanley stawa'...</div>
-      \`;
+        <div id="progressLabel" style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">Initialisation du rendu vidéo...</div>
+        <div id="progressDetail" style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Préparation des sections animées et compression ultra-légère...</div>
+        <div class="progress-bar-wrap"><div id="progressBar" class="progress-bar-fill" style="width: 15%"></div></div>
+      \\`;
 
       try {
-        const initData = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/video\`, {
+        const initRes = await safeFetchJson(\\`\\${getBaseUrl()}/stanleystawa/video\\`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, initialImage, sections, quality, ratio, language })
+          body: JSON.stringify({ prompt, initial_image: initialImage, sections, quality, ratio, duration })
         });
 
-        const taskId = initData.task_id;
-        document.getElementById("videoUrlSnippet").innerText = \`Task ID : \${taskId} | Suivi : GET /stanleystawa/status?task_id=\${taskId}\`;
-
+        const taskId = initRes.task_id;
         let isDone = false;
-        let attempts = 0;
 
-        while (!isDone && attempts < 90) {
-          await new Promise(r => setTimeout(r, 3000));
-          attempts++;
+        for (let attempts = 0; attempts < 120; attempts++) {
+          await new Promise(r => setTimeout(r, 4000));
 
           try {
-            const statusData = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/status?task_id=\${taskId}\`);
+            const statusData = await safeFetchJson(\\`\\${getBaseUrl()}/stanleystawa/status?task_id=\\${taskId}\\`);
 
             if (statusData.status === "completed" && statusData.video_url) {
               isDone = true;
-              box.innerHTML = \`
-                <video class="preview-video" src="\${statusData.video_url}" controls autoplay loop></video>
+              const directDlUrl = \\`\\${statusData.video_url}&dl=1\\`;
+              box.innerHTML = \\`
+                <video class="preview-video" src="\\${statusData.video_url}" controls autoplay loop playsinline preload="auto"></video>
                 <div class="meta-box">
-                  <div><strong>Durée :</strong> \${statusData.duration}s | <strong>Sections :</strong> \${statusData.scenes_count} | <strong>Qualité :</strong> \${quality} | <strong>Filigrane :</strong> ★ Stanley stawa (Dynamique)</div>
-                  <div><strong>Lien direct MP4 :</strong> <a href="\${statusData.video_url}" target="_blank">\${statusData.video_url}</a></div>
+                  <div><strong>Durée :</strong> \\${statusData.duration}s | <strong>Sections :</strong> \\${statusData.scenes_count} | <strong>Qualité :</strong> \\${quality} | <strong>Filigrane :</strong> ★ Stanley stawa (Dynamique)</div>
+                  <div><strong>Lien direct MP4 :</strong> <a href="\\${statusData.video_url}" target="_blank">\\${statusData.video_url}</a></div>
+                  <div class="meta-actions">
+                    <a class="action-pill" href="\\${statusData.video_url}" target="_blank">▶️ Ouvrir dans un onglet</a>
+                    <a class="action-pill" href="\\${directDlUrl}">⬇️ Télécharger le MP4</a>
+                  </div>
                 </div>
-              \`;
+              \\`;
               loadAccounts();
               break;
             } else if (statusData.status === "failed") {
@@ -812,7 +802,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
               const pDet = document.getElementById("progressDetail");
 
               if (pBar) pBar.style.width = pct + "%";
-              if (pLbl) pLbl.innerText = \`Rendu en cours (\${pct}%)...\`;
+              if (pLbl) pLbl.innerText = \\`Rendu en cours (\\${pct}%)...\\`;
               if (pDet) pDet.innerText = statusData.message || "Animation des scènes avec FFmpeg...";
             }
           } catch (e) {
@@ -824,7 +814,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
           throw new Error("Rendu en cours sur les serveurs. Réinterrogez /stanleystawa/status?task_id=" + taskId);
         }
       } catch (err) {
-        box.innerHTML = \`<div style="color: #ef4444; padding: 16px;">❌ Erreur: \${err.message}</div>\`;
+        box.innerHTML = \\`<div style="color: #ef4444; padding: 16px;">❌ Erreur: \\${err.message}</div>\\`;
       } finally {
         btn.disabled = false;
       }
@@ -840,33 +830,33 @@ const HTML_CONTENT = `<!DOCTYPE html>
       if (!prompt) return alert("Veuillez saisir un prompt pour l'image.");
 
       btn.disabled = true;
-      box.innerHTML = \`<div class="loader"></div><div>Génération de l'image haute définition via Creative Studio...</div>\`;
+      box.innerHTML = \\`<div class="loader"></div><div>Génération de l'image haute définition via Creative Studio...</div>\\`;
 
       try {
-        const data = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/image\`, {
+        const data = await safeFetchJson(\\`\\${getBaseUrl()}/stanleystawa/image\\`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ prompt, ratio })
         });
 
         if (data.image_url) {
-          box.innerHTML = \`
-            <img class="preview-img" src="\${data.image_url}" alt="Image générée">
+          box.innerHTML = \\`
+            <img class="preview-img" src="\\${data.image_url}" alt="Image générée">
             <div class="meta-box">
-              <div><strong>Ratio :</strong> \${data.ratio} | <strong>Moteur :</strong> Creative Studio</div>
-              <div><strong>Lien direct :</strong> <a href="\${data.image_url}" target="_blank">\${data.image_url}</a></div>
+              <div><strong>Ratio :</strong> \\${data.ratio} | <strong>Moteur :</strong> Creative Studio</div>
+              <div><strong>Lien direct :</strong> <a href="\\${data.image_url}" target="_blank">\\${data.image_url}</a></div>
             </div>
-          \`;
+          \\`;
           loadAccounts();
         }
       } catch (err) {
-        box.innerHTML = \`<div style="color: #ef4444; padding: 16px;">❌ Erreur: \${err.message}</div>\`;
+        box.innerHTML = \\`<div style="color: #ef4444; padding: 16px;">❌ Erreur: \\${err.message}</div>\\`;
       } finally {
         btn.disabled = false;
       }
     }
 
-    // --- 3. RETOUCHE IMAGE (AVEC UPLOAD BASE64 OU URL) ---
+    // --- 3. RETOUCHE IMAGE ---
     async function editImage() {
       const editData = document.getElementById("editData").value;
       const imageUrl = document.getElementById("editImgUrl").value.trim();
@@ -879,27 +869,27 @@ const HTML_CONTENT = `<!DOCTYPE html>
       if (!prompt) return alert("Veuillez saisir une consigne de retouche.");
 
       btn.disabled = true;
-      box.innerHTML = \`<div class="loader"></div><div>Application de la retouche en cours via Creative Studio...</div>\`;
+      box.innerHTML = \\`<div class="loader"></div><div>Application de la retouche en cours via Creative Studio...</div>\\`;
 
       try {
-        const data = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/edit\`, {
+        const data = await safeFetchJson(\\`\\${getBaseUrl()}/stanleystawa/edit\\`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ image, prompt })
         });
 
         if (data.image_url) {
-          box.innerHTML = \`
-            <img class="preview-img" src="\${data.image_url}" alt="Image retouchée">
+          box.innerHTML = \\`
+            <img class="preview-img" src="\\${data.image_url}" alt="Image retouchée">
             <div class="meta-box">
-              <div><strong>Consigne :</strong> \${data.prompt}</div>
-              <div><strong>Lien direct :</strong> <a href="\${data.image_url}" target="_blank">Ouvrir l'image</a></div>
+              <div><strong>Consigne :</strong> \\${data.prompt}</div>
+              <div><strong>Lien direct :</strong> <a href="\\${data.image_url}" target="_blank">Ouvrir l'image</a></div>
             </div>
-          \`;
+          \\`;
           loadAccounts();
         }
       } catch (err) {
-        box.innerHTML = \`<div style="color: #ef4444; padding: 16px;">❌ Erreur: \${err.message}</div>\`;
+        box.innerHTML = \\`<div style="color: #ef4444; padding: 16px;">❌ Erreur: \\${err.message}</div>\\`;
       } finally {
         btn.disabled = false;
       }
@@ -915,26 +905,26 @@ const HTML_CONTENT = `<!DOCTYPE html>
       if (!idea) return alert("Veuillez saisir une idée.");
 
       btn.disabled = true;
-      box.innerHTML = \`<div class="loader"></div><div>Expansion du scénario et découpage multi-scènes...</div>\`;
+      box.innerHTML = \\`<div class="loader"></div><div>Expansion du scénario et découpage multi-scènes...</div>\\`;
 
       try {
-        const data = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/story?idea=\${encodeURIComponent(idea)}&language=\${language}\`);
+        const data = await safeFetchJson(\\`\\${getBaseUrl()}/stanleystawa/story?idea=\\${encodeURIComponent(idea)}&language=\\${language}\\`);
 
-        let scenesHtml = data.scenes.map((s, i) => \`
-          <div class="scene-item">
-            <div class="scene-num">#\${i+1}</div>
-            <div>\${s}</div>
+        let scenesHtml = data.scenes.map((s, i) => \\`
+          <div class="scene-item" style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; border-left: 3px solid var(--primary);">
+            <div style="font-weight: 700; color: #818cf8; margin-bottom: 2px;">Section #\\${i+1}</div>
+            <div>\\${s}</div>
           </div>
-        \`).join("");
+        \\`).join("");
 
-        box.innerHTML = \`
-          <div style="font-weight: 700; font-size: 15px; margin-bottom: 6px; color: #818cf8;">\${data.title}</div>
-          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">\${data.expanded_story}</div>
-          <div style="font-weight: 600; font-size: 12px; margin-bottom: 6px;">Scènes découpées (\${data.scenes.length}) :</div>
-          <div class="scenes-grid">\${scenesHtml}</div>
-        \`;
+        box.innerHTML = \\`
+          <div style="font-weight: 700; font-size: 15px; margin-bottom: 6px; color: #818cf8;">\\${data.title}</div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">\\${data.expanded_story}</div>
+          <div style="font-weight: 600; font-size: 12px; margin-bottom: 6px;">Sections découpées (\\${data.scenes.length}) :</div>
+          <div class="scenes-grid">\\${scenesHtml}</div>
+        \\`;
       } catch (err) {
-        box.innerHTML = \`<div style="color: #ef4444; padding: 16px;">❌ Erreur: \${err.message}</div>\`;
+        box.innerHTML = \\`<div style="color: #ef4444; padding: 16px;">❌ Erreur: \\${err.message}</div>\\`;
       } finally {
         btn.disabled = false;
       }
@@ -950,23 +940,23 @@ const HTML_CONTENT = `<!DOCTYPE html>
       if (!text) return alert("Veuillez saisir un texte.");
 
       btn.disabled = true;
-      box.innerHTML = \`<div class="loader"></div><div>Synthèse vocale en cours...</div>\`;
+      box.innerHTML = \\`<div class="loader"></div><div>Synthèse vocale en cours...</div>\\`;
 
       try {
-        const data = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/voice?text=\${encodeURIComponent(text)}&voice_id=\${voiceId}\`);
+        const data = await safeFetchJson(\\`\\${getBaseUrl()}/stanleystawa/voice?text=\\${encodeURIComponent(text)}&voice_id=\\${voiceId}\\`);
 
         if (data.audio_url) {
-          box.innerHTML = \`
-            <audio class="preview-audio" src="\${data.audio_url}" controls autoplay></audio>
+          box.innerHTML = \\`
+            <audio class="preview-audio" src="\\${data.audio_url}" controls autoplay></audio>
             <div class="meta-box">
-              <div><strong>Voix :</strong> \${data.voice_id} | <strong>Compte :</strong> \${data.account_used}</div>
-              <div><strong>Lien direct audio :</strong> <a href="\${data.audio_url}" target="_blank">\${data.audio_url}</a></div>
+              <div><strong>Voix :</strong> \\${data.voice_id} | <strong>Compte :</strong> \\${data.account_used}</div>
+              <div><strong>Lien direct audio :</strong> <a href="\\${data.audio_url}" target="_blank">\\${data.audio_url}</a></div>
             </div>
-          \`;
+          \\`;
           loadAccounts();
         }
       } catch (err) {
-        box.innerHTML = \`<div style="color: #ef4444; padding: 16px;">❌ Erreur: \${err.message}</div>\`;
+        box.innerHTML = \\`<div style="color: #ef4444; padding: 16px;">❌ Erreur: \\${err.message}</div>\\`;
       } finally {
         btn.disabled = false;
       }
@@ -975,23 +965,23 @@ const HTML_CONTENT = `<!DOCTYPE html>
     // --- 6. ACCOUNTS & TURSO ---
     async function loadAccounts() {
       const container = document.getElementById("accountsTableContainer");
-      container.innerHTML = \`<div style="text-align: center; color: var(--text-muted); padding: 16px;"><div class="loader" style="margin: 0 auto 8px;"></div>Chargement des données Turso DB...</div>\`;
+      container.innerHTML = \\`<div style="text-align: center; color: var(--text-muted); padding: 16px;"><div class="loader" style="margin: 0 auto 8px;"></div>Chargement des données Turso DB...</div>\\`;
 
       try {
-        const data = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/accounts\`);
+        const data = await safeFetchJson(\\`\\${getBaseUrl()}/stanleystawa/accounts\\`);
 
-        document.getElementById("tursoStats").innerText = \`Turso DB : \${data.total_credits_pool} Crédits (\${data.active_accounts_count} Comptes)\`;
+        document.getElementById("tursoStats").innerText = \\`Turso DB : \\${data.total_credits_pool} Crédits (\\${data.active_accounts_count} Comptes)\\`;
 
-        let rowsHtml = data.accounts.map(acc => \`
+        let rowsHtml = data.accounts.map(acc => \\`
           <tr>
-            <td><strong>\${acc.email}</strong></td>
-            <td><span style="font-weight: 700; color: #34d399;">\${acc.credits}</span> crédits</td>
-            <td><span class="badge-status status-active">\${acc.status}</span></td>
-            <td style="color: var(--text-muted);">\${acc.created_at || '—'}</td>
+            <td><strong>\\${acc.email}</strong></td>
+            <td><span style="font-weight: 700; color: #34d399;">\\${acc.credits}</span> crédits</td>
+            <td><span class="badge-status status-active">\\${acc.status}</span></td>
+            <td style="color: var(--text-muted);">\\${acc.created_at || '—'}</td>
           </tr>
-        \`).join("");
+        \\`).join("");
 
-        container.innerHTML = \`
+        container.innerHTML = \\`
           <table>
             <thead>
               <tr>
@@ -1002,23 +992,23 @@ const HTML_CONTENT = `<!DOCTYPE html>
               </tr>
             </thead>
             <tbody>
-              \${rowsHtml}
+              \\${rowsHtml}
             </tbody>
           </table>
-        \`;
+        \\`;
       } catch (err) {
-        container.innerHTML = \`<div style="color: #ef4444; padding: 12px;">❌ Erreur chargement Turso : \${err.message}</div>\`;
+        container.innerHTML = \\`<div style="color: #ef4444; padding: 12px;">❌ Erreur chargement Turso : \\${err.message}</div>\\`;
       }
     }
 
     async function refillAccount() {
       if (!confirm("Voulez-vous créer automatiquement un nouveau compte MagicLight et l'ajouter à Turso ?")) return;
       try {
-        const data = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/refill\`);
-        alert(\`✅ Compte créé avec succès !\\nE-mail : \${data.account.email}\\nCrédits : \${data.account.credits}\`);
+        const data = await safeFetchJson(\\`\\${getBaseUrl()}/stanleystawa/refill\\`);
+        alert(\\`✅ Compte créé avec succès !\\nE-mail : \\${data.account.email}\\nCrédits : \\${data.account.credits}\\`);
         loadAccounts();
       } catch (err) {
-        alert(\`❌ Erreur refill: \${err.message}\`);
+        alert(\\`❌ Erreur refill: \\${err.message}\\`);
       }
     }
 
@@ -1040,8 +1030,9 @@ module.exports = function handler(req, res) {
       database: "Turso libSQL",
       engine: "vercel-animate-api + FFmpeg + Creative Studio + MagicLight TTS",
       endpoints: {
-        video: "/stanleystawa/video?prompt=...&sections=4&quality=medium",
+        video: "/stanleystawa/video?prompt=...&sections=2&quality=medium",
         status: "/stanleystawa/status?task_id=...",
+        download: "/stanleystawa/download?task_id=...",
         image: "/stanleystawa/image?prompt=...&ratio=16:9",
         edit: "/stanleystawa/edit",
         story: "/stanleystawa/story?idea=...&language=french",

@@ -1,10 +1,10 @@
 /**
- * scripts/render-video.js — Moteur de rendu vidéo HD Multi-Scènes avec :
+ * scripts/render-video.js — Moteur de rendu vidéo Ultra-Optimisé Multi-Scènes avec :
  * 1. Animation IA Text-to-Video via vercel-animate-api (attente complète du rendu avec voix intégrée)
  * 2. Cohérence absolue du personnage (image uploadée obligatoire en référence ou générée en Scène 1)
  * 3. Parallélisation décalée de 1.5s pour les retouches d'images (/edit)
  * 4. Pipelining : Dès qu'une image est prête, déclenchement immédiat de l'animation vercel-animate-api
- * 5. Choix dynamique de la qualité (low, medium, high) et du nombre de sections (2 à 6)
+ * 5. Compression H.264 haute efficacité (-crf 27, -movflags +faststart) pour un poids plume (< 2 MB par défaut)
  * 6. Filigrane dynamique "★ Stanley stawa" par superposition PNG alpha (100% universel et non rognable)
  */
 
@@ -26,7 +26,10 @@ async function executeTurso(sql, args = []) {
   if (!url.endsWith("/v2/pipeline")) url = url.replace(/\/$/, "") + "/v2/pipeline";
 
   const formattedArgs = args.map(arg => {
-    if (typeof arg === "number") return { type: "integer", value: String(arg) };
+    if (typeof arg === "number") {
+      if (Number.isInteger(arg)) return { type: "integer", value: String(arg) };
+      return { type: "float", value: arg };
+    }
     if (arg === null || arg === undefined) return { type: "null" };
     return { type: "text", value: String(arg) };
   });
@@ -124,7 +127,7 @@ d.text((w // 2, sub_y + 28), l1, fill=(255, 255, 255, 255), anchor='mm')
 if l2:
     d.text((w // 2, sub_y + 60), l2, fill=(255, 215, 0, 255), anchor='mm')
 
-img.save(out, 'PNG')
+img.save(out, 'PNG', optimize=True)
 `;
   const tempPy = path.join("/tmp", `gen_overlay_${Date.now()}_${sectionIndex}.py`);
   fs.writeFileSync(tempPy, pyScript);
@@ -136,12 +139,38 @@ async function main() {
   const taskId = process.env.TASK_ID || `vid_${Date.now()}`;
   const prompt = process.env.PROMPT || "Un petit chaton blanc aux yeux bleus qui explore un jardin magique";
   const language = process.env.LANGUAGE || "french";
-  const sectionsRequested = Math.min(6, Math.max(2, parseInt(process.env.SECTIONS || process.env.SCENES || "4", 10)));
+  const sectionsRequested = Math.min(6, Math.max(2, parseInt(process.env.SECTIONS || process.env.SCENES || "2", 10)));
   const quality = process.env.QUALITY || "medium"; // low, medium, high
-  const animDuration = parseInt(process.env.DURATION || "10", 10);
+  const animDuration = parseInt(process.env.DURATION || "5", 10);
   const ratio = parseInt(process.env.RATIO || "1", 10);
-  const outWidth = ratio === 2 ? 720 : 1280;
-  const outHeight = ratio === 2 ? 1280 : 720;
+
+  // Configuration de résolution et encodage ultra-optimisé en Mo
+  let outWidth = ratio === 2 ? 720 : 1280;
+  let outHeight = ratio === 2 ? 1280 : 720;
+  let encCrf = "27";
+  let encMaxrate = "850k";
+  let encBufsize = "1300k";
+  let encAudioBitrate = "96k";
+  let encProfile = "high";
+
+  if (quality === "low") {
+    outWidth = ratio === 2 ? 480 : 854;
+    outHeight = ratio === 2 ? 854 : 480;
+    encCrf = "29";
+    encMaxrate = "550k";
+    encBufsize = "800k";
+    encAudioBitrate = "64k";
+    encProfile = "main";
+  } else if (quality === "high") {
+    outWidth = ratio === 2 ? 720 : 1280;
+    outHeight = ratio === 2 ? 1280 : 720;
+    encCrf = "23";
+    encMaxrate = "1600k";
+    encBufsize = "2400k";
+    encAudioBitrate = "128k";
+    encProfile = "high";
+  }
+
   const ratioStr = ratio === 2 ? "9:16" : "16:9";
 
   let initialImage = process.env.INITIAL_IMAGE || "";
@@ -156,10 +185,10 @@ async function main() {
   console.log(`🚀 [MagicLight Pipelined Engine] Task ID: ${taskId}`);
   console.log(`📝 Prompt: "${prompt}"`);
   console.log(`📑 Sections demandées: ${sectionsRequested}`);
-  console.log(`🎯 Qualité vidéo: ${quality} | Durée par section: ${animDuration}s`);
-  console.log(`🖼️ Personnage Initial: ${initialImage ? "Image fournie (obligatoire)" : "Génération IA requise"}`);
+  console.log(`🎯 Qualité: ${quality} (CRF: ${encCrf}, MaxRate: ${encMaxrate}) | Durée/sec: ${animDuration}s`);
+  console.log(`🖼️ Personnage: ${initialImage ? "Image fournie (obligatoire)" : "Génération IA requise"}`);
   console.log(`📐 Format: ${outWidth}x${outHeight} (${ratioStr})`);
-  console.log(`⚡ Mode: vercel-animate-api + Overlay PNG Stanley stawa`);
+  console.log(`⚡ Streaming: FastStart Moov Atom + MP4 YUV420P`);
   console.log(`======================================================\n`);
 
   const workDir = path.join("/tmp", taskId);
@@ -205,7 +234,9 @@ async function main() {
         `Regardez ce magnifique jardin, une grande aventure commence !`,
         `J'avance avec courage et je découvre un secret extraordinaire.`,
         `Tout s'illumine autour de moi dans un éclat de magie pure !`,
-        `Cette aventure restera gravée pour toujours dans nos cœurs.`
+        `Cette aventure restera gravée pour toujours dans nos cœurs.`,
+        `Le soleil se couche doucement sur ce lieu enchanté.`,
+        `Nous reviendrons très bientôt pour de nouvelles découvertes.`
       ];
     }
 
@@ -221,45 +252,45 @@ async function main() {
       message: "Préparation du personnage de référence obligatoire pour le projet..."
     });
 
-    const refImagePath = path.join(workDir, "character_ref.jpg");
+    const refImagePath = path.join(workDir, "ref_character.jpg");
     let refImageUrl = "";
+    let refImageBase64 = "";
 
-    if (initialImage && (initialImage.startsWith("http") || initialImage.startsWith("data:"))) {
+    if (initialImage) {
       console.log("📥 Utilisation de l'image de personnage fournie par l'utilisateur...");
-      if (initialImage.startsWith("http")) {
-        await downloadFile(initialImage, refImagePath);
-        refImageUrl = initialImage;
-      } else {
+      if (initialImage.startsWith("data:image")) {
         const b64Data = initialImage.replace(/^data:image\/\w+;base64,/, "");
         fs.writeFileSync(refImagePath, Buffer.from(b64Data, "base64"));
-        refImageUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(prompt)}&ratio=${ratioStr}`;
+        refImageBase64 = initialImage;
+      } else if (initialImage.startsWith("http")) {
+        await downloadFile(initialImage, refImagePath);
+        refImageBase64 = `data:image/jpeg;base64,${fs.readFileSync(refImagePath).toString("base64")}`;
       }
+      refImageUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(prompt)}&ratio=${ratioStr}`;
     } else {
-      console.log("🎨 Génération IA du personnage de référence (Scène 1)...");
-      const charPrompt = encodeURIComponent(`${storyTitle} - Character portrait, ${prompt}, 8k photorealistic cinematic lighting`);
-      refImageUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${charPrompt}&ratio=${ratioStr}`;
+      console.log("🎨 Génération du personnage de référence (Scène 1) via Creative Studio...");
+      refImageUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(prompt + ", single character, portrait cinematic masterpiece, 8k")}&ratio=${ratioStr}`;
       await downloadFile(refImageUrl, refImagePath);
+      refImageBase64 = `data:image/jpeg;base64,${fs.readFileSync(refImagePath).toString("base64")}`;
     }
 
-    const refImageBase64 = `data:image/jpeg;base64,${fs.readFileSync(refImagePath).toString("base64")}`;
-    const sceneImages = new Array(finalScenes.length);
-    const sceneImageUrls = new Array(finalScenes.length);
-    sceneImages[0] = refImagePath;
-    sceneImageUrls[0] = refImageUrl;
-
     // ----------------------------------------------------
-    // ÉTAPE 3 : Pipelining Parallélisé :
-    // 1) Retouches décalées de 1.5s
-    // 2) Animation vercel-animate-api immédiate
+    // ÉTAPE 3 : Pipeline Parallélisé & Animation avec Voix
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 45,
-      step: "parallel_pipeline",
-      message: "Génération des scènes et animation Text-to-Video IA avec audio intégré..."
+      step: "animation_pipeline",
+      message: `Animation de ${finalScenes.length} sections avec vercel-animate-api et filigrane Stanley stawa...`
     });
 
     console.log(`\n⚡ Lancement de ${finalScenes.length} sections pipelinées...`);
+
+    const sceneImages = new Array(finalScenes.length);
+    const sceneImageUrls = new Array(finalScenes.length);
     const sceneClips = new Array(finalScenes.length);
+
+    sceneImages[0] = refImagePath;
+    sceneImageUrls[0] = refImageUrl;
 
     async function processSection(index) {
       const sceneText = finalScenes[index].trim();
@@ -347,10 +378,10 @@ async function main() {
         } catch (err) {}
 
         if (!fs.existsSync(audioFile)) {
-          execSync(`ffmpeg -y -f lavfi -i anullsrc=r=44100:cl=mono -t 4 "${audioFile}" -loglevel error`);
+          execSync(`ffmpeg -y -f lavfi -i anullsrc=r=44100:cl=mono -t ${animDuration} "${audioFile}" -loglevel error`);
         }
 
-        let duration = 4.5;
+        let duration = animDuration;
         try {
           const durOutput = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioFile}"`).toString().trim();
           duration = Math.max(3.0, parseFloat(durOutput) + 0.3);
@@ -360,15 +391,15 @@ async function main() {
           ? `zoompan=z='min(zoom+0.0016,1.15)':d=${Math.round(duration * 25)}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${outWidth}x${outHeight}`
           : `zoompan=z='if(lte(zoom,1.0),1.15,max(1.001,zoom-0.0016))':d=${Math.round(duration * 25)}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${outWidth}x${outHeight}`;
 
-        execSync(`ffmpeg -y -loop 1 -t ${duration} -i "${curImg}" -i "${audioFile}" -filter_complex "[0:v]${zoomEffect}[v]" -map "[v]" -map 1:a -c:v libx264 -preset ultrafast -tune stillimage -pix_fmt yuv420p -threads 4 -c:a aac -shortest "${rawClipDownloaded}" -loglevel error`);
+        execSync(`ffmpeg -y -loop 1 -t ${duration} -i "${curImg}" -i "${audioFile}" -filter_complex "[0:v]${zoomEffect}[v]" -map "[v]" -map 1:a -c:v libx264 -preset veryfast -crf ${encCrf} -maxrate ${encMaxrate} -bufsize ${encBufsize} -pix_fmt yuv420p -c:a aac -b:a ${encAudioBitrate} -shortest "${rawClipDownloaded}" -loglevel error`);
       }
 
       // Incrustation du Filigrane Dynamique "★ Stanley stawa" + Sous-titres via PNG Alpha Overlay
       const pngOverlayPath = path.join(workDir, `overlay_${index + 1}.png`);
       createOverlayPng(outWidth, outHeight, index, sceneText, pngOverlayPath);
 
-      const filterComplex = `[0:v]scale=${outWidth}:${outHeight}:force_original_aspect_ratio=decrease,pad=${outWidth}:${outHeight}:(ow-iw)/2:(oh-ih)/2[scaled];[scaled][1:v]overlay=0:0[v]`;
-      execSync(`ffmpeg -y -i "${rawClipDownloaded}" -i "${pngOverlayPath}" -filter_complex "${filterComplex}" -map "[v]" -map 0:a? -c:v libx264 -preset ultrafast -pix_fmt yuv420p -threads 4 -c:a aac "${clipOutput}" -loglevel error`);
+      const filterComplex = `[0:v]scale=${outWidth}:${outHeight}:force_original_aspect_ratio=decrease,pad=${outWidth}:${outHeight}:(ow-iw)/2:(oh-ih)/2,setsar=1[scaled];[scaled][1:v]overlay=0:0[v]`;
+      execSync(`ffmpeg -y -i "${rawClipDownloaded}" -i "${pngOverlayPath}" -filter_complex "${filterComplex}" -map "[v]" -map 0:a? -c:v libx264 -preset veryfast -crf ${encCrf} -maxrate ${encMaxrate} -bufsize ${encBufsize} -profile:v ${encProfile} -level 4.0 -pix_fmt yuv420p -c:a aac -b:a ${encAudioBitrate} -ar 44100 -movflags +faststart "${clipOutput}" -loglevel error`);
 
       sceneClips[index] = clipOutput;
       console.log(` ✅ [Section ${index + 1}/${finalScenes.length}] Section finalisée avec filigrane Stanley stawa`);
@@ -382,21 +413,21 @@ async function main() {
     await Promise.all(sectionPromises);
 
     // ----------------------------------------------------
-    // ÉTAPE 4 : Concaténation rapide & Mixage BGM
+    // ÉTAPE 4 : Concaténation rapide & Mixage BGM Ultra-Léger
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 85,
       step: "video_concat",
-      message: "Concaténation des sections animées et mixage de fond..."
+      message: "Concaténation des sections animées et mixage de fond ultra-optimisé..."
     });
 
-    console.log("\n📦 Étape 4 : Concaténation des clips animés...");
+    console.log("\n📦 Étape 4 : Concaténation et compression finale...");
     const concatListFile = path.join(workDir, "concat.txt");
     const concatContent = sceneClips.map(c => `file '${c}'`).join("\n");
     fs.writeFileSync(concatListFile, concatContent);
 
     const tempMergedVideo = path.join(workDir, "merged_raw.mp4");
-    execSync(`ffmpeg -y -f concat -safe 0 -i "${concatListFile}" -c copy "${tempMergedVideo}" -loglevel error`);
+    execSync(`ffmpeg -y -f concat -safe 0 -i "${concatListFile}" -c copy -movflags +faststart "${tempMergedVideo}" -loglevel error`);
 
     // Musique de fond
     const bgmFile = path.join(workDir, "bgm.mp3");
@@ -407,11 +438,12 @@ async function main() {
     }
 
     const finalMp4Path = path.join(workDir, "final_output.mp4");
-    execSync(`ffmpeg -y -i "${tempMergedVideo}" -i "${bgmFile}" -filter_complex "[0:a]volume=1.0[voice];[1:a]volume=0.10[bgm];[voice][bgm]amix=inputs=2:duration=first[a]" -map 0:v -map "[a]" -c:v copy -c:a aac -shortest "${finalMp4Path}" -loglevel error`);
+    execSync(`ffmpeg -y -i "${tempMergedVideo}" -i "${bgmFile}" -filter_complex "[0:a]volume=1.0[voice];[1:a]volume=0.08[bgm];[voice][bgm]amix=inputs=2:duration=first[a]" -map 0:v -map "[a]" -c:v copy -c:a aac -b:a ${encAudioBitrate} -ar 44100 -movflags +faststart -shortest "${finalMp4Path}" -loglevel error`);
 
-    console.log(`✅ Montage vidéo finalisé : ${finalMp4Path}`);
+    const finalSizeMb = (fs.statSync(finalMp4Path).size / (1024 * 1024)).toFixed(2);
+    console.log(`✅ Montage vidéo finalisé : ${finalMp4Path} (Poids: ${finalSizeMb} Mo)`);
 
-    let totalDuration = 20;
+    let totalDuration = 20.0;
     try {
       const durStr = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${finalMp4Path}"`).toString().trim();
       totalDuration = parseFloat(durStr);
@@ -423,7 +455,7 @@ async function main() {
     await updateTursoTask(taskId, {
       progress: 95,
       step: "publishing",
-      message: "Publication de la vidéo finale..."
+      message: `Publication de la vidéo finale (${finalSizeMb} Mo)...`
     });
 
     const releaseTag = "v1.0.0-videos";
@@ -449,12 +481,13 @@ async function main() {
     console.log(`🎬 Vidéo URL : ${videoUrl}`);
     console.log(`⏱️ Durée totale : ${totalDuration.toFixed(1)}s`);
     console.log(`📑 Sections : ${finalScenes.length}`);
+    console.log(`💾 Taille finale : ${finalSizeMb} Mo (Ultra-léger)`);
 
     await updateTursoTask(taskId, {
       status: "completed",
       progress: 100,
       step: "completed",
-      message: "Vidéo générée avec succès !",
+      message: `Vidéo générée avec succès ! (${finalSizeMb} Mo)`,
       video_url: videoUrl,
       cover_url: `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(prompt)}&ratio=16:9`,
       duration: Math.round(totalDuration * 10) / 10,
