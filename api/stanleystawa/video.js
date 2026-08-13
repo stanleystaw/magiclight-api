@@ -1,5 +1,5 @@
 /**
- * api/stanleystawa/video.js — Déclencheur vidéo avec choix du nombre de sections
+ * api/stanleystawa/video.js — Déclencheur vidéo avec choix des sections, qualité et animation IA
  */
 
 const turso = require("../../lib/turso");
@@ -22,6 +22,8 @@ module.exports = async function handler(req, res) {
     const prompt = (params.prompt || params.text || params.idea || "").trim();
     const initialImage = (params.initialImage || params.image || params.imageUrl || "").trim();
     const sections = String(params.sections || params.scenes || "4");
+    const quality = String(params.quality || "medium"); // low, medium, high
+    const duration = String(params.duration || "10");
     const ratio = params.ratio || "1";
     const language = params.language || "french";
 
@@ -38,7 +40,7 @@ module.exports = async function handler(req, res) {
     `;
     await turso.execute(sql, [taskId, prompt]);
 
-    // 2. Déclenchement du worker GitHub Actions avec le nombre de sections choisi
+    // 2. Déclenchement du worker GitHub Actions
     const ghHeaders = {
       "Authorization": `token ${GITHUB_TOKEN}`,
       "Accept": "application/vnd.github.v3+json",
@@ -57,7 +59,9 @@ module.exports = async function handler(req, res) {
             prompt,
             ratio: String(ratio),
             language,
-            sections: String(sections)
+            sections: String(sections),
+            quality: String(quality),
+            duration: String(duration)
           }
         })
       });
@@ -73,8 +77,10 @@ module.exports = async function handler(req, res) {
       status: "queued",
       task_id: taskId,
       sections: parseInt(sections, 10),
+      quality: quality,
+      duration_per_section: parseInt(duration, 10),
       check_url: checkUrl,
-      message: `Rendu de ${sections} sections initié avec parallélisation 1.5s, filigrane dynamique 'Stanley stawa' et audio explicite.`
+      message: `Rendu initié (${sections} sections, qualité ${quality}) avec animation Text-to-Video et filigrane dynamique 'Stanley stawa'.`
     });
 
   } catch (err) {

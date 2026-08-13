@@ -492,18 +492,18 @@ const HTML_CONTENT = `<!DOCTYPE html>
     <!-- TAB 1 : VIDÉO MULTI-SCÈNES -->
     <div id="tab-video" class="tab-panel active">
       <div class="card">
-        <div class="card-title">🎬 Générateur Vidéo Multi-Scènes Pipelined (FFmpeg + MagicLight)</div>
+        <div class="card-title">🎬 Générateur Vidéo Multi-Scènes (vercel-animate-api + MagicLight)</div>
         
         <div class="form-group">
           <label>Prompt / Idée de l'histoire</label>
-          <textarea id="videoPrompt" placeholder="Ex: Un jeune chevalier avec une épée de lumière qui explore un donjon magique et affronte un dragon..."></textarea>
+          <textarea id="videoPrompt" placeholder="Ex: Un jeune héros courageux qui explore un temple antique et découvre un trésor magique..."></textarea>
         </div>
 
         <div class="form-group">
           <label>Image de départ du Personnage (Optionnel)</label>
           <div class="upload-box" onclick="document.getElementById('videoCharFile').click()">
             <span style="font-size: 18px;">📁</span>
-            <span style="font-size: 12px; color: var(--text-muted);">Cliquez pour uploader un personnage (ou laissez vide pour génération IA auto)</span>
+            <span style="font-size: 12px; color: var(--text-muted);">Cliquez pour uploader une image de personnage (ou laissez vide pour génération IA auto)</span>
             <img id="videoCharThumb" class="upload-preview-thumb" alt="Aperçu personnage">
           </div>
           <input type="file" id="videoCharFile" accept="image/*" style="display: none;" onchange="handleFileSelect(event, 'videoCharThumb', 'videoCharData')">
@@ -514,18 +514,37 @@ const HTML_CONTENT = `<!DOCTYPE html>
           <div class="form-group">
             <label>Nombre de Sections</label>
             <select id="videoSections">
-              <option value="2">2 Sections (~10-12s)</option>
-              <option value="3">3 Sections (~15-18s)</option>
-              <option value="4" selected>4 Sections (~20-25s)</option>
-              <option value="5">5 Sections (~25-30s)</option>
-              <option value="6">6 Sections (~30-35s)</option>
+              <option value="2">2 Sections</option>
+              <option value="3">3 Sections</option>
+              <option value="4" selected>4 Sections</option>
+              <option value="5">5 Sections</option>
+              <option value="6">6 Sections</option>
             </select>
           </div>
+          <div class="form-group">
+            <label>Qualité Vidéo</label>
+            <select id="videoQuality">
+              <option value="low">Rapide (Low)</option>
+              <option value="medium" selected>Équilibré (Medium)</option>
+              <option value="high">Haute Définition (High)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
             <label>Format Ratio</label>
             <select id="videoRatio">
               <option value="1" selected>16:9 Paysage</option>
               <option value="2">9:16 Vertical (Reels/TikTok)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Langue</label>
+            <select id="videoLang">
+              <option value="french" selected>Français</option>
+              <option value="english">Anglais</option>
+              <option value="spanish">Espagnol</option>
             </select>
           </div>
         </div>
@@ -737,7 +756,9 @@ const HTML_CONTENT = `<!DOCTYPE html>
       const prompt = document.getElementById("videoPrompt").value.trim();
       const initialImage = document.getElementById("videoCharData").value;
       const sections = document.getElementById("videoSections").value;
+      const quality = document.getElementById("videoQuality").value;
       const ratio = document.getElementById("videoRatio").value;
+      const language = document.getElementById("videoLang").value;
       const box = document.getElementById("videoPreviewBox");
       const btn = document.getElementById("btnGenVideo");
 
@@ -755,7 +776,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
         const initData = await safeFetchJson(\`\${getBaseUrl()}/stanleystawa/video\`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, initialImage, sections, ratio })
+          body: JSON.stringify({ prompt, initialImage, sections, quality, ratio, language })
         });
 
         const taskId = initData.task_id;
@@ -776,7 +797,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
               box.innerHTML = \`
                 <video class="preview-video" src="\${statusData.video_url}" controls autoplay loop></video>
                 <div class="meta-box">
-                  <div><strong>Durée :</strong> \${statusData.duration}s | <strong>Sections :</strong> \${statusData.scenes_count} | <strong>Filigrane :</strong> ★ Stanley stawa (Dynamique)</div>
+                  <div><strong>Durée :</strong> \${statusData.duration}s | <strong>Sections :</strong> \${statusData.scenes_count} | <strong>Qualité :</strong> \${quality} | <strong>Filigrane :</strong> ★ Stanley stawa (Dynamique)</div>
                   <div><strong>Lien direct MP4 :</strong> <a href="\${statusData.video_url}" target="_blank">\${statusData.video_url}</a></div>
                 </div>
               \`;
@@ -792,7 +813,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
 
               if (pBar) pBar.style.width = pct + "%";
               if (pLbl) pLbl.innerText = \`Rendu en cours (\${pct}%)...\`;
-              if (pDet) pDet.innerText = statusData.message || "Montage multi-scènes avec FFmpeg...";
+              if (pDet) pDet.innerText = statusData.message || "Animation des scènes avec FFmpeg...";
             }
           } catch (e) {
             console.warn("Poll retry...", e);
@@ -1017,9 +1038,9 @@ module.exports = function handler(req, res) {
       status: "online",
       author: "stanleystawa",
       database: "Turso libSQL",
-      engine: "GitHub Actions + FFmpeg + MagicLight TTS",
+      engine: "vercel-animate-api + FFmpeg + Creative Studio + MagicLight TTS",
       endpoints: {
-        video: "/stanleystawa/video?prompt=...&sections=4",
+        video: "/stanleystawa/video?prompt=...&sections=4&quality=medium",
         status: "/stanleystawa/status?task_id=...",
         image: "/stanleystawa/image?prompt=...&ratio=16:9",
         edit: "/stanleystawa/edit",

@@ -1,11 +1,12 @@
 /**
- * scripts/render-video.js — Moteur de rendu vidéo HD Multi-Scènes Pipelined & Parallélisé
- *
- * 1. Parallélisation décalée de 1.5s pour les retouches d'images
- * 2. Pipelining : Animation immédiate dès qu'une image est prête
- * 3. Filigrane dynamique "★ Stanley stawa" avec box=1 natif FFmpeg
- * 4. Choix dynamique du nombre de sections (2 à 6)
- * 5. Pacing optimisé : calage exact de la durée audio (zéro temps mort)
+ * scripts/render-video.js — Moteur de rendu vidéo HD Multi-Scènes avec :
+ * 1. Animation IA Text-to-Video via vercel-animate-api (Glam AI) avec audio/voix intégré
+ * 2. Cohérence du personnage via Creative Image Studio (/generate + /edit)
+ * 3. Parallélisation décalée de 1.5s pour les retouches d'images
+ * 4. Pipelining : Dès qu'une image est prête, déclenchement immédiat de l'animation vercel-animate-api
+ * 5. Choix dynamique de la qualité (low, medium, high) et du nombre de sections (2 à 6)
+ * 6. Filigrane dynamique "★ Stanley stawa" changeant de position à chaque section
+ * 7. Pacing optimisé & streaming MP4 sans temps mort
  */
 
 const fs = require("fs");
@@ -19,8 +20,9 @@ const REPO = process.env.GITHUB_REPOSITORY || "foctaveluka-eng/magiclight-api";
 
 const MAGICLIGHT_API = "https://api.magiclight.ai";
 const CREATIVE_STUDIO_API = "https://creative-image-studio.onrender.com";
+const ANIMATE_API = "https://vercel-animate-api.vercel.app";
 
-// Mise à jour Turso DB (Upsert)
+// Helper Turso DB (Upsert)
 async function updateTursoTask(taskId, fields) {
   let url = TURSO_URL.replace("libsql://", "https://");
   if (!url.endsWith("/v2/pipeline")) url = url.replace(/\/$/, "") + "/v2/pipeline";
@@ -115,17 +117,20 @@ async function main() {
   const initialImage = process.env.INITIAL_IMAGE || "";
   const language = process.env.LANGUAGE || "french";
   const sectionsRequested = Math.min(6, Math.max(2, parseInt(process.env.SECTIONS || process.env.SCENES || "4", 10)));
+  const quality = process.env.QUALITY || "medium"; // low, medium, high
+  const animDuration = parseInt(process.env.DURATION || "10", 10);
   const ratio = parseInt(process.env.RATIO || "1", 10);
   const outWidth = ratio === 2 ? 720 : 1280;
   const outHeight = ratio === 2 ? 1280 : 720;
   const ratioStr = ratio === 2 ? "9:16" : "16:9";
 
   console.log(`\n======================================================`);
-  console.log(`🚀 [MagicLight Multi-Scene Engine] Task ID: ${taskId}`);
+  console.log(`🚀 [MagicLight Pipelined Engine] Task ID: ${taskId}`);
   console.log(`📝 Prompt: "${prompt}"`);
   console.log(`📑 Sections demandées: ${sectionsRequested}`);
+  console.log(`🎯 Qualité vidéo choisie: ${quality} | Durée par section: ${animDuration}s`);
   console.log(`📐 Format: ${outWidth}x${outHeight} (${ratioStr})`);
-  console.log(`⚡ Mode: Parallélisation décalée de 1.5s + Pipelining animation immédiate`);
+  console.log(`⚡ Mode: vercel-animate-api (Audio & Animation IA) + Parallélisation 1.5s`);
   console.log(`======================================================\n`);
 
   const workDir = path.join("/tmp", taskId);
@@ -133,17 +138,17 @@ async function main() {
 
   try {
     // ----------------------------------------------------
-    // ÉTAPE 1 : Scénarisation IA & Dialogues explicites pour l'audio
+    // ÉTAPE 1 : Scénarisation IA & Dialogues explicites pour la vidéo
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       status: "processing",
       progress: 15,
       step: "story",
-      message: `Découpage du scénario en ${sectionsRequested} sections dynamiques...`
+      message: `Découpage du scénario en ${sectionsRequested} sections et dialogues pour l'animation IA...`
     });
 
     let scenes = [];
-    let storyTitle = "Histoire Épique";
+    let storyTitle = "Aventure Magique";
 
     try {
       const expRes = await (await fetch(`${MAGICLIGHT_API}/api/project/story-expand`, {
@@ -168,7 +173,7 @@ async function main() {
 
     if (!scenes || scenes.length < sectionsRequested) {
       scenes = [
-        `Regardez ce magnifique horizon, une grande aventure commence !`,
+        `Regardez ce magnifique jardin, une grande aventure commence !`,
         `J'avance avec courage et je découvre un secret extraordinaire.`,
         `Tout s'illumine autour de moi dans un éclat de magie pure !`,
         `Cette aventure restera gravée pour toujours dans nos cœurs.`
@@ -179,7 +184,7 @@ async function main() {
     console.log(`✅ ${finalScenes.length} sections préparées pour "${storyTitle}"`);
 
     // ----------------------------------------------------
-    // ÉTAPE 2 : Création de l'image de référence (Scène 1)
+    // ÉTAPE 2 : Création du Personnage de Référence (Scène 1)
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 30,
@@ -188,47 +193,56 @@ async function main() {
     });
 
     const refImagePath = path.join(workDir, "character_ref.jpg");
+    let refImageUrl = "";
 
     if (initialImage && (initialImage.startsWith("http") || initialImage.startsWith("data:"))) {
       console.log("📥 Utilisation de l'image de personnage fournie...");
       if (initialImage.startsWith("http")) {
         await downloadFile(initialImage, refImagePath);
+        refImageUrl = initialImage;
       } else {
         const b64Data = initialImage.replace(/^data:image\/\w+;base64,/, "");
         fs.writeFileSync(refImagePath, Buffer.from(b64Data, "base64"));
+        refImageUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(prompt)}&ratio=${ratioStr}`;
       }
     } else {
       console.log("🎨 Génération IA du personnage de référence (Scène 1)...");
       const charPrompt = encodeURIComponent(`${storyTitle} - Character portrait, ${prompt}, 8k photorealistic cinematic lighting`);
-      const charUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${charPrompt}&ratio=${ratioStr}`;
-      await downloadFile(charUrl, refImagePath);
+      refImageUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${charPrompt}&ratio=${ratioStr}`;
+      await downloadFile(refImageUrl, refImagePath);
     }
 
     const refImageBase64 = `data:image/jpeg;base64,${fs.readFileSync(refImagePath).toString("base64")}`;
     const sceneImages = new Array(finalScenes.length);
+    const sceneImageUrls = new Array(finalScenes.length);
     sceneImages[0] = refImagePath;
+    sceneImageUrls[0] = refImageUrl;
 
     // ----------------------------------------------------
-    // ÉTAPE 3 : Pipelining & Parallélisation des Retouches (Décalées de 1.5s)
-    // Dès qu'une image est prête, son animation démarre immédiatement !
+    // ÉTAPE 3 : Pipelining Parallélisé :
+    // 1) Retouches décalées de 1.5s (pour garder le même personnage)
+    // 2) Dès qu'une image est prête ➔ Déclenchement immédiat de l'animation vercel-animate-api !
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 45,
       step: "parallel_pipeline",
-      message: "Génération parallèle des scènes et animations séquentielles..."
+      message: "Génération des scènes et animation Text-to-Video IA avec audio intégré..."
     });
 
-    console.log(`\n⚡ Lancement de ${finalScenes.length - 1} retouches en parallèle (décalées de 1.5s)...`);
+    console.log(`\n⚡ Lancement de ${finalScenes.length} sections pipelinées (retouche 1.5s ➔ animation IA immédiate)...`);
     const sceneClips = new Array(finalScenes.length);
 
-    // Fonction de traitement d'une section individuelle
     async function processSection(index) {
       const sceneText = finalScenes[index].trim();
       const sceneImgPath = path.join(workDir, `scene_${index + 1}.jpg`);
+      let sceneImgUrl = "";
 
-      if (index > 0) {
+      if (index === 0) {
+        sceneImgUrl = refImageUrl;
+      } else {
+        // Décalage de 1.5s entre chaque appel de retouche
         await new Promise(r => setTimeout(r, (index - 1) * 1500));
-        console.log(` 🎨 [Section ${index + 1}/${finalScenes.length}] Appel /edit pour cohérence personnage...`);
+        console.log(` 🎨 [Section ${index + 1}/${finalScenes.length}] Retouche /edit pour cohérence personnage...`);
 
         try {
           const editRes = await fetch(`${CREATIVE_STUDIO_API}/edit`, {
@@ -244,69 +258,99 @@ async function main() {
           if (editRes.ok) {
             const arrBuf = await editRes.arrayBuffer();
             fs.writeFileSync(sceneImgPath, Buffer.from(arrBuf));
+            sceneImgUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(sceneText)}&ratio=${ratioStr}`;
           } else {
-            const fallbackUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(sceneText)}&ratio=${ratioStr}`;
-            await downloadFile(fallbackUrl, sceneImgPath);
+            sceneImgUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(sceneText)}&ratio=${ratioStr}`;
+            await downloadFile(sceneImgUrl, sceneImgPath);
           }
         } catch (e) {
-          const fallbackUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(sceneText)}&ratio=${ratioStr}`;
-          await downloadFile(fallbackUrl, sceneImgPath);
+          sceneImgUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(sceneText)}&ratio=${ratioStr}`;
+          await downloadFile(sceneImgUrl, sceneImgPath);
         }
         sceneImages[index] = sceneImgPath;
+        sceneImageUrls[index] = sceneImgUrl;
       }
 
-      console.log(` 🎬 [Section ${index + 1}] Image prête ➔ Déclenchement immédiat de l'animation vidéo...`);
+      console.log(` 🎬 [Section ${index + 1}] Image prête ➔ Déclenchement immédiat de l'animation vercel-animate-api...`);
       const clipOutput = path.join(workDir, `clip_${index + 1}.mp4`);
+      const rawClipDownloaded = path.join(workDir, `raw_clip_${index + 1}.mp4`);
       const curImg = sceneImages[index];
 
-      // Génération de la voix MagicLight TTS avec dialogue explicite
-      const audioFile = path.join(workDir, `voice_${index + 1}.mp3`);
+      // Prompt explicite pour que l'IA vidéo génère l'audio/dialogue intégré
+      const explicitSpeechPrompt = `${storyTitle} - The character is talking expressively: "${sceneText}", looking at camera, speaking with emotion, cinematic animation`;
+
+      let animatedVideoDownloaded = false;
+
+      // Appel de vercel-animate-api pour animer l'image en vidéo avec audio intégré
       try {
-        const vRes = await (await fetch(`${MAGICLIGHT_API}/api/voice`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "User-Agent": "Mozilla/5.0" },
-          body: JSON.stringify({
-            text: sceneText,
-            voiceId: "MM:lengdan_xiongzhang"
-          })
-        })).json();
+        const animRes = await (await fetch(`${ANIMATE_API}/stanleystawa/video?imageUrl=${encodeURIComponent(sceneImageUrls[index])}&prompt=${encodeURIComponent(explicitSpeechPrompt)}&duration=${animDuration}&quality=${quality}&format=json`)).json();
 
-        if (vRes.data?.data?.url) {
-          await downloadFile(vRes.data.data.url, audioFile);
+        if (animRes.checkUrl) {
+          console.log(` ⏳ [Section ${index + 1}] Animation en cours sur vercel-animate-api...`);
+          for (let p = 0; p < 25; p++) {
+            await new Promise(r => setTimeout(r, 3000));
+            const pollData = await (await fetch(animRes.checkUrl)).json();
+            if (pollData.status === "READY" && pollData.videoUrl) {
+              console.log(` 🎉 [Section ${index + 1}] Vidéo IA avec audio générée par vercel-animate-api !`);
+              await downloadFile(pollData.videoUrl, rawClipDownloaded);
+              animatedVideoDownloaded = true;
+              break;
+            } else if (pollData.error) {
+              break;
+            }
+          }
         }
-      } catch (err) {}
-
-      if (!fs.existsSync(audioFile)) {
-        execSync(`ffmpeg -y -f lavfi -i anullsrc=r=44100:cl=mono -t 4 "${audioFile}" -loglevel error`);
+      } catch (animErr) {
+        console.warn(`[Section ${index + 1}] Fallback animation locale:`, animErr.message);
       }
 
-      let duration = 4.5;
-      try {
-        const durOutput = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioFile}"`).toString().trim();
-        duration = Math.max(3.0, parseFloat(durOutput) + 0.3);
-      } catch (e) {}
+      // Si l'animation n'est pas revenue à temps, fallback fluide MagicLight TTS + Ken Burns
+      if (!animatedVideoDownloaded) {
+        console.log(` ⚙️ [Section ${index + 1}] Fallback animation fluide + MagicLight TTS...`);
+        const audioFile = path.join(workDir, `voice_${index + 1}.mp3`);
+        try {
+          const vRes = await (await fetch(`${MAGICLIGHT_API}/api/voice`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "User-Agent": "Mozilla/5.0" },
+            body: JSON.stringify({ text: sceneText, voiceId: "MM:lengdan_xiongzhang" })
+          })).json();
 
-      // Mouvement de caméra Ken Burns
-      const zoomEffect = index % 2 === 0
-        ? `zoompan=z='min(zoom+0.0016,1.15)':d=${Math.round(duration * 25)}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${outWidth}x${outHeight}`
-        : `zoompan=z='if(lte(zoom,1.0),1.15,max(1.001,zoom-0.0016))':d=${Math.round(duration * 25)}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${outWidth}x${outHeight}`;
+          if (vRes.data?.data?.url) {
+            await downloadFile(vRes.data.data.url, audioFile);
+          }
+        } catch (err) {}
 
-      // Filigrane dynamique "★ Stanley stawa" avec box natif FFmpeg
+        if (!fs.existsSync(audioFile)) {
+          execSync(`ffmpeg -y -f lavfi -i anullsrc=r=44100:cl=mono -t 4 "${audioFile}" -loglevel error`);
+        }
+
+        let duration = 4.5;
+        try {
+          const durOutput = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioFile}"`).toString().trim();
+          duration = Math.max(3.0, parseFloat(durOutput) + 0.3);
+        } catch (e) {}
+
+        const zoomEffect = index % 2 === 0
+          ? `zoompan=z='min(zoom+0.0016,1.15)':d=${Math.round(duration * 25)}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${outWidth}x${outHeight}`
+          : `zoompan=z='if(lte(zoom,1.0),1.15,max(1.001,zoom-0.0016))':d=${Math.round(duration * 25)}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${outWidth}x${outHeight}`;
+
+        execSync(`ffmpeg -y -loop 1 -t ${duration} -i "${curImg}" -i "${audioFile}" -filter_complex "[0:v]${zoomEffect}[v]" -map "[v]" -map 1:a -c:v libx264 -preset ultrafast -tune stillimage -pix_fmt yuv420p -threads 4 -c:a aac -shortest "${rawClipDownloaded}" -loglevel error`);
+      }
+
+      // Incrustation du Filigrane Dynamique "★ Stanley stawa" + Sous-titres sur le clip final
       const wmPos = WATERMARK_POSITIONS[index % WATERMARK_POSITIONS.length];
       const watermarkFilter = `drawtext=text='★ Stanley stawa':${wmPos}:fontcolor=0x7CF0C4:fontsize=22:box=1:boxcolor=black@0.75:boxborderw=8:shadowcolor=black@0.8:shadowx=1:shadowy=1`;
 
-      // Sous-titres dynamiques
       const wrappedLines = wrapText(sceneText, 38);
       const line1 = (wrappedLines[0] || "").replace(/'/g, "'\\\\''").replace(/:/g, "\\:");
       const line2 = (wrappedLines[1] || "").replace(/'/g, "'\\\\''").replace(/:/g, "\\:");
       const subFilter = `drawbox=y=ih-110:color=black@0.7:width=iw:height=95:t=fill,drawtext=text='${line1}':fontcolor=white:fontsize=24:x=(w-text_w)/2:y=h-90,drawtext=text='${line2}':fontcolor=0xFFD700:fontsize=22:x=(w-text_w)/2:y=h-55`;
 
-      const filterComplex = `[0:v]${zoomEffect},${watermarkFilter},${subFilter}[v]`;
-      const cmd = `ffmpeg -y -loop 1 -t ${duration} -i "${curImg}" -i "${audioFile}" -filter_complex "${filterComplex}" -map "[v]" -map 1:a -c:v libx264 -preset ultrafast -tune stillimage -pix_fmt yuv420p -threads 4 -c:a aac -shortest "${clipOutput}" -loglevel error`;
-      execSync(cmd);
+      const filterComplex = `[0:v]scale=${outWidth}:${outHeight}:force_original_aspect_ratio=decrease,pad=${outWidth}:${outHeight}:(ow-iw)/2:(oh-ih)/2,${watermarkFilter},${subFilter}[v]`;
+      execSync(`ffmpeg -y -i "${rawClipDownloaded}" -filter_complex "${filterComplex}" -map "[v]" -map 0:a? -c:v libx264 -preset ultrafast -pix_fmt yuv420p -threads 4 -c:a aac "${clipOutput}" -loglevel error`);
 
       sceneClips[index] = clipOutput;
-      console.log(` ✅ [Section ${index + 1}/${finalScenes.length}] Rendu terminé (${duration.toFixed(1)}s, sans temps mort)`);
+      console.log(` ✅ [Section ${index + 1}/${finalScenes.length}] Section finalisée avec watermark dynamique`);
     }
 
     // Exécution parallélisée de toutes les sections
@@ -317,15 +361,15 @@ async function main() {
     await Promise.all(sectionPromises);
 
     // ----------------------------------------------------
-    // ÉTAPE 4 : Concaténation rapide & Musique BGM
+    // ÉTAPE 4 : Concaténation rapide & Mixage BGM
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 85,
       step: "video_concat",
-      message: "Concaténation finale des sections et mixage audio..."
+      message: "Concaténation des sections animées et mixage de fond..."
     });
 
-    console.log("\n📦 Étape 4 : Concaténation des clips...");
+    console.log("\n📦 Étape 4 : Concaténation des clips animés...");
     const concatListFile = path.join(workDir, "concat.txt");
     const concatContent = sceneClips.map(c => `file '${c}'`).join("\n");
     fs.writeFileSync(concatListFile, concatContent);
@@ -342,11 +386,11 @@ async function main() {
     }
 
     const finalMp4Path = path.join(workDir, "final_output.mp4");
-    execSync(`ffmpeg -y -i "${tempMergedVideo}" -i "${bgmFile}" -filter_complex "[0:a]volume=1.0[voice];[1:a]volume=0.12[bgm];[voice][bgm]amix=inputs=2:duration=first[a]" -map 0:v -map "[a]" -c:v copy -c:a aac -shortest "${finalMp4Path}" -loglevel error`);
+    execSync(`ffmpeg -y -i "${tempMergedVideo}" -i "${bgmFile}" -filter_complex "[0:a]volume=1.0[voice];[1:a]volume=0.10[bgm];[voice][bgm]amix=inputs=2:duration=first[a]" -map 0:v -map "[a]" -c:v copy -c:a aac -shortest "${finalMp4Path}" -loglevel error`);
 
     console.log(`✅ Montage vidéo finalisé : ${finalMp4Path}`);
 
-    let totalDuration = 15;
+    let totalDuration = 20;
     try {
       const durStr = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${finalMp4Path}"`).toString().trim();
       totalDuration = parseFloat(durStr);
