@@ -1,8 +1,8 @@
 /**
- * scripts/render-video.js — Moteur de rendu vidéo IA Multi-Scènes avec :
- * 1. Scénario IA & Découpage officiel via MagicLight API (avec Token Turso Pool)
+ * scripts/render-video.js — Moteur de rendu vidéo IA Multi-Scènes Haute Fidélité :
+ * 1. Scénarisation IA & Découpage officiel via MagicLight API (avec Token Turso Pool)
  * 2. Cohérence absolue du personnage via Creative Studio /edit (Image Uploadée ou Scène 1)
- * 3. Proxy d'images public Vercel pour alimenter vercel-animate-api même sur dépôt privé
+ * 3. Hébergement direct des images pour alimentation instantanée de vercel-animate-api
  * 4. Animation pipelinée vercel-animate-api avec audio vocal natif synchronisé
  * 5. Filigrane dynamique "★ Stanley stawa" par superposition PNG alpha (6 positions rotatives)
  * 6. Compression H.264 ultra-optimisée (< 2 Mo par défaut) et FastStart Web
@@ -101,10 +101,33 @@ async function downloadFile(url, destPath) {
   fs.writeFileSync(destPath, Buffer.from(arrayBuffer));
 }
 
-// Upload d'un asset (vidéo ou image) sur GitHub Releases
+// Upload direct et public d'une image pour l'animateur (Catbox/Litterbox 24h)
+async function uploadDirectPublicImage(filePath) {
+  try {
+    const form = new FormData();
+    const fileBuf = fs.readFileSync(filePath);
+    form.append("reqtype", "fileupload");
+    form.append("time", "24h");
+    form.append("fileToUpload", new Blob([fileBuf], { type: "image/jpeg" }), "scene.jpg");
+
+    const res = await fetch("https://litterbox.catbox.moe/resources/internals/api.php", {
+      method: "POST",
+      body: form
+    });
+    const url = (await res.text()).trim();
+    if (url.startsWith("http")) {
+      console.log(` 🌐 Image publique hébergée : ${url}`);
+      return url;
+    }
+  } catch (err) {
+    console.warn("Upload public image fallback:", err.message);
+  }
+  return null;
+}
+
+// Upload d'un asset sur GitHub Releases
 async function uploadReleaseAsset(assetName, filePath, mimeType = "application/octet-stream") {
   try {
-    // 1. Récupération de la release
     const relRes = await (await fetch(`https://api.github.com/repos/${REPO}/releases/tags/v1.0.0-videos`, {
       headers: { "Authorization": `token ${GITHUB_TOKEN}`, "User-Agent": "MagicLight-Pipeline" }
     })).json();
@@ -115,7 +138,6 @@ async function uploadReleaseAsset(assetName, filePath, mimeType = "application/o
       });
     }
 
-    // 2. Suppression de l'asset si existant
     const existing = (relRes.assets || []).find(a => a.name === assetName);
     if (existing) {
       await fetch(`https://api.github.com/repos/${REPO}/releases/assets/${existing.id}`, {
@@ -124,7 +146,6 @@ async function uploadReleaseAsset(assetName, filePath, mimeType = "application/o
       });
     }
 
-    // 3. Upload du binaire
     const uploadUrl = `https://uploads.github.com/repos/${REPO}/releases/${relRes.id}/assets?name=${encodeURIComponent(assetName)}`;
     const fileBuf = fs.readFileSync(filePath);
 
@@ -144,7 +165,6 @@ async function uploadReleaseAsset(assetName, filePath, mimeType = "application/o
       return true;
     }
   } catch (err) {
-    // Fallback CLI
     try {
       execSync(`gh release upload v1.0.0-videos "${filePath}" --repo ${REPO} --clobber`, {
         env: { ...process.env, GH_TOKEN: GITHUB_TOKEN }
@@ -256,7 +276,7 @@ async function main() {
   const animDuration = parseInt(process.env.DURATION || "5", 10);
   const ratio = parseInt(process.env.RATIO || "1", 10);
 
-  // Configuration de compression haute efficacité
+  // Configuration de compression haute efficacité (< 2 Mo par défaut)
   let outWidth = ratio === 2 ? 720 : 1280;
   let outHeight = ratio === 2 ? 1280 : 720;
   let encCrf = "27";
@@ -300,7 +320,7 @@ async function main() {
   console.log(`🎯 Qualité: ${quality} (CRF: ${encCrf}, MaxRate: ${encMaxrate}) | Durée/sec: ${animDuration}s`);
   console.log(`🖼️ Personnage: ${initialImage ? "Image fournie (référence obligatoire)" : "Génération IA requise"}`);
   console.log(`📐 Format: ${outWidth}x${outHeight} (${ratioStr})`);
-  console.log(`🔒 Dépôt GitHub Privé — Streaming via Proxy Vercel`);
+  console.log(`🔒 Dépôt GitHub Privé — Hébergement direct des images`);
   console.log(`======================================================\n`);
 
   const workDir = path.join("/tmp", taskId);
@@ -401,10 +421,12 @@ async function main() {
       refImageBase64 = `data:image/jpeg;base64,${fs.readFileSync(refImagePath).toString("base64")}`;
     }
 
-    // Upload du personnage Scène 1 sur Release pour proxy public Vercel
-    const scene1AssetName = `${taskId}_scene_1.jpg`;
-    await uploadReleaseAsset(scene1AssetName, refImagePath, "image/jpeg");
-    const scene1PublicUrl = `${VERCEL_PUBLIC_HOST}/stanleystawa/download?name=${scene1AssetName}`;
+    // Hébergement direct de l'image pour vercel-animate-api
+    let scene1PublicUrl = await uploadDirectPublicImage(refImagePath);
+    if (!scene1PublicUrl) {
+      scene1PublicUrl = `${VERCEL_PUBLIC_HOST}/stanleystawa/download?name=${taskId}_scene_1.jpg`;
+    }
+    await uploadReleaseAsset(`${taskId}_scene_1.jpg`, refImagePath, "image/jpeg");
 
     // ----------------------------------------------------
     // ÉTAPE 3 : Pipeline de Retouche (/edit) & Animation
@@ -432,7 +454,6 @@ async function main() {
       if (index === 0) {
         sceneImgUrl = scene1PublicUrl;
       } else {
-        // Décalage pour respecter le serveur Creative Studio
         await new Promise(r => setTimeout(r, (index - 1) * 2000));
         console.log(` 🎨 [Section ${index + 1}/${finalScenes.length}] Retouche /edit pour cohérence du personnage...`);
 
@@ -464,10 +485,12 @@ async function main() {
           await downloadFile(fallbackUrl, sceneImgPath);
         }
 
-        // Upload de l'image de scène sur release pour proxy public
-        const sceneAssetName = `${taskId}_scene_${index + 1}.jpg`;
-        await uploadReleaseAsset(sceneAssetName, sceneImgPath, "image/jpeg");
-        sceneImgUrl = `${VERCEL_PUBLIC_HOST}/stanleystawa/download?name=${sceneAssetName}`;
+        // Hébergement direct de l'image de scène
+        sceneImgUrl = await uploadDirectPublicImage(sceneImgPath);
+        if (!sceneImgUrl) {
+          sceneImgUrl = `${VERCEL_PUBLIC_HOST}/stanleystawa/download?name=${taskId}_scene_${index + 1}.jpg`;
+        }
+        await uploadReleaseAsset(`${taskId}_scene_${index + 1}.jpg`, sceneImgPath, "image/jpeg");
 
         sceneImages[index] = sceneImgPath;
         sceneImageUrls[index] = sceneImgUrl;
