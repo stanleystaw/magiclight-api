@@ -5,7 +5,7 @@
  * 3. Parallélisation décalée de 1.5s pour les retouches d'images (/edit)
  * 4. Pipelining : Dès qu'une image est prête, déclenchement immédiat de l'animation vercel-animate-api
  * 5. Choix dynamique de la qualité (low, medium, high) et du nombre de sections (2 à 6)
- * 6. Filigrane dynamique "★ Stanley stawa" par superposition SVG alpha (universel et non rognable)
+ * 6. Filigrane dynamique "★ Stanley stawa" par superposition PNG alpha (100% universel et non rognable)
  */
 
 const fs = require("fs");
@@ -84,59 +84,52 @@ async function downloadFile(url, destPath) {
   fs.writeFileSync(destPath, Buffer.from(arrayBuffer));
 }
 
-function wrapText(text, maxLen = 42) {
-  const words = text.split(" ");
-  const lines = [];
-  let currentLine = "";
+// Création de l'overlay PNG (Filigrane Stanley stawa + Sous-titres) via Python Pillow
+function createOverlayPng(width, height, sectionIndex, sceneText, outputPath) {
+  const pyScript = `
+from PIL import Image, ImageDraw
+import sys
 
-  for (const word of words) {
-    if ((currentLine + " " + word).trim().length <= maxLen) {
-      currentLine = (currentLine + " " + word).trim();
-    } else {
-      if (currentLine) lines.push(currentLine);
-      currentLine = word;
-    }
-  }
-  if (currentLine) lines.push(currentLine);
-  return lines;
-}
+w = int(sys.argv[1])
+h = int(sys.argv[2])
+idx = int(sys.argv[3])
+text = sys.argv[4]
+out = sys.argv[5]
 
-// Génération de l'overlay SVG (Filigrane dynamique + Sous-titres)
-function createSceneOverlaySVG(width, height, sectionIndex, sceneText) {
-  const positions = ["top-left", "top-right", "bottom-right", "bottom-left", "center-right", "center-left"];
-  const pos = positions[sectionIndex % positions.length];
+img = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+d = ImageDraw.Draw(img)
 
-  let wm_x = 30, wm_y = 30;
-  if (pos === "top-right") {
-    wm_x = width - 240; wm_y = 30;
-  } else if (pos === "bottom-right") {
-    wm_x = width - 240; wm_y = height - 160;
-  } else if (pos === "bottom-left") {
-    wm_x = 30; wm_y = height - 160;
-  } else if (pos === "center-right") {
-    wm_x = width - 240; wm_y = Math.floor(height / 2) - 25;
-  } else if (pos === "center-left") {
-    wm_x = 30; wm_y = Math.floor(height / 2) - 25;
-  }
+positions = ['top-left', 'top-right', 'bottom-right', 'bottom-left', 'center-right', 'center-left']
+pos = positions[idx % len(positions)]
 
-  const lines = wrapText(sceneText, 38);
-  const line1 = (lines[0] || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const line2 = (lines[1] || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+if pos == 'top-left': x, y = 30, 30
+elif pos == 'top-right': x, y = w - 250, 30
+elif pos == 'bottom-right': x, y = w - 250, h - 160
+elif pos == 'bottom-left': x, y = 30, h - 160
+elif pos == 'center-right': x, y = w - 250, h // 2 - 25
+else: x, y = 30, h // 2 - 25
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-  <!-- Filigrane dynamique Stanley stawa -->
-  <g transform="translate(${wm_x}, ${wm_y})">
-    <rect width="210" height="42" rx="10" fill="rgba(10, 15, 25, 0.82)" stroke="#7CF0C4" stroke-width="1.5" />
-    <text x="105" y="27" font-family="sans-serif" font-size="15" font-weight="bold" fill="#7CF0C4" text-anchor="middle">★ Stanley stawa</text>
-  </g>
+d.rounded_rectangle([x, y, x + 220, y + 44], radius=10, fill=(10, 15, 25, 215), outline=(124, 240, 196, 255), width=2)
+d.text((x + 110, y + 22), '★ Stanley stawa', fill=(124, 240, 196, 255), anchor='mm')
 
-  <!-- Sous-titres stylisés -->
-  <g transform="translate(30, ${height - 115})">
-    <rect width="${width - 60}" height="90" rx="14" fill="rgba(0, 0, 0, 0.78)" stroke="rgba(255, 255, 255, 0.18)" stroke-width="1" />
-    <text x="${(width - 60) / 2}" y="36" font-family="sans-serif" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">${line1}</text>
-    <text x="${(width - 60) / 2}" y="66" font-family="sans-serif" font-size="18" font-weight="bold" fill="#FFD700" text-anchor="middle">${line2}</text>
-  </g>
-</svg>`;
+sub_y = h - 120
+d.rounded_rectangle([30, sub_y, w - 30, sub_y + 90], radius=14, fill=(0, 0, 0, 205), outline=(255, 255, 255, 50), width=1)
+
+words = text.split(' ')
+mid = len(words) // 2
+l1 = ' '.join(words[:mid]) if mid > 0 else text
+l2 = ' '.join(words[mid:]) if mid > 0 else ''
+
+d.text((w // 2, sub_y + 28), l1, fill=(255, 255, 255, 255), anchor='mm')
+if l2:
+    d.text((w // 2, sub_y + 60), l2, fill=(255, 215, 0, 255), anchor='mm')
+
+img.save(out, 'PNG')
+`;
+  const tempPy = path.join("/tmp", `gen_overlay_${Date.now()}_${sectionIndex}.py`);
+  fs.writeFileSync(tempPy, pyScript);
+  execSync(`python3 "${tempPy}" ${width} ${height} ${sectionIndex} "${sceneText.replace(/"/g, '\\"')}" "${outputPath}"`);
+  try { fs.unlinkSync(tempPy); } catch(e) {}
 }
 
 async function main() {
@@ -166,7 +159,7 @@ async function main() {
   console.log(`🎯 Qualité vidéo: ${quality} | Durée par section: ${animDuration}s`);
   console.log(`🖼️ Personnage Initial: ${initialImage ? "Image fournie (obligatoire)" : "Génération IA requise"}`);
   console.log(`📐 Format: ${outWidth}x${outHeight} (${ratioStr})`);
-  console.log(`⚡ Mode: Attente garantie vercel-animate-api + SVG Overlay Stanley stawa`);
+  console.log(`⚡ Mode: vercel-animate-api + Overlay PNG Stanley stawa`);
   console.log(`======================================================\n`);
 
   const workDir = path.join("/tmp", taskId);
@@ -257,7 +250,7 @@ async function main() {
     // ----------------------------------------------------
     // ÉTAPE 3 : Pipelining Parallélisé :
     // 1) Retouches décalées de 1.5s
-    // 2) Animation vercel-animate-api
+    // 2) Animation vercel-animate-api immédiate
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 45,
@@ -370,13 +363,12 @@ async function main() {
         execSync(`ffmpeg -y -loop 1 -t ${duration} -i "${curImg}" -i "${audioFile}" -filter_complex "[0:v]${zoomEffect}[v]" -map "[v]" -map 1:a -c:v libx264 -preset ultrafast -tune stillimage -pix_fmt yuv420p -threads 4 -c:a aac -shortest "${rawClipDownloaded}" -loglevel error`);
       }
 
-      // Incrustation du Filigrane Dynamique "★ Stanley stawa" + Sous-titres via SVG Alpha Overlay
-      const svgOverlayPath = path.join(workDir, `overlay_${index + 1}.svg`);
-      const svgContent = createSceneOverlaySVG(outWidth, outHeight, index, sceneText);
-      fs.writeFileSync(svgOverlayPath, svgContent);
+      // Incrustation du Filigrane Dynamique "★ Stanley stawa" + Sous-titres via PNG Alpha Overlay
+      const pngOverlayPath = path.join(workDir, `overlay_${index + 1}.png`);
+      createOverlayPng(outWidth, outHeight, index, sceneText, pngOverlayPath);
 
       const filterComplex = `[0:v]scale=${outWidth}:${outHeight}:force_original_aspect_ratio=decrease,pad=${outWidth}:${outHeight}:(ow-iw)/2:(oh-ih)/2[scaled];[scaled][1:v]overlay=0:0[v]`;
-      execSync(`ffmpeg -y -i "${rawClipDownloaded}" -i "${svgOverlayPath}" -filter_complex "${filterComplex}" -map "[v]" -map 0:a? -c:v libx264 -preset ultrafast -pix_fmt yuv420p -threads 4 -c:a aac "${clipOutput}" -loglevel error`);
+      execSync(`ffmpeg -y -i "${rawClipDownloaded}" -i "${pngOverlayPath}" -filter_complex "${filterComplex}" -map "[v]" -map 0:a? -c:v libx264 -preset ultrafast -pix_fmt yuv420p -threads 4 -c:a aac "${clipOutput}" -loglevel error`);
 
       sceneClips[index] = clipOutput;
       console.log(` ✅ [Section ${index + 1}/${finalScenes.length}] Section finalisée avec filigrane Stanley stawa`);
