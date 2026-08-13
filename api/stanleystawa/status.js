@@ -1,5 +1,8 @@
 /**
  * api/stanleystawa/status.js — Suivi en temps réel de l'état des vidéos & images (Turso DB)
+ *
+ * GET /stanleystawa/status?task_id=...
+ * GET /stanleystawa/status?task_id=...&format=mp4
  */
 
 const turso = require("../../lib/turso");
@@ -16,6 +19,7 @@ module.exports = async function handler(req, res) {
   try {
     const params = { ...(req.query || {}), ...(req.body || {}) };
     const taskId = params.task_id || params.taskId || params.id || params.project_id;
+    const format = String(params.format || "").toLowerCase();
 
     if (!taskId) {
       return res.status(400).json({ error: "Le paramètre 'task_id' est requis." });
@@ -24,6 +28,18 @@ module.exports = async function handler(req, res) {
     const rows = await turso.execute(`SELECT * FROM video_tasks WHERE task_id = ?;`, [taskId]);
     
     if (!rows.length) {
+      if (format === "mp4" || format === "redirect") {
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        return res.status(200).send(`
+          <html>
+            <head><meta http-equiv="refresh" content="3"><title>Génération de votre vidéo...</title></head>
+            <body style="background:#0b0f19;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;gap:12px;">
+              <div style="font-size:18px;font-weight:bold;">⚡ Initialisation du rendu vidéo (${taskId})...</div>
+              <div style="color:#9ca3af;font-size:14px;">Cette page se rechargera automatiquement dès que la vidéo sera prête.</div>
+            </body>
+          </html>
+        `);
+      }
       return res.status(200).json({
         status: "processing",
         progress: 15,
@@ -34,9 +50,39 @@ module.exports = async function handler(req, res) {
 
     const task = rows[0];
 
-    // Redirection directe si format=mp4 et vidéo prête
-    if (params.format === "mp4" && task.status === "completed" && task.video_url) {
+    // Redirection directe vers le streaming MP4 si format=mp4 et vidéo terminée
+    if ((format === "mp4" || format === "redirect") && task.status === "completed" && task.video_url) {
       return res.redirect(302, task.video_url);
+    }
+
+    // Si format=mp4 mais pas encore terminé, afficher une page d'attente auto-actualisée
+    if (format === "mp4" || format === "redirect") {
+      if (task.status === "failed") {
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        return res.status(500).send(`
+          <html>
+            <body style="background:#0b0f19;color:#ef4444;font-family:sans-serif;padding:30px;">
+              <h2>❌ Échec du rendu</h2>
+              <p>${task.error || task.message || "Erreur de traitement"}</p>
+            </body>
+          </html>
+        `);
+      }
+
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      return res.status(200).send(`
+        <html>
+          <head><meta http-equiv="refresh" content="4"><title>Rendu en cours (${task.progress || 20}%)...</title></head>
+          <body style="background:#0b0f19;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;gap:14px;text-align:center;">
+            <div style="font-size:20px;font-weight:bold;">🎬 Production de votre vidéo (${task.progress || 20}%)...</div>
+            <div style="color:#818cf8;font-size:14px;">${task.message || "Animation des scènes IA en cours..."}</div>
+            <div style="width:280px;height:6px;background:rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;">
+              <div style="width:${task.progress || 20}%;height:100%;background:#6366f1;"></div>
+            </div>
+            <div style="color:#6b7280;font-size:12px;">Redirection automatique vers le lecteur dès la fin du rendu...</div>
+          </body>
+        </html>
+      `);
     }
 
     return res.status(200).json({

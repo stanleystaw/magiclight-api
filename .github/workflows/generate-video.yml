@@ -12,15 +12,15 @@ on:
       prompt:
         description: "Video Prompt / Story"
         required: true
-        default: "Un petit chaton blanc aux yeux bleus qui explore un jardin magique"
+        default: "Un jeune aventurier courageux avec une cape rouge découvre un grimoire magique"
       initial_image:
         description: "Initial Character Image URL"
         required: false
         default: ""
       sections:
-        description: "Number of sections (2 to 6)"
+        description: "Number of sections (2 to 10)"
         required: false
-        default: "2"
+        default: "6"
       quality:
         description: "Quality (low, medium, high)"
         required: false
@@ -28,7 +28,7 @@ on:
       duration:
         description: "Duration per section (5 or 10)"
         required: false
-        default: "5"
+        default: "10"
       ratio:
         description: "Ratio (1 for 16:9, 2 for 9:16)"
         required: false
@@ -68,9 +68,9 @@ jobs:
           TASK_ID: ${{ github.event.client_payload.task_id || github.event.inputs.task_id }}
           PROMPT: ${{ github.event.client_payload.prompt || github.event.inputs.prompt }}
           INITIAL_IMAGE: ${{ github.event.client_payload.initial_image || github.event.inputs.initial_image || '' }}
-          SECTIONS: ${{ github.event.client_payload.sections || github.event.inputs.sections || '2' }}
+          SECTIONS: ${{ github.event.client_payload.sections || github.event.inputs.sections || '6' }}
           QUALITY: ${{ github.event.client_payload.quality || github.event.inputs.quality || 'medium' }}
-          DURATION: ${{ github.event.client_payload.duration || github.event.inputs.duration || '5' }}
+          DURATION: ${{ github.event.client_payload.duration || github.event.inputs.duration || '10' }}
           RATIO: ${{ github.event.client_payload.ratio || github.event.inputs.ratio || '1' }}
           LANGUAGE: ${{ github.event.client_payload.language || github.event.inputs.language || 'french' }}
           TURSO_DATABASE_URL: "https://magicligth-stanleystawa354.aws-eu-west-1.turso.io"

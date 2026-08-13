@@ -524,13 +524,13 @@ const HTML_CONTENT = `<!DOCTYPE html>
           <div class="form-group">
             <label>Nombre de Sections (2 à 10+)</label>
             <select id="videoSections">
-              <option value="2" selected>2 Sections (~1.5 Mo)</option>
+              <option value="2">2 Sections (~1.5 Mo)</option>
               <option value="3">3 Sections (~2.2 Mo)</option>
               <option value="4">4 Sections (~2.9 Mo)</option>
               <option value="5">5 Sections (~3.5 Mo)</option>
-              <option value="6">6 Sections (Film complet ~4 Mo)</option>
+              <option value="6" selected>6 Sections (Film complet ~4 Mo)</option>
               <option value="8">8 Sections (Histoire longue)</option>
-              <option value="10">10 Sections (Épisode complet)</option>
+              <option value="10" selected>10 Sections (Épisode complet)</option>
             </select>
           </div>
           <div class="form-group">
@@ -554,7 +554,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
           <div class="form-group">
             <label>Durée par Section</label>
             <select id="videoDuration">
-              <option value="5" selected>5 secondes (Rapide & Économique)</option>
+              <option value="5">5 secondes (Rapide & Économique)</option>
               <option value="10">10 secondes</option>
             </select>
           </div>
@@ -1021,7 +1021,7 @@ module.exports = function handler(req, res) {
       database: "Turso libSQL",
       engine: "vercel-animate-api + FFmpeg + Creative Studio + MagicLight TTS",
       endpoints: {
-        video: "/stanleystawa/video?prompt=...&sections=2&quality=medium",
+        video: "/stanleystawa/video?prompt=...&imageUrl=...&sections=6&duration=10&quality=medium&format=json",
         status: "/stanleystawa/status?task_id=...",
         download: "/stanleystawa/download?task_id=...",
         image: "/stanleystawa/image?prompt=...&ratio=16:9",
