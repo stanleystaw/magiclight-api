@@ -1,5 +1,7 @@
 /**
- * api/stanleystawa/image.js — Génération d'images 100% MagicLight AI
+ * api/stanleystawa/image.js — Génération d'images via Creative Image Studio
+ *
+ * GET/POST /stanleystawa/image?prompt=...&ratio=16:9&format=image
  */
 
 const engine = require("../../lib/magiclight");
@@ -15,7 +17,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const params = { ...(req.query || {}), ...(req.body || {}) };
-    const prompt = params.prompt || params.text;
+    const prompt = (params.prompt || params.text || "").trim();
 
     if (!prompt) {
       return res.status(400).json({ error: "Le paramètre 'prompt' est requis." });
@@ -23,8 +25,7 @@ module.exports = async function handler(req, res) {
 
     const result = await engine.generateImage({
       prompt,
-      styleId: params.styleId || params.style_id || "5001",
-      ratio: params.ratio || 1
+      ratio: params.ratio || "16:9"
     });
 
     if (params.format === "image" && result.image_url) {

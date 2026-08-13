@@ -1,6 +1,6 @@
 /**
  * scripts/render-video.js — Moteur de rendu vidéo HD Multi-Scènes exécuté sur GitHub Actions
- * Utilise FFmpeg natif Linux, MagicLight Story Expansion, MagicLight TTS et Turso DB
+ * Utilise FFmpeg natif Linux, MagicLight Story Expansion, MagicLight TTS et Creative Image Studio
  */
 
 const fs = require("fs");
@@ -12,6 +12,7 @@ const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN || "eyJhbGciOiJFZERTQSIsInR5cCI
 const GITHUB_TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || ("ghp_" + "xR2NKjc2PgzOl0kmCQSjy7nEVvAIQw0ue3HS");
 const REPO = process.env.GITHUB_REPOSITORY || "foctaveluka-eng/vercel-animate-api";
 const MAGICLIGHT_API = "https://api.magiclight.ai";
+const CREATIVE_STUDIO_API = "https://creative-image-studio.onrender.com";
 
 // Helpers Turso DB (Upsert)
 async function updateTursoTask(taskId, fields) {
@@ -136,11 +137,12 @@ async function main() {
   const ratio = parseInt(process.env.RATIO || "1", 10);
   const outWidth = ratio === 2 ? 720 : 1280;
   const outHeight = ratio === 2 ? 1280 : 720;
+  const ratioStr = ratio === 2 ? "9:16" : "16:9";
 
   console.log(`\n======================================================`);
   console.log(`🚀 [GitHub Actions Video Render] Task ID: ${taskId}`);
   console.log(`📝 Prompt: "${prompt}"`);
-  console.log(`📐 Format: ${outWidth}x${outHeight} (${ratio === 2 ? "9:16 Vertical" : "16:9 Paysage"})`);
+  console.log(`📐 Format: ${outWidth}x${outHeight} (${ratioStr})`);
   console.log(`======================================================\n`);
 
   const workDir = path.join("/tmp", taskId);
@@ -243,24 +245,23 @@ async function main() {
     }
 
     // ----------------------------------------------------
-    // ÉTAPE 3 : Images dédiées pour chaque scène
+    // ÉTAPE 3 : Images dédiées via Creative Image Studio
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 60,
       step: "images",
-      message: "Génération des visuels haute définition pour chaque scène..."
+      message: "Génération des visuels via Creative Image Studio..."
     });
 
-    console.log("\n🎨 Étape 3 : Génération des visuels distincts par scène...");
+    console.log("\n🎨 Étape 3 : Génération des visuels distincts via Creative Image Studio...");
     const sceneImages = [];
 
     for (let i = 0; i < finalScenes.length; i++) {
       const sceneText = finalScenes[i].trim();
       const imgFile = path.join(workDir, `scene_${i+1}.jpg`);
 
-      const cleanPrompt = encodeURIComponent(`${storyTitle}, scene ${i+1}: ${sceneText}, ultra photorealistic 8k, highly detailed cinematic lighting, masterpiece, sharp focus, 35mm film`);
-      const seed = Math.floor(Math.random() * 999999);
-      const imgUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${outWidth}&height=${outHeight}&seed=${seed}&nologo=true&enhance=true`;
+      const cleanPrompt = encodeURIComponent(`${storyTitle}, scene ${i+1}: ${sceneText}`);
+      const imgUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${cleanPrompt}&ratio=${ratioStr}`;
 
       try {
         await downloadFile(imgUrl, imgFile);
@@ -268,11 +269,11 @@ async function main() {
         execSync(`ffmpeg -y -f lavfi -i color=c=0x1f2937:s=${outWidth}x${outHeight}:d=1 -vframes 1 "${imgFile}" -loglevel error`);
       }
       sceneImages.push(imgFile);
-      console.log(` - Image Scène ${i+1}/${finalScenes.length} générée`);
+      console.log(` - Image Scène ${i+1}/${finalScenes.length} prête`);
     }
 
     // ----------------------------------------------------
-    // ÉTAPE 4 : Encodage vidéo FFmpeg multi-scènes (Rapide)
+    // ÉTAPE 4 : Encodage vidéo FFmpeg multi-scènes (Ultrafast)
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 80,
@@ -375,7 +376,7 @@ async function main() {
       step: "completed",
       message: "Vidéo générée avec succès !",
       video_url: videoUrl,
-      cover_url: `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=720&height=405&seed=1&nologo=true`,
+      cover_url: `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(prompt)}&ratio=16:9`,
       duration: Math.round(totalDuration * 10) / 10,
       scenes_count: finalScenes.length
     });

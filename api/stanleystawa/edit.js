@@ -1,5 +1,7 @@
 /**
- * api/stanleystawa/edit.js — Retouche et modification d'images 100% MagicLight AI
+ * api/stanleystawa/edit.js — Retouche d'images via Creative Image Studio
+ *
+ * POST /stanleystawa/edit { image, prompt, ratio }
  */
 
 const engine = require("../../lib/magiclight");
@@ -15,17 +17,18 @@ module.exports = async function handler(req, res) {
 
   try {
     const params = { ...(req.query || {}), ...(req.body || {}) };
-    const prompt = params.prompt || params.instructions || "Amélioration des détails";
+    const prompt = (params.prompt || params.instructions || "Amélioration des détails").trim();
+    const image = params.image || params.imageUrl || params.image_url;
+
+    if (!image) {
+      return res.status(400).json({ error: "Le paramètre 'image' ou 'imageUrl' est requis." });
+    }
 
     const result = await engine.editImage({
-      imageUrl: params.imageUrl || params.image_url,
+      image,
       prompt,
-      styleId: params.styleId || params.style_id || "5001"
+      ratio: params.ratio || "16:9"
     });
-
-    if (params.format === "image" && result.image_url) {
-      return res.redirect(302, result.image_url);
-    }
 
     return res.status(200).json(result);
   } catch (err) {
