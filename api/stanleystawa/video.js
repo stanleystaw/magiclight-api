@@ -1,5 +1,5 @@
 /**
- * api/stanleystawa/video.js — Déclencheur ultra-rapide (< 250 ms) avec await garanti sur GitHub Actions
+ * api/stanleystawa/video.js — Déclencheur vidéo avec support personnage initial et cohérence
  */
 
 const turso = require("../../lib/turso");
@@ -20,6 +20,7 @@ module.exports = async function handler(req, res) {
   try {
     const params = { ...(req.query || {}), ...(req.body || {}) };
     const prompt = (params.prompt || params.text || params.idea || "").trim();
+    const initialImage = (params.initialImage || params.image || params.imageUrl || "").trim();
 
     if (!prompt) {
       return res.status(400).json({ error: "Le paramètre 'prompt' ou 'text' est requis." });
@@ -29,14 +30,14 @@ module.exports = async function handler(req, res) {
     const ratio = params.ratio || "1";
     const language = params.language || "french";
 
-    // 1. Enregistrement initial dans Turso DB
+    // 1. Enregistrement dans Turso DB
     const sql = `
       INSERT INTO video_tasks (task_id, prompt, status, progress, step, message)
       VALUES (?, ?, 'queued', 10, 'queued', 'Initialisation du rendu vidéo...');
     `;
     await turso.execute(sql, [taskId, prompt]);
 
-    // 2. Déclenchement garanti du worker GitHub Actions (avec await pour éviter le freeze serverless)
+    // 2. Déclenchement du worker GitHub Actions
     const ghHeaders = {
       "Authorization": `token ${GITHUB_TOKEN}`,
       "Accept": "application/vnd.github.v3+json",
@@ -45,7 +46,7 @@ module.exports = async function handler(req, res) {
     };
 
     try {
-      const dispatchRes = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
+      await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
         method: "POST",
         headers: ghHeaders,
         body: JSON.stringify({
@@ -58,7 +59,6 @@ module.exports = async function handler(req, res) {
           }
         })
       });
-      console.log("[GitHub Dispatch Status]:", dispatchRes.status);
     } catch (e) {
       console.error("[GitHub Dispatch Error]:", e.message);
     }
@@ -71,7 +71,7 @@ module.exports = async function handler(req, res) {
       status: "queued",
       task_id: taskId,
       check_url: checkUrl,
-      message: "Rendu vidéo multi-scènes lancé sur GitHub Actions avec FFmpeg & MagicLight TTS."
+      message: "Rendu vidéo multi-scènes lancé avec filigrane dynamique 'Stanley stawa' et cohérence de personnage."
     });
 
   } catch (err) {

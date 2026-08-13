@@ -252,6 +252,32 @@
       gap: 10px;
     }
 
+    .upload-box {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(255,255,255,0.02);
+      transition: border 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .upload-box:hover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .upload-preview-thumb {
+      max-height: 80px;
+      border-radius: 6px;
+      margin-top: 6px;
+      display: none;
+    }
+
     .btn-submit {
       background: linear-gradient(135deg, var(--primary), var(--primary-hover));
       color: #fff;
@@ -490,10 +516,23 @@
     <div id="tab-video" class="tab-panel active">
       <div class="card">
         <div class="card-title">🎬 Générateur Vidéo Multi-Scènes (FFmpeg + Voix MagicLight)</div>
+        
         <div class="form-group">
           <label>Prompt / Idée de l'histoire</label>
-          <textarea id="videoPrompt" placeholder="Ex: Un petit chaton blanc aux yeux bleus qui explore un jardin magique et rencontre des papillons dorés..."></textarea>
+          <textarea id="videoPrompt" placeholder="Ex: Un jeune chevalier avec une épée de lumière qui explore un donjon magique et affronte un dragon..."></textarea>
         </div>
+
+        <div class="form-group">
+          <label>Image de départ du Personnage (Optionnel)</label>
+          <div class="upload-box" onclick="document.getElementById('videoCharFile').click()">
+            <span style="font-size: 18px;">📁</span>
+            <span style="font-size: 12px; color: var(--text-muted);">Cliquez pour uploader un personnage (ou laissez vide pour génération IA auto)</span>
+            <img id="videoCharThumb" class="upload-preview-thumb" alt="Aperçu personnage">
+          </div>
+          <input type="file" id="videoCharFile" accept="image/*" style="display: none;" onchange="handleFileSelect(event, 'videoCharThumb', 'videoCharData')">
+          <input type="hidden" id="videoCharData" value="">
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label>Format Ratio</label>
@@ -511,14 +550,15 @@
             </select>
           </div>
         </div>
+
         <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">🚀 Générer la vidéo HD complète</button>
-        <div class="code-preview" id="videoUrlSnippet">Endpoint: POST /stanleystawa/video + GET /stanleystawa/status?task_id=...</div>
+        <div class="code-preview" id="videoUrlSnippet">Filigrane dynamique : ★ Stanley stawa (changement d'angle à chaque scène)</div>
       </div>
 
       <div class="card">
         <div class="card-title">📺 Lecteur Vidéo HD & Suivi en Direct</div>
         <div class="preview-box" id="videoPreviewBox">
-          <div class="preview-placeholder">La vidéo finale avec ses scènes, voix MagicLight TTS et sous-titres s'affichera ici.</div>
+          <div class="preview-placeholder">La vidéo finale avec ses scènes, voix MagicLight TTS et filigrane "Stanley stawa" s'affichera ici.</div>
         </div>
       </div>
     </div>
@@ -526,7 +566,7 @@
     <!-- TAB 2 : IMAGE -->
     <div id="tab-image" class="tab-panel">
       <div class="card">
-        <div class="card-title">🎨 Génération d'Image IA Haute Définition</div>
+        <div class="card-title">🎨 Génération d'Image IA (Creative Studio)</div>
         <div class="form-group">
           <label>Prompt de l'image</label>
           <textarea id="imagePrompt" placeholder="Ex: Un magnifique dragon dore volant au-dessus de montagnes enneigees, 8k photorealiste..."></textarea>
@@ -535,16 +575,9 @@
           <div class="form-group">
             <label>Format Ratio</label>
             <select id="imageRatio">
-              <option value="1" selected>16:9 Paysage</option>
-              <option value="2">9:16 Vertical</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Style Visuel</label>
-            <select id="imageStyle">
-              <option value="5001" selected>Réaliste (5001)</option>
-              <option value="5013">Anime 3D (5013)</option>
-              <option value="6000">Cinématique (6000)</option>
+              <option value="16:9" selected>16:9 Paysage</option>
+              <option value="9:16">9:16 Vertical</option>
+              <option value="1:1">1:1 Carré</option>
             </select>
           </div>
         </div>
@@ -562,11 +595,24 @@
     <!-- TAB 3 : EDIT -->
     <div id="tab-edit" class="tab-panel">
       <div class="card">
-        <div class="card-title">✏️ Retouche & Modification d'Image</div>
+        <div class="card-title">✏️ Retouche & Modification d'Image (Upload & URL)</div>
+        
         <div class="form-group">
-          <label>URL de l'image source (Optionnel)</label>
+          <label>Uploader une Image Source</label>
+          <div class="upload-box" onclick="document.getElementById('editFile').click()">
+            <span style="font-size: 18px;">📁</span>
+            <span style="font-size: 12px; color: var(--text-muted);">Cliquez pour choisir une image locale à retoucher</span>
+            <img id="editThumb" class="upload-preview-thumb" alt="Aperçu retouche">
+          </div>
+          <input type="file" id="editFile" accept="image/*" style="display: none;" onchange="handleFileSelect(event, 'editThumb', 'editData')">
+          <input type="hidden" id="editData" value="">
+        </div>
+
+        <div class="form-group">
+          <label>OU URL de l'image</label>
           <input type="text" id="editImgUrl" placeholder="https://.../mon-image.jpg">
         </div>
+
         <div class="form-group">
           <label>Consignes de retouche</label>
           <textarea id="editPrompt" placeholder="Ex: Ajouter une armure d'or scintillante et des reflets magiques..."></textarea>
@@ -662,6 +708,19 @@
       return baseUrlInput.value.replace(/\/$/, "");
     }
 
+    function handleFileSelect(event, thumbId, hiddenId) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const thumb = document.getElementById(thumbId);
+        thumb.src = e.target.result;
+        thumb.style.display = "block";
+        document.getElementById(hiddenId).value = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
     async function safeFetchJson(url, options = {}) {
       const res = await fetch(url, options);
       const text = await res.text();
@@ -697,6 +756,7 @@
     // --- 1. VIDÉO MULTI-SCÈNES (GITHUB ACTIONS + TURSO DB) ---
     async function generateVideo() {
       const prompt = document.getElementById("videoPrompt").value.trim();
+      const initialImage = document.getElementById("videoCharData").value;
       const ratio = document.getElementById("videoRatio").value;
       const language = document.getElementById("videoLang").value;
       const box = document.getElementById("videoPreviewBox");
@@ -709,14 +769,14 @@
         <div class="loader"></div>
         <div style="font-weight: 600;" id="progressLabel">Initialisation du rendu vidéo...</div>
         <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar" style="width: 15%;"></div></div>
-        <div style="font-size: 12px; color: var(--text-muted);" id="progressDetail">Déclenchement du moteur GitHub Actions & FFmpeg...</div>
+        <div style="font-size: 12px; color: var(--text-muted);" id="progressDetail">Déclenchement du moteur avec filigrane dynamique 'Stanley stawa'...</div>
       `;
 
       try {
         const initData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/video`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, ratio, language })
+          body: JSON.stringify({ prompt, initialImage, ratio, language })
         });
 
         const taskId = initData.task_id;
@@ -737,7 +797,7 @@
               box.innerHTML = `
                 <video class="preview-video" src="${statusData.video_url}" controls autoplay loop></video>
                 <div class="meta-box">
-                  <div><strong>Durée :</strong> ${statusData.duration}s | <strong>Scènes :</strong> ${statusData.scenes_count} | <strong>Filigrane :</strong> ❌ Aucun (Watermark-Free)</div>
+                  <div><strong>Durée :</strong> ${statusData.duration}s | <strong>Scènes :</strong> ${statusData.scenes_count} | <strong>Filigrane :</strong> ★ Stanley stawa (Dynamique)</div>
                   <div><strong>Lien direct MP4 :</strong> <a href="${statusData.video_url}" target="_blank">${statusData.video_url}</a></div>
                 </div>
               `;
@@ -774,27 +834,26 @@
     async function generateImage() {
       const prompt = document.getElementById("imagePrompt").value.trim();
       const ratio = document.getElementById("imageRatio").value;
-      const styleId = document.getElementById("imageStyle").value;
       const box = document.getElementById("imagePreviewBox");
       const btn = document.getElementById("btnGenImg");
 
       if (!prompt) return alert("Veuillez saisir un prompt pour l'image.");
 
       btn.disabled = true;
-      box.innerHTML = `<div class="loader"></div><div>Génération de l'image haute définition...</div>`;
+      box.innerHTML = `<div class="loader"></div><div>Génération de l'image haute définition via Creative Studio...</div>`;
 
       try {
         const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/image`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, ratio, styleId })
+          body: JSON.stringify({ prompt, ratio })
         });
 
         if (data.image_url) {
           box.innerHTML = `
             <img class="preview-img" src="${data.image_url}" alt="Image générée">
             <div class="meta-box">
-              <div><strong>Résolution :</strong> ${data.resolution || 'HD'} | <strong>Compte :</strong> ${data.account_used}</div>
+              <div><strong>Ratio :</strong> ${data.ratio} | <strong>Moteur :</strong> Creative Studio</div>
               <div><strong>Lien direct :</strong> <a href="${data.image_url}" target="_blank">${data.image_url}</a></div>
             </div>
           `;
@@ -807,31 +866,34 @@
       }
     }
 
-    // --- 3. RETOUCHE IMAGE ---
+    // --- 3. RETOUCHE IMAGE (AVEC UPLOAD BASE64 OU URL) ---
     async function editImage() {
+      const editData = document.getElementById("editData").value;
       const imageUrl = document.getElementById("editImgUrl").value.trim();
+      const image = editData || imageUrl;
       const prompt = document.getElementById("editPrompt").value.trim();
       const box = document.getElementById("editPreviewBox");
       const btn = document.getElementById("btnEditImg");
 
+      if (!image) return alert("Veuillez uploader une image ou saisir une URL d'image source.");
       if (!prompt) return alert("Veuillez saisir une consigne de retouche.");
 
       btn.disabled = true;
-      box.innerHTML = `<div class="loader"></div><div>Application de la retouche en cours...</div>`;
+      box.innerHTML = `<div class="loader"></div><div>Application de la retouche en cours via Creative Studio...</div>`;
 
       try {
         const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/edit`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageUrl, prompt })
+          body: JSON.stringify({ image, prompt })
         });
 
         if (data.image_url) {
           box.innerHTML = `
             <img class="preview-img" src="${data.image_url}" alt="Image retouchée">
             <div class="meta-box">
-              <div><strong>Compte :</strong> ${data.account_used}</div>
-              <div><strong>Lien direct :</strong> <a href="${data.image_url}" target="_blank">${data.image_url}</a></div>
+              <div><strong>Consigne :</strong> ${data.prompt}</div>
+              <div><strong>Lien direct :</strong> <a href="${data.image_url}" target="_blank">Ouvrir l'image</a></div>
             </div>
           `;
           loadAccounts();
