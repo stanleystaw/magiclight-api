@@ -1,11 +1,12 @@
 /**
- * api/stanleystawa/video.js — Déclencheur ultra-rapide (< 200 ms) via GitHub Actions & Turso DB
+ * api/stanleystawa/video.js — Déclencheur ultra-rapide (< 200 ms) via GitHub Actions sur magiclight-api
  */
 
 const turso = require("../../lib/turso");
 
 const GITHUB_TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || ("ghp_" + "xR2NKjc2PgzOl0kmCQSjy7nEVvAIQw0ue3HS");
-const REPO = "foctaveluka-eng/vercel-animate-api";
+const REPO = "foctaveluka-eng/magiclight-api";
+const WORKFLOW_ID = "332930279";
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -35,21 +36,23 @@ module.exports = async function handler(req, res) {
     `;
     await turso.execute(sql, [taskId, prompt]);
 
-    // 2. Déclenchement du worker GitHub Actions via repository_dispatch (< 150 ms)
-    fetch(`https://api.github.com/repos/${REPO}/dispatches`, {
+    // 2. Déclenchement du worker GitHub Actions via workflow_dispatch
+    const ghHeaders = {
+      "Authorization": `token ${GITHUB_TOKEN}`,
+      "Accept": "application/vnd.github.v3+json",
+      "User-Agent": "MagicLight-Vercel-API",
+      "Content-Type": "application/json"
+    };
+
+    fetch(`https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
       method: "POST",
-      headers: {
-        "Authorization": `token ${GITHUB_TOKEN}`,
-        "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "MagicLight-Vercel-API",
-        "Content-Type": "application/json"
-      },
+      headers: ghHeaders,
       body: JSON.stringify({
-        event_type: "generate-video",
-        client_payload: {
+        ref: "main",
+        inputs: {
           task_id: taskId,
           prompt,
-          ratio,
+          ratio: String(ratio),
           language
         }
       })
@@ -63,7 +66,7 @@ module.exports = async function handler(req, res) {
       status: "queued",
       task_id: taskId,
       check_url: checkUrl,
-      message: "Rendu vidéo multi-scènes initié sur GitHub Actions. Suivez l'avancement via 'check_url'."
+      message: "Rendu vidéo multi-scènes lancé sur GitHub Actions avec FFmpeg & MagicLight TTS."
     });
 
   } catch (err) {
