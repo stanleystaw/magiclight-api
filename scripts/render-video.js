@@ -87,10 +87,10 @@ async function downloadFile(url, destPath) {
   fs.writeFileSync(destPath, Buffer.from(arrayBuffer));
 }
 
-// Création de l'overlay PNG (Filigrane Stanley stawa + Sous-titres) via Python Pillow
+// Création de l'overlay PNG (Filigrane Stanley stawa + Sous-titres) via Python Pillow avec polices TrueType
 function createOverlayPng(width, height, sectionIndex, sceneText, outputPath) {
   const pyScript = `
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 import sys
 
 w = int(sys.argv[1])
@@ -102,30 +102,37 @@ out = sys.argv[5]
 img = Image.new('RGBA', (w, h), (0, 0, 0, 0))
 d = ImageDraw.Draw(img)
 
+try:
+    font_wm = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 20)
+    font_sub1 = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 24)
+    font_sub2 = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 22)
+except Exception:
+    font_wm = font_sub1 = font_sub2 = ImageFont.load_default()
+
 positions = ['top-left', 'top-right', 'bottom-right', 'bottom-left', 'center-right', 'center-left']
 pos = positions[idx % len(positions)]
 
 if pos == 'top-left': x, y = 30, 30
-elif pos == 'top-right': x, y = w - 250, 30
-elif pos == 'bottom-right': x, y = w - 250, h - 160
+elif pos == 'top-right': x, y = w - 280, 30
+elif pos == 'bottom-right': x, y = w - 280, h - 160
 elif pos == 'bottom-left': x, y = 30, h - 160
-elif pos == 'center-right': x, y = w - 250, h // 2 - 25
+elif pos == 'center-right': x, y = w - 280, h // 2 - 25
 else: x, y = 30, h // 2 - 25
 
-d.rounded_rectangle([x, y, x + 220, y + 44], radius=10, fill=(10, 15, 25, 215), outline=(124, 240, 196, 255), width=2)
-d.text((x + 110, y + 22), '★ Stanley stawa', fill=(124, 240, 196, 255), anchor='mm')
+d.rounded_rectangle([x, y, x + 250, y + 46], radius=10, fill=(10, 15, 25, 220), outline=(124, 240, 196, 255), width=2)
+d.text((x + 125, y + 23), '★ Stanley stawa', fill=(124, 240, 196, 255), font=font_wm, anchor='mm')
 
 sub_y = h - 120
-d.rounded_rectangle([30, sub_y, w - 30, sub_y + 90], radius=14, fill=(0, 0, 0, 205), outline=(255, 255, 255, 50), width=1)
+d.rounded_rectangle([30, sub_y, w - 30, sub_y + 90], radius=14, fill=(0, 0, 0, 210), outline=(255, 255, 255, 50), width=1)
 
 words = text.split(' ')
 mid = len(words) // 2
 l1 = ' '.join(words[:mid]) if mid > 0 else text
 l2 = ' '.join(words[mid:]) if mid > 0 else ''
 
-d.text((w // 2, sub_y + 28), l1, fill=(255, 255, 255, 255), anchor='mm')
+d.text((w // 2, sub_y + 28), l1, fill=(255, 255, 255, 255), font=font_sub1, anchor='mm')
 if l2:
-    d.text((w // 2, sub_y + 60), l2, fill=(255, 215, 0, 255), anchor='mm')
+    d.text((w // 2, sub_y + 60), l2, fill=(255, 215, 0, 255), font=font_sub2, anchor='mm')
 
 img.save(out, 'PNG', optimize=True)
 `;
