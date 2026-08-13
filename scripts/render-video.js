@@ -1,5 +1,6 @@
 /**
- * scripts/render-video.js — Moteur de rendu vidéo HD Multi-Scènes avec :
+ * scripts/render-video.js — Moteur de rendu vidéo HD Multi-Scènes Pipelined & Parallélisé
+ *
  * 1. Animation IA Text-to-Video via vercel-animate-api (attente complète du rendu avec voix intégrée)
  * 2. Cohérence absolue du personnage (image uploadée obligatoire en référence ou générée en Scène 1)
  * 3. Parallélisation décalée de 1.5s pour les retouches d'images (/edit)
@@ -21,11 +22,33 @@ const MAGICLIGHT_API = "https://api.magiclight.ai";
 const CREATIVE_STUDIO_API = "https://creative-image-studio.onrender.com";
 const ANIMATE_API = "https://vercel-animate-api.vercel.app";
 
-// Helper Turso DB (Upsert)
-async function updateTursoTask(taskId, fields) {
+async function executeTurso(sql, args = []) {
   let url = TURSO_URL.replace("libsql://", "https://");
   if (!url.endsWith("/v2/pipeline")) url = url.replace(/\/$/, "") + "/v2/pipeline";
 
+  const formattedArgs = args.map(arg => {
+    if (typeof arg === "number") return { type: "integer", value: String(arg) };
+    if (arg === null || arg === undefined) return { type: "null" };
+    return { type: "text", value: String(arg) };
+  });
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${TURSO_TOKEN}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ requests: [{ type: "execute", stmt: { sql, args: formattedArgs } }, { type: "close" }] })
+  });
+  const data = await res.json();
+  const result = data.results?.[0]?.response?.result;
+  if (!result) return [];
+  const cols = result.cols?.map(c => c.name) || [];
+  return (result.rows || []).map(row => {
+    const obj = {};
+    row.forEach((cell, idx) => obj[cols[idx]] = cell.value);
+    return obj;
+  });
+}
+
+async function updateTursoTask(taskId, fields) {
   const status = fields.status || "processing";
   const progress = fields.progress || 20;
   const step = fields.step || "processing";
@@ -52,28 +75,7 @@ async function updateTursoTask(taskId, fields) {
       updated_at=CURRENT_TIMESTAMP;
   `;
 
-  const args = [
-    { type: "text", value: taskId },
-    { type: "text", value: status },
-    { type: "integer", value: String(progress) },
-    { type: "text", value: step },
-    { type: "text", value: message },
-    { type: "text", value: videoUrl },
-    { type: "text", value: coverUrl },
-    { type: "text", value: String(duration) },
-    { type: "integer", value: String(scenesCount) },
-    { type: "text", value: error }
-  ];
-
-  try {
-    await fetch(url, {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${TURSO_TOKEN}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ requests: [{ type: "execute", stmt: { sql, args } }, { type: "close" }] })
-    });
-  } catch (err) {
-    console.error("[Turso Update Error]", err.message);
-  }
+  await executeTurso(sql, [taskId, status, progress, step, message, videoUrl, coverUrl, duration, scenesCount, error]);
 }
 
 async function downloadFile(url, destPath) {
@@ -100,7 +102,6 @@ function wrapText(text, maxLen = 40) {
   return lines;
 }
 
-// Emplacements dynamiques du filigrane "Stanley stawa" changeant à chaque section
 const WATERMARK_POSITIONS = [
   "x=35:y=35", // Section 1 : Haut-Gauche
   "x=w-tw-35:y=35", // Section 2 : Haut-Droite
@@ -113,7 +114,6 @@ const WATERMARK_POSITIONS = [
 async function main() {
   const taskId = process.env.TASK_ID || `vid_${Date.now()}`;
   const prompt = process.env.PROMPT || "Un petit chaton blanc aux yeux bleus qui explore un jardin magique";
-  const initialImage = process.env.INITIAL_IMAGE || "";
   const language = process.env.LANGUAGE || "french";
   const sectionsRequested = Math.min(6, Math.max(2, parseInt(process.env.SECTIONS || process.env.SCENES || "4", 10)));
   const quality = process.env.QUALITY || "medium"; // low, medium, high
@@ -122,6 +122,15 @@ async function main() {
   const outWidth = ratio === 2 ? 720 : 1280;
   const outHeight = ratio === 2 ? 1280 : 720;
   const ratioStr = ratio === 2 ? "9:16" : "16:9";
+
+  // Récupération de l'image de personnage depuis les inputs OU depuis Turso DB
+  let initialImage = process.env.INITIAL_IMAGE || "";
+  try {
+    const taskRows = await executeTurso("SELECT initial_image FROM video_tasks WHERE task_id = ?;", [taskId]);
+    if (taskRows[0]?.initial_image) {
+      initialImage = taskRows[0].initial_image;
+    }
+  } catch (err) {}
 
   console.log(`\n======================================================`);
   console.log(`🚀 [MagicLight Pipelined Engine] Task ID: ${taskId}`);
@@ -185,7 +194,6 @@ async function main() {
 
     // ----------------------------------------------------
     // ÉTAPE 2 : Création du Personnage de Référence (Scène 1)
-    // Si une image est fournie, elle est obligatoirement utilisée
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 30,
@@ -221,8 +229,8 @@ async function main() {
 
     // ----------------------------------------------------
     // ÉTAPE 3 : Pipelining Parallélisé :
-    // 1) Retouches décalées de 1.5s (pour garder le même personnage)
-    // 2) Dès qu'une image est prête ➔ Déclenchement et attente complète de vercel-animate-api
+    // 1) Retouches décalées de 1.5s
+    // 2) Animation vercel-animate-api immédiate
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 45,
@@ -241,7 +249,6 @@ async function main() {
       if (index === 0) {
         sceneImgUrl = refImageUrl;
       } else {
-        // Décalage de 1.5s entre chaque appel de retouche
         await new Promise(r => setTimeout(r, (index - 1) * 1500));
         console.log(` 🎨 [Section ${index + 1}/${finalScenes.length}] Retouche /edit pour cohérence personnage...`);
 
@@ -277,9 +284,7 @@ async function main() {
       const rawClipDownloaded = path.join(workDir, `raw_clip_${index + 1}.mp4`);
       const curImg = sceneImages[index];
 
-      // Prompt explicite pour que l'IA vidéo génère l'audio/dialogue intégré
       const explicitSpeechPrompt = `${storyTitle} - Character is talking: "${sceneText}", looking at camera, speaking with expressive motion, cinematic 8k animation`;
-
       let animatedVideoDownloaded = false;
 
       // Appel de vercel-animate-api et attente complète de la génération
@@ -287,18 +292,16 @@ async function main() {
         const animRes = await (await fetch(`${ANIMATE_API}/stanleystawa/video?imageUrl=${encodeURIComponent(sceneImageUrls[index])}&prompt=${encodeURIComponent(explicitSpeechPrompt)}&duration=${animDuration}&quality=${quality}&format=json`)).json();
 
         if (animRes.checkUrl) {
-          console.log(` ⏳ [Section ${index + 1}] Animation en cours sur vercel-animate-api (attente du résultat)...`);
-          // Attente jusqu'à ce que la vidéo soit prête (jusqu'à 60 polls x 3s = 3 minutes)
+          console.log(` ⏳ [Section ${index + 1}] Animation en cours sur vercel-animate-api...`);
           for (let p = 0; p < 60; p++) {
             await new Promise(r => setTimeout(r, 3000));
             const pollData = await (await fetch(animRes.checkUrl)).json();
             if (pollData.status === "READY" && pollData.videoUrl) {
-              console.log(` 🎉 [Section ${index + 1}] Vidéo IA avec audio générée avec succès par vercel-animate-api !`);
+              console.log(` 🎉 [Section ${index + 1}] Vidéo IA avec audio générée par vercel-animate-api !`);
               await downloadFile(pollData.videoUrl, rawClipDownloaded);
               animatedVideoDownloaded = true;
               break;
             } else if (pollData.error) {
-              console.warn(`[Section ${index + 1}] Erreur animate-api:`, pollData.error);
               break;
             }
           }
@@ -307,7 +310,7 @@ async function main() {
         console.warn(`[Section ${index + 1}] Erreur appel animate-api:`, animErr.message);
       }
 
-      // Si l'animation n'est pas revenue après attente, fallback fluide MagicLight TTS
+      // Fallback fluide si animate-api échoue
       if (!animatedVideoDownloaded) {
         console.log(` ⚙️ [Section ${index + 1}] Fallback animation fluide + MagicLight TTS...`);
         const audioFile = path.join(workDir, `voice_${index + 1}.mp3`);

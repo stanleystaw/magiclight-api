@@ -1,5 +1,5 @@
 /**
- * api/stanleystawa/video.js — Déclencheur vidéo avec support personnage initial obligatoire, qualité et animation IA
+ * api/stanleystawa/video.js — Déclencheur vidéo ultra-rapide avec sauvegarde Turso et dispatch GitHub
  */
 
 const turso = require("../../lib/turso");
@@ -33,14 +33,14 @@ module.exports = async function handler(req, res) {
 
     const taskId = `vid_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
-    // 1. Enregistrement dans Turso DB
+    // 1. Enregistrement sécurisé dans Turso DB (avec l'image initiale, même en base64 volumineuse)
     const sql = `
-      INSERT INTO video_tasks (task_id, prompt, status, progress, step, message)
-      VALUES (?, ?, 'queued', 10, 'queued', 'Initialisation du rendu vidéo...');
+      INSERT INTO video_tasks (task_id, prompt, initial_image, status, progress, step, message)
+      VALUES (?, ?, ?, 'queued', 10, 'queued', 'Initialisation du rendu vidéo...');
     `;
-    await turso.execute(sql, [taskId, prompt]);
+    await turso.execute(sql, [taskId, prompt, initialImage]);
 
-    // 2. Déclenchement du worker GitHub Actions avec personnage initial et qualité
+    // 2. Déclenchement garanti du worker GitHub Actions
     const ghHeaders = {
       "Authorization": `token ${GITHUB_TOKEN}`,
       "Accept": "application/vnd.github.v3+json",
@@ -48,8 +48,11 @@ module.exports = async function handler(req, res) {
       "Content-Type": "application/json"
     };
 
+    // Si initialImage est une URL http courte, on la passe dans les inputs, sinon chaîne vide (le worker la lit depuis Turso DB)
+    const inputImageUrl = initialImage.startsWith("http") ? initialImage : "";
+
     try {
-      await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
+      const dispatchRes = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
         method: "POST",
         headers: ghHeaders,
         body: JSON.stringify({
@@ -57,7 +60,7 @@ module.exports = async function handler(req, res) {
           inputs: {
             task_id: taskId,
             prompt,
-            initial_image: initialImage,
+            initial_image: inputImageUrl,
             ratio: String(ratio),
             language,
             sections: String(sections),
@@ -66,6 +69,11 @@ module.exports = async function handler(req, res) {
           }
         })
       });
+      console.log("[GitHub Dispatch Status]:", dispatchRes.status);
+      if (!dispatchRes.ok) {
+        const txt = await dispatchRes.text();
+        console.error("[GitHub Dispatch Error Body]:", txt);
+      }
     } catch (e) {
       console.error("[GitHub Dispatch Error]:", e.message);
     }
@@ -82,7 +90,7 @@ module.exports = async function handler(req, res) {
       duration_per_section: parseInt(duration, 10),
       character_image: initialImage ? "Fournie (obligatoire pour le projet)" : "Génération IA",
       check_url: checkUrl,
-      message: `Rendu initié (${sections} sections, qualité ${quality}) avec animation vercel-animate-api et filigrane dynamique 'Stanley stawa'.`
+      message: `Rendu initié (${sections} sections, qualité ${quality}) avec animation Text-to-Video et filigrane dynamique 'Stanley stawa'.`
     });
 
   } catch (err) {

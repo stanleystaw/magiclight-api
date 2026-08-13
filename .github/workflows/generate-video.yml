@@ -13,6 +13,10 @@ on:
         description: "Video Prompt / Story"
         required: true
         default: "Un petit chaton blanc aux yeux bleus qui explore un jardin magique"
+      initial_image:
+        description: "Initial Character Image URL"
+        required: false
+        default: ""
       sections:
         description: "Number of sections (2 to 6)"
         required: false
@@ -60,6 +64,7 @@ jobs:
         env:
           TASK_ID: ${{ github.event.client_payload.task_id || github.event.inputs.task_id }}
           PROMPT: ${{ github.event.client_payload.prompt || github.event.inputs.prompt }}
+          INITIAL_IMAGE: ${{ github.event.client_payload.initial_image || github.event.inputs.initial_image || '' }}
           SECTIONS: ${{ github.event.client_payload.sections || github.event.inputs.sections || '4' }}
           QUALITY: ${{ github.event.client_payload.quality || github.event.inputs.quality || 'medium' }}
           DURATION: ${{ github.event.client_payload.duration || github.event.inputs.duration || '10' }}
