@@ -656,7 +656,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
     <!-- 5. TAB VOICE -->
     <div id="tab-voice" class="tab-panel">
       <div class="card">
-        <div class="card-title">🎙️ Synthèse Vocale Officielle MagicLight TTS</div>
+        <div class="card-title">🎙️ Synthèse Vocale Studio Voice IA</div>
         <div class="form-group">
           <label>Texte à Synthétiser</label>
           <textarea id="voiceText" placeholder="Entrez le texte parlé...">Bienvenue dans le studio MagicLight AI. Voici une voix naturelle et ultra-réaliste pour vos projets vidéo.</textarea>
@@ -821,7 +821,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
       if (!prompt) return alert("Veuillez saisir un prompt pour l'image.");
 
       btn.disabled = true;
-      box.innerHTML = \\`<div class="loader"></div><div>Génération de l'image haute définition via Creative Studio...</div>\\`;
+      box.innerHTML = \\`<div class="loader"></div><div>Génération de l'image haute définition via MagicLight Studio AI...</div>\\`;
 
       try {
         const data = await safeFetchJson(\\`\\${getBaseUrl()}/stanleystawa/image\\`, {
@@ -834,7 +834,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
           box.innerHTML = \\`
             <img class="preview-img" src="\\${data.image_url}" alt="Image générée">
             <div class="meta-box">
-              <div><strong>Ratio :</strong> \\${data.ratio} | <strong>Moteur :</strong> Creative Studio</div>
+              <div><strong>Ratio :</strong> \\${data.ratio} | <strong>Moteur :</strong> MagicLight Studio AI</div>
               <div><strong>Lien direct :</strong> <a href="\\${data.image_url}" target="_blank">\\${data.image_url}</a></div>
             </div>
           \\`;
@@ -860,7 +860,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
       if (!prompt) return alert("Veuillez saisir une consigne de retouche.");
 
       btn.disabled = true;
-      box.innerHTML = \\`<div class="loader"></div><div>Application de la retouche en cours via Creative Studio...</div>\\`;
+      box.innerHTML = \\`<div class="loader"></div><div>Application de la retouche en cours via MagicLight Studio AI...</div>\\`;
 
       try {
         const data = await safeFetchJson(\\`\\${getBaseUrl()}/stanleystawa/edit\\`, {
@@ -1015,11 +1015,10 @@ module.exports = function handler(req, res) {
   const accept = req.headers["accept"] || "";
   if (accept.includes("application/json") && !accept.includes("text/html")) {
     return res.status(200).json({
-      name: "MagicLight AI Serverless API",
+      name: "MagicLight AI Studio API",
       status: "online",
       author: "stanleystawa",
-      database: "Turso libSQL",
-      engine: "vercel-animate-api + FFmpeg + Creative Studio + MagicLight TTS",
+      version: "2.5.0",
       endpoints: {
         video: "/stanleystawa/video?prompt=...&imageUrl=...&sections=6&duration=10&quality=medium&format=json",
         status: "/stanleystawa/status?task_id=...",

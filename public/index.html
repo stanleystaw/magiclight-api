@@ -652,7 +652,7 @@
     <!-- 5. TAB VOICE -->
     <div id="tab-voice" class="tab-panel">
       <div class="card">
-        <div class="card-title">🎙️ Synthèse Vocale Officielle MagicLight TTS</div>
+        <div class="card-title">🎙️ Synthèse Vocale Studio Voice IA</div>
         <div class="form-group">
           <label>Texte à Synthétiser</label>
           <textarea id="voiceText" placeholder="Entrez le texte parlé...">Bienvenue dans le studio MagicLight AI. Voici une voix naturelle et ultra-réaliste pour vos projets vidéo.</textarea>
@@ -817,7 +817,7 @@
       if (!prompt) return alert("Veuillez saisir un prompt pour l'image.");
 
       btn.disabled = true;
-      box.innerHTML = `<div class="loader"></div><div>Génération de l'image haute définition via Creative Studio...</div>`;
+      box.innerHTML = `<div class="loader"></div><div>Génération de l'image haute définition via MagicLight Studio AI...</div>`;
 
       try {
         const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/image`, {
@@ -830,7 +830,7 @@
           box.innerHTML = `
             <img class="preview-img" src="${data.image_url}" alt="Image générée">
             <div class="meta-box">
-              <div><strong>Ratio :</strong> ${data.ratio} | <strong>Moteur :</strong> Creative Studio</div>
+              <div><strong>Ratio :</strong> ${data.ratio} | <strong>Moteur :</strong> MagicLight Studio AI</div>
               <div><strong>Lien direct :</strong> <a href="${data.image_url}" target="_blank">${data.image_url}</a></div>
             </div>
           `;
@@ -856,7 +856,7 @@
       if (!prompt) return alert("Veuillez saisir une consigne de retouche.");
 
       btn.disabled = true;
-      box.innerHTML = `<div class="loader"></div><div>Application de la retouche en cours via Creative Studio...</div>`;
+      box.innerHTML = `<div class="loader"></div><div>Application de la retouche en cours via MagicLight Studio AI...</div>`;
 
       try {
         const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/edit`, {

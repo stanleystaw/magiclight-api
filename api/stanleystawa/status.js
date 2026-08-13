@@ -91,7 +91,7 @@ module.exports = async function handler(req, res) {
       step: task.step,
       message: task.message,
       video_url: task.video_url || null,
-      cover_url: task.cover_url || null,
+      cover_url: task.cover_url ? `https://${req.headers.host || "magiclight-api.vercel.app"}/stanleystawa/image?prompt=${encodeURIComponent(task.prompt)}&format=image` : null,
       duration: parseFloat(task.duration || 0),
       scenes_count: parseInt(task.scenes_count || 0, 10),
       error: task.error || null,
