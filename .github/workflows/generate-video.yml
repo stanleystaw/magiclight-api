@@ -55,11 +55,6 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install FFmpeg & Fonts
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg fonts-dejavu-core fonts-freefont-ttf
-
       - name: Run Video Rendering Engine
         env:
           TASK_ID: ${{ github.event.client_payload.task_id || github.event.inputs.task_id }}
