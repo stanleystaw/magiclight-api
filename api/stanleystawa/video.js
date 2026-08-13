@@ -1,5 +1,5 @@
 /**
- * api/stanleystawa/video.js — Déclencheur vidéo avec choix des sections, qualité et animation IA
+ * api/stanleystawa/video.js — Déclencheur vidéo avec support personnage initial obligatoire, qualité et animation IA
  */
 
 const turso = require("../../lib/turso");
@@ -20,7 +20,7 @@ module.exports = async function handler(req, res) {
   try {
     const params = { ...(req.query || {}), ...(req.body || {}) };
     const prompt = (params.prompt || params.text || params.idea || "").trim();
-    const initialImage = (params.initialImage || params.image || params.imageUrl || "").trim();
+    const initialImage = (params.initialImage || params.initial_image || params.image || params.imageUrl || "").trim();
     const sections = String(params.sections || params.scenes || "4");
     const quality = String(params.quality || "medium"); // low, medium, high
     const duration = String(params.duration || "10");
@@ -40,7 +40,7 @@ module.exports = async function handler(req, res) {
     `;
     await turso.execute(sql, [taskId, prompt]);
 
-    // 2. Déclenchement du worker GitHub Actions
+    // 2. Déclenchement du worker GitHub Actions avec personnage initial et qualité
     const ghHeaders = {
       "Authorization": `token ${GITHUB_TOKEN}`,
       "Accept": "application/vnd.github.v3+json",
@@ -57,6 +57,7 @@ module.exports = async function handler(req, res) {
           inputs: {
             task_id: taskId,
             prompt,
+            initial_image: initialImage,
             ratio: String(ratio),
             language,
             sections: String(sections),
@@ -79,8 +80,9 @@ module.exports = async function handler(req, res) {
       sections: parseInt(sections, 10),
       quality: quality,
       duration_per_section: parseInt(duration, 10),
+      character_image: initialImage ? "Fournie (obligatoire pour le projet)" : "Génération IA",
       check_url: checkUrl,
-      message: `Rendu initié (${sections} sections, qualité ${quality}) avec animation Text-to-Video et filigrane dynamique 'Stanley stawa'.`
+      message: `Rendu initié (${sections} sections, qualité ${quality}) avec animation vercel-animate-api et filigrane dynamique 'Stanley stawa'.`
     });
 
   } catch (err) {

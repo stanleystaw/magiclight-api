@@ -1,12 +1,11 @@
 /**
  * scripts/render-video.js — Moteur de rendu vidéo HD Multi-Scènes avec :
- * 1. Animation IA Text-to-Video via vercel-animate-api (Glam AI) avec audio/voix intégré
- * 2. Cohérence du personnage via Creative Image Studio (/generate + /edit)
- * 3. Parallélisation décalée de 1.5s pour les retouches d'images
+ * 1. Animation IA Text-to-Video via vercel-animate-api (attente complète du rendu avec voix intégrée)
+ * 2. Cohérence absolue du personnage (image uploadée obligatoire en référence ou générée en Scène 1)
+ * 3. Parallélisation décalée de 1.5s pour les retouches d'images (/edit)
  * 4. Pipelining : Dès qu'une image est prête, déclenchement immédiat de l'animation vercel-animate-api
  * 5. Choix dynamique de la qualité (low, medium, high) et du nombre de sections (2 à 6)
  * 6. Filigrane dynamique "★ Stanley stawa" changeant de position à chaque section
- * 7. Pacing optimisé & streaming MP4 sans temps mort
  */
 
 const fs = require("fs");
@@ -128,9 +127,10 @@ async function main() {
   console.log(`🚀 [MagicLight Pipelined Engine] Task ID: ${taskId}`);
   console.log(`📝 Prompt: "${prompt}"`);
   console.log(`📑 Sections demandées: ${sectionsRequested}`);
-  console.log(`🎯 Qualité vidéo choisie: ${quality} | Durée par section: ${animDuration}s`);
+  console.log(`🎯 Qualité vidéo: ${quality} | Durée par section: ${animDuration}s`);
+  console.log(`🖼️ Personnage Initial: ${initialImage ? "Image fournie (obligatoire pour le projet)" : "Génération IA requise"}`);
   console.log(`📐 Format: ${outWidth}x${outHeight} (${ratioStr})`);
-  console.log(`⚡ Mode: vercel-animate-api (Audio & Animation IA) + Parallélisation 1.5s`);
+  console.log(`⚡ Mode: Attente garantie de vercel-animate-api + Parallélisation 1.5s`);
   console.log(`======================================================\n`);
 
   const workDir = path.join("/tmp", taskId);
@@ -185,18 +185,19 @@ async function main() {
 
     // ----------------------------------------------------
     // ÉTAPE 2 : Création du Personnage de Référence (Scène 1)
+    // Si une image est fournie, elle est obligatoirement utilisée
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 30,
       step: "character_init",
-      message: "Création du personnage de référence..."
+      message: "Préparation du personnage de référence obligatoire pour le projet..."
     });
 
     const refImagePath = path.join(workDir, "character_ref.jpg");
     let refImageUrl = "";
 
     if (initialImage && (initialImage.startsWith("http") || initialImage.startsWith("data:"))) {
-      console.log("📥 Utilisation de l'image de personnage fournie...");
+      console.log("📥 Utilisation de l'image de personnage fournie par l'utilisateur...");
       if (initialImage.startsWith("http")) {
         await downloadFile(initialImage, refImagePath);
         refImageUrl = initialImage;
@@ -221,7 +222,7 @@ async function main() {
     // ----------------------------------------------------
     // ÉTAPE 3 : Pipelining Parallélisé :
     // 1) Retouches décalées de 1.5s (pour garder le même personnage)
-    // 2) Dès qu'une image est prête ➔ Déclenchement immédiat de l'animation vercel-animate-api !
+    // 2) Dès qu'une image est prête ➔ Déclenchement et attente complète de vercel-animate-api
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 45,
@@ -250,7 +251,7 @@ async function main() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               image: refImageBase64,
-              prompt: `Exact same character as reference: ${sceneText}, cinematic lighting, 8k masterpiece`,
+              prompt: `Exact same character as in reference: ${sceneText}, cinematic lighting, 8k masterpiece`,
               ratio: ratioStr
             })
           });
@@ -277,34 +278,36 @@ async function main() {
       const curImg = sceneImages[index];
 
       // Prompt explicite pour que l'IA vidéo génère l'audio/dialogue intégré
-      const explicitSpeechPrompt = `${storyTitle} - The character is talking expressively: "${sceneText}", looking at camera, speaking with emotion, cinematic animation`;
+      const explicitSpeechPrompt = `${storyTitle} - Character is talking: "${sceneText}", looking at camera, speaking with expressive motion, cinematic 8k animation`;
 
       let animatedVideoDownloaded = false;
 
-      // Appel de vercel-animate-api pour animer l'image en vidéo avec audio intégré
+      // Appel de vercel-animate-api et attente complète de la génération
       try {
         const animRes = await (await fetch(`${ANIMATE_API}/stanleystawa/video?imageUrl=${encodeURIComponent(sceneImageUrls[index])}&prompt=${encodeURIComponent(explicitSpeechPrompt)}&duration=${animDuration}&quality=${quality}&format=json`)).json();
 
         if (animRes.checkUrl) {
-          console.log(` ⏳ [Section ${index + 1}] Animation en cours sur vercel-animate-api...`);
-          for (let p = 0; p < 25; p++) {
+          console.log(` ⏳ [Section ${index + 1}] Animation en cours sur vercel-animate-api (attente du résultat)...`);
+          // Attente jusqu'à ce que la vidéo soit prête (jusqu'à 60 polls x 3s = 3 minutes)
+          for (let p = 0; p < 60; p++) {
             await new Promise(r => setTimeout(r, 3000));
             const pollData = await (await fetch(animRes.checkUrl)).json();
             if (pollData.status === "READY" && pollData.videoUrl) {
-              console.log(` 🎉 [Section ${index + 1}] Vidéo IA avec audio générée par vercel-animate-api !`);
+              console.log(` 🎉 [Section ${index + 1}] Vidéo IA avec audio générée avec succès par vercel-animate-api !`);
               await downloadFile(pollData.videoUrl, rawClipDownloaded);
               animatedVideoDownloaded = true;
               break;
             } else if (pollData.error) {
+              console.warn(`[Section ${index + 1}] Erreur animate-api:`, pollData.error);
               break;
             }
           }
         }
       } catch (animErr) {
-        console.warn(`[Section ${index + 1}] Fallback animation locale:`, animErr.message);
+        console.warn(`[Section ${index + 1}] Erreur appel animate-api:`, animErr.message);
       }
 
-      // Si l'animation n'est pas revenue à temps, fallback fluide MagicLight TTS + Ken Burns
+      // Si l'animation n'est pas revenue après attente, fallback fluide MagicLight TTS
       if (!animatedVideoDownloaded) {
         console.log(` ⚙️ [Section ${index + 1}] Fallback animation fluide + MagicLight TTS...`);
         const audioFile = path.join(workDir, `voice_${index + 1}.mp3`);
