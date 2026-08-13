@@ -1,14 +1,11 @@
 /**
  * scripts/render-video.js — Moteur de rendu vidéo HD Multi-Scènes Pipelined & Parallélisé
  *
- * Fonctionnalités :
- * 1. Lancement des retouches d'images en parallèle décalées de 1.5s.
- * 2. Pipelining : Dès qu'une image est prête, déclenchement immédiat de l'animation sans attendre les autres.
- * 3. Audio natif intégré généré par vercel-animate-api avec dialogues explicites (+ fallback MagicLight TTS).
- * 4. Choix dynamique du nombre de sections (2 à 6).
- * 5. Suppression des temps morts (optimisation de durée / transitions dynamiques).
- * 6. Filigrane dynamique "★ Stanley stawa" qui change de position à chaque section.
- * 7. Mise à jour en direct de Turso DB et gestion des erreurs.
+ * 1. Parallélisation décalée de 1.5s pour les retouches d'images
+ * 2. Pipelining : Animation immédiate dès qu'une image est prête
+ * 3. Filigrane dynamique "★ Stanley stawa" avec box=1 natif FFmpeg
+ * 4. Choix dynamique du nombre de sections (2 à 6)
+ * 5. Pacing optimisé : calage exact de la durée audio (zéro temps mort)
  */
 
 const fs = require("fs");
@@ -22,7 +19,6 @@ const REPO = process.env.GITHUB_REPOSITORY || "foctaveluka-eng/magiclight-api";
 
 const MAGICLIGHT_API = "https://api.magiclight.ai";
 const CREATIVE_STUDIO_API = "https://creative-image-studio.onrender.com";
-const ANIMATE_API = "https://vercel-animate-api.vercel.app";
 
 // Mise à jour Turso DB (Upsert)
 async function updateTursoTask(taskId, fields) {
@@ -103,14 +99,14 @@ function wrapText(text, maxLen = 40) {
   return lines;
 }
 
-// Positions dynamiques du filigrane "Stanley stawa" changeant à chaque section
+// Emplacements dynamiques du filigrane "Stanley stawa" changeant à chaque section
 const WATERMARK_POSITIONS = [
-  { textPos: "x=35:y=35", boxPos: "x=20:y=20:w=tw+30:h=th+25" }, // Section 1 : Haut-Gauche
-  { textPos: "x=w-tw-35:y=35", boxPos: "x=w-tw-45:y=20:w=tw+30:h=th+25" }, // Section 2 : Haut-Droite
-  { textPos: "x=w-tw-35:y=h-th-130", boxPos: "x=w-tw-45:y=h-th-140:w=tw+30:h=th+25" }, // Section 3 : Bas-Droite
-  { textPos: "x=35:y=h-th-130", boxPos: "x=20:y=h-th-140:w=tw+30:h=th+25" }, // Section 4 : Bas-Gauche
-  { textPos: "x=w-tw-35:y=(h-th)/2", boxPos: "x=w-tw-45:y=(h-th)/2-12:w=tw+30:h=th+25" }, // Section 5 : Centre-Droite
-  { textPos: "x=35:y=(h-th)/2", boxPos: "x=20:y=(h-th)/2-12:w=tw+30:h=th+25" } // Section 6 : Centre-Gauche
+  "x=35:y=35", // Section 1 : Haut-Gauche
+  "x=w-tw-35:y=35", // Section 2 : Haut-Droite
+  "x=w-tw-35:y=h-th-130", // Section 3 : Bas-Droite
+  "x=35:y=h-th-130", // Section 4 : Bas-Gauche
+  "x=w-tw-35:y=(h-th)/2", // Section 5 : Centre-Droite
+  "x=35:y=(h-th)/2" // Section 6 : Centre-Gauche
 ];
 
 async function main() {
@@ -125,7 +121,7 @@ async function main() {
   const ratioStr = ratio === 2 ? "9:16" : "16:9";
 
   console.log(`\n======================================================`);
-  console.log(`🚀 [MagicLight Pipelined Engine] Task ID: ${taskId}`);
+  console.log(`🚀 [MagicLight Multi-Scene Engine] Task ID: ${taskId}`);
   console.log(`📝 Prompt: "${prompt}"`);
   console.log(`📑 Sections demandées: ${sectionsRequested}`);
   console.log(`📐 Format: ${outWidth}x${outHeight} (${ratioStr})`);
@@ -231,7 +227,6 @@ async function main() {
       const sceneImgPath = path.join(workDir, `scene_${index + 1}.jpg`);
 
       if (index > 0) {
-        // Décalage de 1.5s entre chaque appel
         await new Promise(r => setTimeout(r, (index - 1) * 1500));
         console.log(` 🎨 [Section ${index + 1}/${finalScenes.length}] Appel /edit pour cohérence personnage...`);
 
@@ -288,7 +283,6 @@ async function main() {
       let duration = 4.5;
       try {
         const durOutput = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioFile}"`).toString().trim();
-        // Élimination des temps morts : calage exact sur la parole + 0.3s
         duration = Math.max(3.0, parseFloat(durOutput) + 0.3);
       } catch (e) {}
 
@@ -297,9 +291,9 @@ async function main() {
         ? `zoompan=z='min(zoom+0.0016,1.15)':d=${Math.round(duration * 25)}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${outWidth}x${outHeight}`
         : `zoompan=z='if(lte(zoom,1.0),1.15,max(1.001,zoom-0.0016))':d=${Math.round(duration * 25)}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${outWidth}x${outHeight}`;
 
-      // Filigrane dynamique "Stanley stawa"
-      const wm = WATERMARK_POSITIONS[index % WATERMARK_POSITIONS.length];
-      const watermarkFilter = `drawbox=${wm.boxPos}:color=black@0.7:t=fill,drawtext=text='★ Stanley stawa':${wm.textPos}:fontcolor=0x7CF0C4:fontsize=22:shadowcolor=black@0.8:shadowx=1:shadowy=1`;
+      // Filigrane dynamique "★ Stanley stawa" avec box natif FFmpeg
+      const wmPos = WATERMARK_POSITIONS[index % WATERMARK_POSITIONS.length];
+      const watermarkFilter = `drawtext=text='★ Stanley stawa':${wmPos}:fontcolor=0x7CF0C4:fontsize=22:box=1:boxcolor=black@0.75:boxborderw=8:shadowcolor=black@0.8:shadowx=1:shadowy=1`;
 
       // Sous-titres dynamiques
       const wrappedLines = wrapText(sceneText, 38);
@@ -350,6 +344,8 @@ async function main() {
     const finalMp4Path = path.join(workDir, "final_output.mp4");
     execSync(`ffmpeg -y -i "${tempMergedVideo}" -i "${bgmFile}" -filter_complex "[0:a]volume=1.0[voice];[1:a]volume=0.12[bgm];[voice][bgm]amix=inputs=2:duration=first[a]" -map 0:v -map "[a]" -c:v copy -c:a aac -shortest "${finalMp4Path}" -loglevel error`);
 
+    console.log(`✅ Montage vidéo finalisé : ${finalMp4Path}`);
+
     let totalDuration = 15;
     try {
       const durStr = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${finalMp4Path}"`).toString().trim();
@@ -357,7 +353,7 @@ async function main() {
     } catch (e) {}
 
     // ----------------------------------------------------
-    // ÉTAPE 5 : Upload & Mise à jour Turso DB
+    // ÉTAPE 5 : Publication & Upload Release
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 95,
