@@ -55,6 +55,11 @@ jobs:
         with:
           node-version: 20
 
+      - name: Setup FFmpeg (Instant Binary < 2s)
+        uses: FedericoCarboni/setup-ffmpeg@v3
+        with:
+          ffmpeg-version: release
+
       - name: Run Video Rendering Engine
         env:
           TASK_ID: ${{ github.event.client_payload.task_id || github.event.inputs.task_id }}
