@@ -55,6 +55,9 @@ jobs:
         with:
           node-version: 20
 
+      - name: Setup Python & Pillow (1s)
+        run: pip install pillow --break-system-packages || pip install pillow
+
       - name: Setup Full FFmpeg & FFprobe (1.5s)
         run: |
           curl -sL https://github.com/ffbinaries/ffbinaries-prebuilt/releases/download/v6.1/ffmpeg-6.1-linux-64.zip -o /tmp/ff.zip && unzip -o -q /tmp/ff.zip -d /tmp/ && sudo cp /tmp/ffmpeg /usr/local/bin/ && sudo chmod +x /usr/local/bin/ffmpeg
