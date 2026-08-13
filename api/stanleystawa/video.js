@@ -1,5 +1,5 @@
 /**
- * api/stanleystawa/video.js — Déclencheur ultra-rapide (< 200 ms) via GitHub Actions sur magiclight-api
+ * api/stanleystawa/video.js — Déclencheur ultra-rapide (< 250 ms) avec await garanti sur GitHub Actions
  */
 
 const turso = require("../../lib/turso");
@@ -36,7 +36,7 @@ module.exports = async function handler(req, res) {
     `;
     await turso.execute(sql, [taskId, prompt]);
 
-    // 2. Déclenchement du worker GitHub Actions via workflow_dispatch
+    // 2. Déclenchement garanti du worker GitHub Actions (avec await pour éviter le freeze serverless)
     const ghHeaders = {
       "Authorization": `token ${GITHUB_TOKEN}`,
       "Accept": "application/vnd.github.v3+json",
@@ -44,19 +44,24 @@ module.exports = async function handler(req, res) {
       "Content-Type": "application/json"
     };
 
-    fetch(`https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
-      method: "POST",
-      headers: ghHeaders,
-      body: JSON.stringify({
-        ref: "main",
-        inputs: {
-          task_id: taskId,
-          prompt,
-          ratio: String(ratio),
-          language
-        }
-      })
-    }).catch(e => console.error("[GitHub Dispatch Error]", e));
+    try {
+      const dispatchRes = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
+        method: "POST",
+        headers: ghHeaders,
+        body: JSON.stringify({
+          ref: "main",
+          inputs: {
+            task_id: taskId,
+            prompt,
+            ratio: String(ratio),
+            language
+          }
+        })
+      });
+      console.log("[GitHub Dispatch Status]:", dispatchRes.status);
+    } catch (e) {
+      console.error("[GitHub Dispatch Error]:", e.message);
+    }
 
     const host = req.headers.host || "magiclight-api.vercel.app";
     const protocol = req.headers["x-forwarded-proto"] || "https";
