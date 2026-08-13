@@ -1,12 +1,11 @@
 /**
- * scripts/render-video.js — Moteur de rendu vidéo HD Multi-Scènes Pipelined & Parallélisé
- *
+ * scripts/render-video.js — Moteur de rendu vidéo HD Multi-Scènes avec :
  * 1. Animation IA Text-to-Video via vercel-animate-api (attente complète du rendu avec voix intégrée)
  * 2. Cohérence absolue du personnage (image uploadée obligatoire en référence ou générée en Scène 1)
  * 3. Parallélisation décalée de 1.5s pour les retouches d'images (/edit)
  * 4. Pipelining : Dès qu'une image est prête, déclenchement immédiat de l'animation vercel-animate-api
  * 5. Choix dynamique de la qualité (low, medium, high) et du nombre de sections (2 à 6)
- * 6. Filigrane dynamique "★ Stanley stawa" changeant de position à chaque section
+ * 6. Filigrane dynamique "★ Stanley stawa" par superposition SVG alpha (universel et non rognable)
  */
 
 const fs = require("fs");
@@ -85,7 +84,7 @@ async function downloadFile(url, destPath) {
   fs.writeFileSync(destPath, Buffer.from(arrayBuffer));
 }
 
-function wrapText(text, maxLen = 40) {
+function wrapText(text, maxLen = 42) {
   const words = text.split(" ");
   const lines = [];
   let currentLine = "";
@@ -102,14 +101,43 @@ function wrapText(text, maxLen = 40) {
   return lines;
 }
 
-const WATERMARK_POSITIONS = [
-  "x=35:y=35", // Section 1 : Haut-Gauche
-  "x=w-tw-35:y=35", // Section 2 : Haut-Droite
-  "x=w-tw-35:y=h-th-130", // Section 3 : Bas-Droite
-  "x=35:y=h-th-130", // Section 4 : Bas-Gauche
-  "x=w-tw-35:y=(h-th)/2", // Section 5 : Centre-Droite
-  "x=35:y=(h-th)/2" // Section 6 : Centre-Gauche
-];
+// Génération de l'overlay SVG (Filigrane dynamique + Sous-titres)
+function createSceneOverlaySVG(width, height, sectionIndex, sceneText) {
+  const positions = ["top-left", "top-right", "bottom-right", "bottom-left", "center-right", "center-left"];
+  const pos = positions[sectionIndex % positions.length];
+
+  let wm_x = 30, wm_y = 30;
+  if (pos === "top-right") {
+    wm_x = width - 240; wm_y = 30;
+  } else if (pos === "bottom-right") {
+    wm_x = width - 240; wm_y = height - 160;
+  } else if (pos === "bottom-left") {
+    wm_x = 30; wm_y = height - 160;
+  } else if (pos === "center-right") {
+    wm_x = width - 240; wm_y = Math.floor(height / 2) - 25;
+  } else if (pos === "center-left") {
+    wm_x = 30; wm_y = Math.floor(height / 2) - 25;
+  }
+
+  const lines = wrapText(sceneText, 38);
+  const line1 = (lines[0] || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const line2 = (lines[1] || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <!-- Filigrane dynamique Stanley stawa -->
+  <g transform="translate(${wm_x}, ${wm_y})">
+    <rect width="210" height="42" rx="10" fill="rgba(10, 15, 25, 0.82)" stroke="#7CF0C4" stroke-width="1.5" />
+    <text x="105" y="27" font-family="sans-serif" font-size="15" font-weight="bold" fill="#7CF0C4" text-anchor="middle">★ Stanley stawa</text>
+  </g>
+
+  <!-- Sous-titres stylisés -->
+  <g transform="translate(30, ${height - 115})">
+    <rect width="${width - 60}" height="90" rx="14" fill="rgba(0, 0, 0, 0.78)" stroke="rgba(255, 255, 255, 0.18)" stroke-width="1" />
+    <text x="${(width - 60) / 2}" y="36" font-family="sans-serif" font-size="20" font-weight="bold" fill="#FFFFFF" text-anchor="middle">${line1}</text>
+    <text x="${(width - 60) / 2}" y="66" font-family="sans-serif" font-size="18" font-weight="bold" fill="#FFD700" text-anchor="middle">${line2}</text>
+  </g>
+</svg>`;
+}
 
 async function main() {
   const taskId = process.env.TASK_ID || `vid_${Date.now()}`;
@@ -123,7 +151,6 @@ async function main() {
   const outHeight = ratio === 2 ? 1280 : 720;
   const ratioStr = ratio === 2 ? "9:16" : "16:9";
 
-  // Récupération de l'image de personnage depuis les inputs OU depuis Turso DB
   let initialImage = process.env.INITIAL_IMAGE || "";
   try {
     const taskRows = await executeTurso("SELECT initial_image FROM video_tasks WHERE task_id = ?;", [taskId]);
@@ -137,9 +164,9 @@ async function main() {
   console.log(`📝 Prompt: "${prompt}"`);
   console.log(`📑 Sections demandées: ${sectionsRequested}`);
   console.log(`🎯 Qualité vidéo: ${quality} | Durée par section: ${animDuration}s`);
-  console.log(`🖼️ Personnage Initial: ${initialImage ? "Image fournie (obligatoire pour le projet)" : "Génération IA requise"}`);
+  console.log(`🖼️ Personnage Initial: ${initialImage ? "Image fournie (obligatoire)" : "Génération IA requise"}`);
   console.log(`📐 Format: ${outWidth}x${outHeight} (${ratioStr})`);
-  console.log(`⚡ Mode: Attente garantie de vercel-animate-api + Parallélisation 1.5s`);
+  console.log(`⚡ Mode: Attente garantie vercel-animate-api + SVG Overlay Stanley stawa`);
   console.log(`======================================================\n`);
 
   const workDir = path.join("/tmp", taskId);
@@ -147,7 +174,7 @@ async function main() {
 
   try {
     // ----------------------------------------------------
-    // ÉTAPE 1 : Scénarisation IA & Dialogues explicites pour la vidéo
+    // ÉTAPE 1 : Scénarisation IA & Dialogues explicites
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       status: "processing",
@@ -230,7 +257,7 @@ async function main() {
     // ----------------------------------------------------
     // ÉTAPE 3 : Pipelining Parallélisé :
     // 1) Retouches décalées de 1.5s
-    // 2) Animation vercel-animate-api immédiate
+    // 2) Animation vercel-animate-api
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 45,
@@ -238,7 +265,7 @@ async function main() {
       message: "Génération des scènes et animation Text-to-Video IA avec audio intégré..."
     });
 
-    console.log(`\n⚡ Lancement de ${finalScenes.length} sections pipelinées (retouche 1.5s ➔ animation IA immédiate)...`);
+    console.log(`\n⚡ Lancement de ${finalScenes.length} sections pipelinées...`);
     const sceneClips = new Array(finalScenes.length);
 
     async function processSection(index) {
@@ -279,7 +306,7 @@ async function main() {
         sceneImageUrls[index] = sceneImgUrl;
       }
 
-      console.log(` 🎬 [Section ${index + 1}] Image prête ➔ Déclenchement immédiat de l'animation vercel-animate-api...`);
+      console.log(` 🎬 [Section ${index + 1}] Image prête ➔ Animation vercel-animate-api...`);
       const clipOutput = path.join(workDir, `clip_${index + 1}.mp4`);
       const rawClipDownloaded = path.join(workDir, `raw_clip_${index + 1}.mp4`);
       const curImg = sceneImages[index];
@@ -287,7 +314,7 @@ async function main() {
       const explicitSpeechPrompt = `${storyTitle} - Character is talking: "${sceneText}", looking at camera, speaking with expressive motion, cinematic 8k animation`;
       let animatedVideoDownloaded = false;
 
-      // Appel de vercel-animate-api et attente complète de la génération
+      // Appel de vercel-animate-api et attente complète
       try {
         const animRes = await (await fetch(`${ANIMATE_API}/stanleystawa/video?imageUrl=${encodeURIComponent(sceneImageUrls[index])}&prompt=${encodeURIComponent(explicitSpeechPrompt)}&duration=${animDuration}&quality=${quality}&format=json`)).json();
 
@@ -343,20 +370,16 @@ async function main() {
         execSync(`ffmpeg -y -loop 1 -t ${duration} -i "${curImg}" -i "${audioFile}" -filter_complex "[0:v]${zoomEffect}[v]" -map "[v]" -map 1:a -c:v libx264 -preset ultrafast -tune stillimage -pix_fmt yuv420p -threads 4 -c:a aac -shortest "${rawClipDownloaded}" -loglevel error`);
       }
 
-      // Incrustation du Filigrane Dynamique "★ Stanley stawa" + Sous-titres sur le clip final
-      const wmPos = WATERMARK_POSITIONS[index % WATERMARK_POSITIONS.length];
-      const watermarkFilter = `drawtext=text='★ Stanley stawa':${wmPos}:fontcolor=0x7CF0C4:fontsize=22:box=1:boxcolor=black@0.75:boxborderw=8:shadowcolor=black@0.8:shadowx=1:shadowy=1`;
+      // Incrustation du Filigrane Dynamique "★ Stanley stawa" + Sous-titres via SVG Alpha Overlay
+      const svgOverlayPath = path.join(workDir, `overlay_${index + 1}.svg`);
+      const svgContent = createSceneOverlaySVG(outWidth, outHeight, index, sceneText);
+      fs.writeFileSync(svgOverlayPath, svgContent);
 
-      const wrappedLines = wrapText(sceneText, 38);
-      const line1 = (wrappedLines[0] || "").replace(/'/g, "'\\\\''").replace(/:/g, "\\:");
-      const line2 = (wrappedLines[1] || "").replace(/'/g, "'\\\\''").replace(/:/g, "\\:");
-      const subFilter = `drawbox=y=ih-110:color=black@0.7:width=iw:height=95:t=fill,drawtext=text='${line1}':fontcolor=white:fontsize=24:x=(w-text_w)/2:y=h-90,drawtext=text='${line2}':fontcolor=0xFFD700:fontsize=22:x=(w-text_w)/2:y=h-55`;
-
-      const filterComplex = `[0:v]scale=${outWidth}:${outHeight}:force_original_aspect_ratio=decrease,pad=${outWidth}:${outHeight}:(ow-iw)/2:(oh-ih)/2,${watermarkFilter},${subFilter}[v]`;
-      execSync(`ffmpeg -y -i "${rawClipDownloaded}" -filter_complex "${filterComplex}" -map "[v]" -map 0:a? -c:v libx264 -preset ultrafast -pix_fmt yuv420p -threads 4 -c:a aac "${clipOutput}" -loglevel error`);
+      const filterComplex = `[0:v]scale=${outWidth}:${outHeight}:force_original_aspect_ratio=decrease,pad=${outWidth}:${outHeight}:(ow-iw)/2:(oh-ih)/2[scaled];[scaled][1:v]overlay=0:0[v]`;
+      execSync(`ffmpeg -y -i "${rawClipDownloaded}" -i "${svgOverlayPath}" -filter_complex "${filterComplex}" -map "[v]" -map 0:a? -c:v libx264 -preset ultrafast -pix_fmt yuv420p -threads 4 -c:a aac "${clipOutput}" -loglevel error`);
 
       sceneClips[index] = clipOutput;
-      console.log(` ✅ [Section ${index + 1}/${finalScenes.length}] Section finalisée avec watermark dynamique`);
+      console.log(` ✅ [Section ${index + 1}/${finalScenes.length}] Section finalisée avec filigrane Stanley stawa`);
     }
 
     // Exécution parallélisée de toutes les sections
