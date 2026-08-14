@@ -219,18 +219,19 @@ module.exports = async function handler(req, res) {
 
   // 1. Envoi OTP
   if (action === "send_otp" || action === "sendotp" || action === "otp") {
-    if (!security.checkRateLimit(req, 6)) {
+    if (!security.checkRateLimit(req, 12)) {
       return res.status(429).json({ error: "Trop de demandes d'OTP. Veuillez patienter une minute." });
     }
 
     const rawEmail = (params.email || "").trim().toLowerCase();
     const canonicalEmail = security.canonicalizeEmail(rawEmail);
+    const isAdm = security.isAdminEmail(rawEmail) || security.isAdminEmail(canonicalEmail);
 
     if (!rawEmail || !rawEmail.includes("@") || !rawEmail.includes(".")) {
       return res.status(400).json({ error: "Veuillez saisir une adresse e-mail valide." });
     }
 
-    if (mailer.isDisposableEmail(rawEmail) || mailer.isDisposableEmail(canonicalEmail)) {
+    if (!isAdm && (mailer.isDisposableEmail(rawEmail) || mailer.isDisposableEmail(canonicalEmail))) {
       return res.status(400).json({
         error: "Les adresses e-mails temporaires ou jetables sont strictement interdites. Utilisez une vraie adresse Gmail."
       });
@@ -238,14 +239,14 @@ module.exports = async function handler(req, res) {
 
     try {
       const regCount = await turso.getEmailRegistrationCount(canonicalEmail);
-      if (regCount >= MAX_REGISTRATIONS_PER_GMAIL) {
+      if (!isAdm && regCount >= MAX_REGISTRATIONS_PER_GMAIL) {
         return res.status(403).json({
           error: `Limite maximale atteinte : Cette adresse Gmail a déjà été utilisée ${regCount} fois pour créer un compte (maximum autorisé : ${MAX_REGISTRATIONS_PER_GMAIL} fois).`
         });
       }
 
       const existing = await turso.getUserByEmail(canonicalEmail) || await turso.getUserByEmail(rawEmail);
-      if (existing) {
+      if (existing && !isAdm) {
         return res.status(409).json({ error: "Un compte actif existe déjà avec cette adresse e-mail. Veuillez vous connecter." });
       }
 
@@ -265,7 +266,7 @@ module.exports = async function handler(req, res) {
         message: `Code de vérification expédié à ${rawEmail} ! Vérifiez votre boîte Gmail.`,
         email: rawEmail,
         creations_used: regCount,
-        max_creations: MAX_REGISTRATIONS_PER_GMAIL,
+        max_creations: isAdm ? "Illimité (Compte Admin)" : MAX_REGISTRATIONS_PER_GMAIL,
         expires_in: "10 minutes"
       });
     } catch (err) {
@@ -276,7 +277,7 @@ module.exports = async function handler(req, res) {
 
   // 2. Inscription
   if (action === "register" || action === "signup") {
-    if (!security.checkRateLimit(req, 10)) {
+    if (!security.checkRateLimit(req, 15)) {
       return res.status(429).json({ error: "Trop de tentatives d'inscription. Veuillez patienter." });
     }
 
@@ -286,12 +287,13 @@ module.exports = async function handler(req, res) {
     const otp = String(params.otp || params.code || params.otp_code || "").trim();
     const accountType = (params.account_type || params.accountType || "studio").toLowerCase();
     const referralCode = String(params.ref || params.referral || params.referrer || "").trim().toLowerCase();
+    const isAdm = security.isAdminEmail(rawEmail) || security.isAdminEmail(canonicalEmail);
 
     if (!rawEmail || !rawEmail.includes("@") || !rawEmail.includes(".")) {
       return res.status(400).json({ error: "Adresse e-mail valide requise." });
     }
 
-    if (mailer.isDisposableEmail(rawEmail) || mailer.isDisposableEmail(canonicalEmail)) {
+    if (!isAdm && (mailer.isDisposableEmail(rawEmail) || mailer.isDisposableEmail(canonicalEmail))) {
       return res.status(400).json({ error: "Les adresses jetables sont interdites. Utilisez une adresse Gmail réelle." });
     }
 
@@ -307,7 +309,7 @@ module.exports = async function handler(req, res) {
 
     try {
       const regCount = await turso.getEmailRegistrationCount(canonicalEmail);
-      if (regCount >= MAX_REGISTRATIONS_PER_GMAIL) {
+      if (!isAdm && regCount >= MAX_REGISTRATIONS_PER_GMAIL) {
         return res.status(403).json({
           error: `Limite maximale atteinte : Cette adresse Gmail a déjà été utilisée ${regCount} fois pour créer un compte (maximum autorisé : ${MAX_REGISTRATIONS_PER_GMAIL} fois).`
         });
@@ -322,12 +324,28 @@ module.exports = async function handler(req, res) {
 
       const existing = await turso.getUserByEmail(canonicalEmail) || await turso.getUserByEmail(rawEmail);
       if (existing) {
-        return res.status(409).json({ error: "Un compte existe déjà avec cette adresse e-mail." });
+        if (!isAdm) {
+          return res.status(409).json({ error: "Un compte existe déjà avec cette adresse e-mail." });
+        } else {
+          // Si compte admin ré-inscrit, mise à jour sécurisée avec crédits illimités
+          const passwordHash = security.hashPassword(password);
+          await turso.execute(`UPDATE users SET password_hash = ?, credits = 999999, role = 'admin', updated_at = CURRENT_TIMESTAMP WHERE LOWER(email) = LOWER(?);`, [passwordHash, canonicalEmail]);
+          return res.status(200).json({
+            status: "success",
+            message: "Compte Administrateur mis à jour avec succès (Crédits illimités) !",
+            user: {
+              email: canonicalEmail,
+              api_key: existing.api_key,
+              credits: 999999,
+              role: "admin",
+              account_type: existing.account_type || "developer"
+            }
+          });
+        }
       }
 
       const passwordHash = security.hashPassword(password);
       const userApiKey = security.generateUserApiKey();
-      const isAdm = security.isAdminEmail(rawEmail) || security.isAdminEmail(canonicalEmail);
       
       let welcomeCredits = isAdm ? 999999 : 30;
       let wasReferred = false;
@@ -347,7 +365,7 @@ module.exports = async function handler(req, res) {
 
       return res.status(201).json({
         status: "success",
-        message: `E-mail vérifié et compte créé avec succès ! ${welcomeCredits} crédits offerts ${wasReferred ? '(Bonus Parrainage inclus !)' : ''} (Création ${regCount + 1}/${MAX_REGISTRATIONS_PER_GMAIL} pour cet e-mail).`,
+        message: `E-mail vérifié et compte créé avec succès ! ${welcomeCredits} crédits offerts ${wasReferred ? '(Bonus Parrainage inclus !)' : ''} ${isAdm ? '(Admin Illimité)' : `(Création ${regCount + 1}/${MAX_REGISTRATIONS_PER_GMAIL})`}.`,
         user: {
           email: user.email,
           api_key: user.api_key,
@@ -561,7 +579,6 @@ module.exports = async function handler(req, res) {
 
       // 2. VÉRIFICATION STRICTE DE LA QUÊTE #1 : REJOINDRE LE GROUPE WHATSAPP
       if (quest.id === "join_whatsapp") {
-        // Exiger le numéro WhatsApp
         const digitsPhone = submittedPhone.replace(/[^0-9]/g, "");
         if (!digitsPhone || digitsPhone.length < 8) {
           return res.status(400).json({
@@ -569,7 +586,6 @@ module.exports = async function handler(req, res) {
           });
         }
 
-        // Vérifier l'unicité du numéro WhatsApp (1 seul compte par numéro WhatsApp)
         const phoneAlreadyUsed = await turso.hasWhatsAppNumberClaimed(digitsPhone, "join_whatsapp");
         if (phoneAlreadyUsed) {
           return res.status(403).json({
@@ -577,7 +593,6 @@ module.exports = async function handler(req, res) {
           });
         }
 
-        // Exiger et vérifier le Code Secret du Groupe WhatsApp
         if (!submittedSecret) {
           return res.status(400).json({
             error: "Code Secret VIP manquant ! Veuillez rejoindre le groupe WhatsApp officiel et consulter la description ou le message épinglé pour trouver le code secret."
