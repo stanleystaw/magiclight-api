@@ -1065,10 +1065,10 @@
 
       <!-- Boutons Connexion & Inscription distincts -->
       <div id="authButtonsGroup" style="display:flex;gap:8px;align-items:center;">
-        <button id="btnOpenRegister" class="btn-m3-primary" onclick="openAuthModal('register')">
+        <button id="btnOpenRegister" class="btn-m3-primary" onclick="openRegisterModal()">
           Inscription (+30 Crédits)
         </button>
-        <button id="btnOpenLogin" class="btn-secondary" style="font-weight:800;padding:8px 16px;border-radius:var(--md-shape-corner-full);" onclick="openAuthModal('login')">
+        <button id="btnOpenLogin" class="btn-secondary" style="font-weight:800;padding:8px 16px;border-radius:var(--md-shape-corner-full);" onclick="openLoginModal()">
           Connexion
         </button>
       </div>
@@ -1444,27 +1444,53 @@
 
   </div>
 
-  <!-- MODAL AUTHENTIFICATION AVEC CHOIX DE TYPE DE COMPTE -->
-  <div id="authModal" class="modal-backdrop">
+  <!-- 1. MODAL CONNEXION (DÉDIÉ) -->
+  <div id="modalLogin" class="modal-backdrop">
     <div class="modal-card">
-      <button type="button" class="modal-close" onclick="closeAuthModal()">✕</button>
+      <button type="button" class="modal-close" onclick="closeAuthModals()">✕</button>
 
-      <div class="modal-tabs">
-        <button type="button" id="tabAuthRegister" class="modal-tab-btn active" onclick="switchAuthTab('register')">Inscription (+30 Crédits)</button>
-        <button type="button" id="tabAuthLogin" class="modal-tab-btn" onclick="switchAuthTab('login')">Connexion</button>
-      </div>
+      <div style="font-weight:800;font-size:18px;color:#fff;margin-bottom:2px;">Connexion à votre Espace</div>
+      <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;">Entrez votre adresse Gmail et votre mot de passe pour vous connecter.</div>
 
-      <div id="referralIndicatorBox" style="display:none;background:rgba(124,240,196,0.1);border:1px dashed var(--md-sys-color-primary);border-radius:var(--md-shape-corner-small);padding:8px 12px;font-size:11px;color:var(--md-sys-color-primary);font-weight:700;">
+      <div id="loginAlert" class="auth-alert"></div>
+
+      <form id="formLogin" onsubmit="handleLoginSubmit(event)">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label>Adresse Gmail</label>
+          <input type="email" id="loginEmail" required placeholder="votre_compte@gmail.com" autocomplete="email">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 18px;">
+          <label>Mot de passe</label>
+          <input type="password" id="loginPassword" required minlength="6" placeholder="••••••••" autocomplete="current-password">
+        </div>
+
+        <button type="submit" id="btnLoginSubmit" class="btn-submit" style="width: 100%;">
+          Se connecter
+        </button>
+
+        <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--md-sys-color-on-surface-variant);">
+          Pas encore de compte ? <a href="javascript:void(0)" onclick="openRegisterModal()" style="color:var(--md-sys-color-primary);font-weight:800;text-decoration:none;">Créer un compte (+30 Crédits)</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. MODAL INSCRIPTION (DÉDIÉ) -->
+  <div id="modalRegister" class="modal-backdrop">
+    <div class="modal-card">
+      <button type="button" class="modal-close" onclick="closeAuthModals()">✕</button>
+
+      <div style="font-weight:800;font-size:18px;color:#fff;margin-bottom:2px;">Créer un Nouveau Compte (+30 Crédits)</div>
+      <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-bottom:12px;">Vérification sécurisée par code OTP envoyé sur votre boîte Gmail.</div>
+
+      <div id="referralIndicatorBox" style="display:none;background:rgba(124,240,196,0.1);border:1px dashed var(--md-sys-color-primary);border-radius:var(--md-shape-corner-small);padding:8px 12px;font-size:11px;color:var(--md-sys-color-primary);font-weight:700;margin-bottom:10px;">
         🎁 Bonus Parrainage actif : Vous recevrez 35 Crédits de bienvenue au lieu de 30 !
       </div>
 
-      <div id="authAlert" class="auth-alert"></div>
+      <div id="regAlert" class="auth-alert"></div>
 
-      <!-- FORMULAIRE INSCRIPTION -->
       <form id="formRegister" onsubmit="handleRegisterSubmit(event)">
-        <div style="font-weight:800;font-size:14px;color:#fff;margin-bottom:4px;">Créer un Nouveau Compte (+30 Crédits)</div>
-        <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);margin-bottom:12px;">Vérification sécurisée par code OTP envoyé sur votre boîte Gmail.</div>
-        
         <!-- CHOIX DU TYPE DE COMPTE -->
         <div class="account-type-box">
           <label style="font-size:10px;font-weight:800;color:var(--md-sys-color-primary);text-transform:uppercase;">Type d'utilisation :</label>
@@ -1479,7 +1505,7 @@
             <input type="radio" name="accountTypeChoice" value="developer" onchange="toggleKeyOption(true)" style="width:auto;margin-top:2px;">
             <div>
               <div style="font-size:12px;font-weight:800;color:#fff;">Compte Développeur (Avec Clé API)</div>
-              <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);">Pour intégrations bots Messenger, scripts cURL et requêtes externes.</div>
+              <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);">Pour bots Messenger, scripts cURL et accès API automatisé.</div>
             </div>
           </label>
         </div>
@@ -1510,31 +1536,7 @@
         </button>
 
         <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--md-sys-color-on-surface-variant);">
-          Vous avez déjà un compte ? <a href="javascript:void(0)" onclick="switchAuthTab('login')" style="color:var(--md-sys-color-primary);font-weight:700;text-decoration:none;">Se connecter</a>
-        </div>
-      </form>
-
-      <!-- FORMULAIRE CONNEXION -->
-      <form id="formLogin" style="display:none;" onsubmit="handleLoginSubmit(event)">
-        <div style="font-weight:800;font-size:14px;color:#fff;margin-bottom:4px;">Connexion à votre Compte</div>
-        <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;">Entrez votre adresse Gmail et votre mot de passe pour vous connecter.</div>
-
-        <div class="form-group" style="margin-bottom: 12px;">
-          <label>Adresse E-mail</label>
-          <input type="email" id="loginEmail" required placeholder="votre_compte@gmail.com" autocomplete="email">
-        </div>
-
-        <div class="form-group" style="margin-bottom: 18px;">
-          <label>Mot de passe</label>
-          <input type="password" id="loginPassword" required minlength="6" placeholder="••••••••" autocomplete="current-password">
-        </div>
-
-        <button type="submit" id="btnLoginSubmit" class="btn-submit" style="width: 100%;">
-          Se connecter
-        </button>
-
-        <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--md-sys-color-on-surface-variant);">
-          Pas encore de compte ? <a href="javascript:void(0)" onclick="switchAuthTab('register')" style="color:var(--md-sys-color-primary);font-weight:700;text-decoration:none;">Créer un compte (+30 Crédits)</a>
+          Vous avez déjà un compte ? <a href="javascript:void(0)" onclick="openLoginModal()" style="color:var(--md-sys-color-primary);font-weight:800;text-decoration:none;">Se connecter</a>
         </div>
       </form>
     </div>
@@ -1643,61 +1645,64 @@
       showToast("Clé API copiée dans le presse-papier !", "success");
     }
 
-    // --- MODAL AUTHENTIFICATION ---
+    // --- MODALES AUTHENTIFICATION DÉDIÉES ---
 
-    function openAuthModal(mode = "register", customMessage = "") {
-      currentAuthMode = mode;
-      switchAuthTab(mode);
-      document.getElementById("authModal").classList.add("open");
-
-      const alertBox = document.getElementById("authAlert");
-      if (customMessage) {
-        alertBox.className = "auth-alert error";
-        alertBox.innerText = customMessage;
-      } else {
-        alertBox.className = "auth-alert";
-        alertBox.innerText = "";
+    function openLoginModal(customMessage = "") {
+      closeAuthModals();
+      const modal = document.getElementById("modalLogin");
+      if (modal) modal.classList.add("open");
+      const alertBox = document.getElementById("loginAlert");
+      if (alertBox) {
+        if (customMessage) {
+          alertBox.className = "auth-alert error";
+          alertBox.innerText = customMessage;
+        } else {
+          alertBox.className = "auth-alert";
+          alertBox.innerText = "";
+        }
       }
+      setTimeout(() => {
+        const input = document.getElementById("loginEmail");
+        if (input) input.focus();
+      }, 100);
+    }
 
+    function openRegisterModal(customMessage = "") {
+      closeAuthModals();
+      const modal = document.getElementById("modalRegister");
+      if (modal) modal.classList.add("open");
+      const alertBox = document.getElementById("regAlert");
+      if (alertBox) {
+        if (customMessage) {
+          alertBox.className = "auth-alert error";
+          alertBox.innerText = customMessage;
+        } else {
+          alertBox.className = "auth-alert";
+          alertBox.innerText = "";
+        }
+      }
       const refBox = document.getElementById("referralIndicatorBox");
       const referrer = localStorage.getItem("stanley_referrer");
-      if (referrer && mode === "register") {
-        refBox.style.display = "block";
+      if (refBox) refBox.style.display = referrer ? "block" : "none";
+    }
+
+    function closeAuthModals() {
+      const mLog = document.getElementById("modalLogin");
+      const mReg = document.getElementById("modalRegister");
+      if (mLog) mLog.classList.remove("open");
+      if (mReg) mReg.classList.remove("open");
+    }
+
+    function openAuthModal(mode = "register", customMessage = "") {
+      if (mode === "login") {
+        openLoginModal(customMessage);
       } else {
-        refBox.style.display = "none";
+        openRegisterModal(customMessage);
       }
     }
 
     function closeAuthModal() {
-      document.getElementById("authModal").classList.remove("open");
-    }
-
-    function switchAuthTab(mode) {
-      currentAuthMode = mode;
-      const btnReg = document.getElementById("tabAuthRegister");
-      const btnLog = document.getElementById("tabAuthLogin");
-      const formReg = document.getElementById("formRegister");
-      const formLog = document.getElementById("formLogin");
-      const alertBox = document.getElementById("authAlert");
-      const refBox = document.getElementById("referralIndicatorBox");
-
-      alertBox.className = "auth-alert";
-      alertBox.innerText = "";
-
-      if (mode === "register") {
-        btnReg.classList.add("active");
-        btnLog.classList.remove("active");
-        formReg.style.display = "block";
-        formLog.style.display = "none";
-        const referrer = localStorage.getItem("stanley_referrer");
-        if (referrer) refBox.style.display = "block";
-      } else {
-        btnLog.classList.add("active");
-        btnReg.classList.remove("active");
-        formLog.style.display = "block";
-        formLog.style.display = "none";
-        refBox.style.display = "none";
-      }
+      closeAuthModals();
     }
 
     async function sendOtpCode() {
@@ -2167,7 +2172,7 @@
 
     async function submitWhatsAppJoinQuest() {
       if (!isUserLoggedIn()) {
-        return openAuthModal("register", "Inscription requise : Créez votre compte pour réclamer vos +15 Crédits !");
+        return openLoginModal("Connexion requise : Veuillez vous connecter pour réclamer vos crédits de quête.");
       }
 
       const phone = document.getElementById("waJoinPhoneInput").value.trim();
@@ -2189,7 +2194,7 @@
 
     async function submitWhatsAppStatusQuest() {
       if (!isUserLoggedIn()) {
-        return openAuthModal("register", "Inscription requise : Veuillez vous connecter.");
+        return openLoginModal("Connexion requise : Veuillez vous connecter.");
       }
 
       const phoneInput = document.getElementById("waStatusPhoneInput");
@@ -2202,7 +2207,7 @@
 
     async function claimQuest(questId, extraParams = {}) {
       if (!isUserLoggedIn()) {
-        return openAuthModal("register", "Inscription requise : Rejoignez le Studio pour réclamer vos crédits gratuits !");
+        return openLoginModal("Connexion requise : Veuillez vous connecter pour valider vos quêtes.");
       }
 
       const key = getApiKey();
@@ -2252,7 +2257,7 @@
     // --- 1. VIDEO GENERATION ---
     async function generateVideo() {
       if (!isUserLoggedIn()) {
-        return openAuthModal("register", "Inscription requise : Veuillez valider votre e-mail pour générer des vidéos.");
+        return openLoginModal("Connexion requise : Veuillez vous connecter pour générer des vidéos.");
       }
 
       const prompt = document.getElementById("videoPrompt").value.trim();
@@ -2345,7 +2350,7 @@
     // --- 2. IMAGE GENERATION ---
     async function generateImage() {
       if (!isUserLoggedIn()) {
-        return openAuthModal("register", "Inscription requise : Veuillez valider votre e-mail pour générer des images.");
+        return openLoginModal("Connexion requise : Veuillez vous connecter pour générer des images.");
       }
 
       const prompt = document.getElementById("imagePrompt").value.trim();
@@ -2387,7 +2392,7 @@
     // --- 3. SCENARIO IA ---
     async function expandStory() {
       if (!isUserLoggedIn()) {
-        return openAuthModal("register", "Inscription requise : Veuillez valider votre e-mail pour créer des scénarios.");
+        return openLoginModal("Connexion requise : Veuillez vous connecter pour créer des scénarios.");
       }
 
       const idea = document.getElementById("storyIdea").value.trim();
@@ -2428,7 +2433,7 @@
     // --- 4. SYNTHESE VOCALE ---
     async function synthesizeVoice() {
       if (!isUserLoggedIn()) {
-        return openAuthModal("register", "Inscription requise : Veuillez valider votre e-mail pour générer des voix.");
+        return openLoginModal("Connexion requise : Veuillez vous connecter pour générer des voix.");
       }
 
       const text = document.getElementById("voiceText").value.trim();
