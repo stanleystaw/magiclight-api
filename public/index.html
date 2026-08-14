@@ -988,7 +988,7 @@
       alertBox.className = "auth-alert";
       alertBox.innerText = "";
 
-      const endpoint = currentAuthMode === "register" ? "/stanleystawa/register" : "/stanleystawa/login";
+      const endpoint = currentAuthMode === "register" ? "/stanleystawa/accounts?action=register" : "/stanleystawa/accounts?action=login";
 
       try {
         const res = await fetch(`${getBaseUrl()}${endpoint}`, {
@@ -1056,7 +1056,7 @@
       const savedKey = localStorage.getItem("stanley_user_key");
       if (savedKey) {
         try {
-          const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/me?key=${savedKey}`);
+          const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/accounts?action=me&key=${savedKey}`);
           if (data.user) {
             currentUser = { ...data.user, api_key: savedKey };
             updateUserUI();
