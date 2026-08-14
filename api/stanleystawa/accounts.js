@@ -245,18 +245,19 @@ module.exports = async function handler(req, res) {
   // ACTIONS UTILISATEUR (AUTHENTIFICATION & QUÊTES SÉCURISÉES)
   // ====================================================
 
-  // 1. Envoi OTP
+  // 1. Envoi OTP (Inscription & Connexion Sécurisée)
   if (action === "send_otp" || action === "sendotp" || action === "otp") {
-    if (!security.checkRateLimit(req, 12)) {
+    if (!security.checkRateLimit(req, 15)) {
       return res.status(429).json({ error: "Trop de demandes d'OTP. Veuillez patienter une minute." });
     }
 
     const rawEmail = (params.email || "").trim().toLowerCase();
     const canonicalEmail = security.canonicalizeEmail(rawEmail);
+    const purpose = String(params.purpose || params.type || "auth").toLowerCase();
     const isExempt = security.isExemptFromLimits(rawEmail) || security.isExemptFromLimits(canonicalEmail);
 
     if (!rawEmail || !rawEmail.includes("@") || !rawEmail.includes(".")) {
-      return res.status(400).json({ error: "Veuillez saisir une adresse e-mail valide." });
+      return res.status(400).json({ error: "Veuillez saisir une adresse Gmail valide." });
     }
 
     if (!isExempt && (mailer.isDisposableEmail(rawEmail) || mailer.isDisposableEmail(canonicalEmail))) {
@@ -266,7 +267,7 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-      if (!isExempt) {
+      if (!isExempt && purpose === "register") {
         const isDeleted = await turso.isEmailPermanentlyDeleted(canonicalEmail);
         if (isDeleted) {
           return res.status(403).json({
@@ -282,11 +283,7 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      const existing = await turso.getUserByEmail(canonicalEmail) || await turso.getUserByEmail(rawEmail);
-      if (existing && !isExempt) {
-        return res.status(409).json({ error: "Un compte actif existe déjà avec cette adresse e-mail. Veuillez vous connecter." });
-      }
-
+      // Générer et enregistrer l'OTP (valable 10 minutes)
       const otpCode = mailer.generateOtp();
       await turso.saveOtp(canonicalEmail, otpCode, 10);
 
@@ -301,7 +298,7 @@ module.exports = async function handler(req, res) {
       const regCount = await turso.getEmailRegistrationCount(canonicalEmail);
       return res.status(200).json({
         status: "success",
-        message: `Code de vérification expédié à ${rawEmail} ! Vérifiez votre boîte Gmail.`,
+        message: `Code de vérification expédié à ${rawEmail} ! Consultez votre boîte Gmail.`,
         email: rawEmail,
         creations_used: regCount,
         max_creations: isExempt ? "Illimité" : MAX_REGISTRATIONS_PER_GMAIL,
@@ -431,7 +428,7 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // 3. Connexion
+  // 3. Connexion (Par Mot de Passe OU par Code OTP par E-mail)
   if (action === "login" || action === "signin") {
     if (security.isIpLockedOut(clientIp)) {
       return res.status(429).json({
@@ -442,9 +439,14 @@ module.exports = async function handler(req, res) {
     const rawEmail = (params.email || "").trim().toLowerCase();
     const canonicalEmail = security.canonicalizeEmail(rawEmail);
     const password = String(params.password || "").trim();
+    const otp = String(params.otp || params.code || params.otp_code || "").trim();
 
-    if (!rawEmail || !password) {
-      return res.status(400).json({ error: "E-mail et mot de passe requis." });
+    if (!rawEmail) {
+      return res.status(400).json({ error: "Adresse e-mail requise." });
+    }
+
+    if (!password && !otp) {
+      return res.status(400).json({ error: "Veuillez entrer votre mot de passe OU votre code OTP reçu par e-mail." });
     }
 
     try {
@@ -454,10 +456,19 @@ module.exports = async function handler(req, res) {
         return res.status(401).json({ error: "Aucun compte actif trouvé avec cette adresse e-mail. Veuillez d'abord cliquer sur 'Inscription' pour créer votre compte." });
       }
 
-      const passwordHash = security.hashPassword(password);
-      if (user.password_hash !== passwordHash) {
-        security.recordLoginAttempt(clientIp, false);
-        return res.status(401).json({ error: "Mot de passe incorrect. Veuillez vérifier votre saisie." });
+      // 1. Connexion par Code OTP (Sans mot de passe / Récupération)
+      if (otp) {
+        const otpValidation = await turso.verifyOtp(canonicalEmail, otp);
+        if (!otpValidation.valid) {
+          return res.status(400).json({ error: otpValidation.reason || "Code OTP incorrect ou expiré." });
+        }
+      } else {
+        // 2. Connexion par Mot de Passe
+        const passwordHash = security.hashPassword(password);
+        if (user.password_hash !== passwordHash) {
+          security.recordLoginAttempt(clientIp, false);
+          return res.status(401).json({ error: "Mot de passe incorrect. Vous pouvez aussi vous connecter sans mot de passe en utilisant l'onglet 'Code OTP par E-mail'." });
+        }
       }
 
       security.recordLoginAttempt(clientIp, true);
