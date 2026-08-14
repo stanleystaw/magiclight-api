@@ -5,17 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Stanley Stawa — Studio Vidéo & IA Générative</title>
   
-  <!-- Polices typographiques professionnelles (Plus Jakarta Sans & JetBrains Mono) -->
+  <!-- Typographies Google Material Design 3 (Roboto Flex & JetBrains Mono) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Meta tags de partage (Facebook, Messenger, WhatsApp, Twitter) -->
+  <!-- Meta tags de partage -->
   <meta name="description" content="Stanley Stawa AI Studio — Plateforme de Production Vidéo IA Multi-Scènes, Synthèse Vocale et Création Visuelle Haute Définition par Stanley Stawa.">
   <meta name="author" content="Stanley Stawa">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Stanley Stawa — Studio Vidéo & IA Générative">
-  <meta property="og:description" content="Production de films IA complets avec voix parlée, cohérence du personnage et filigrane officiel Stanley stawa.">
+  <meta property="og:description" content="Production de films IA complets avec dialogues parlés, cohérence du personnage et filigrane officiel Stanley stawa.">
   <meta property="og:site_name" content="Stanley Stawa AI Studio">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Stanley Stawa — Studio Vidéo & IA Générative">
@@ -23,39 +23,50 @@
 
   <style>
     :root {
-      --bg: #080a0f;
-      --surface: #0f131d;
-      --surface-raised: #161c2b;
-      --surface-hover: #1e263a;
-      --border: rgba(255, 255, 255, 0.08);
-      --border-focus: rgba(0, 242, 173, 0.5);
-      --accent: #00f2ad;
-      --accent-hover: #00d698;
-      --accent-dim: rgba(0, 242, 173, 0.12);
-      --accent-glow: rgba(0, 242, 173, 0.25);
-      --text: #f0f3f8;
-      --text-muted: #8b949e;
-      --text-dim: #545d68;
-      --danger: #ff4d4f;
-      --danger-dim: rgba(255, 77, 79, 0.12);
-      --radius: 14px;
-      --radius-sm: 8px;
-      --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
-      --transition: cubic-bezier(0.16, 1, 0.3, 1);
+      /* Google Material 3 Dark Palette Tokens */
+      --md-sys-color-background: #0b0e14;
+      --md-sys-color-surface: #121722;
+      --md-sys-color-surface-container: #181f2e;
+      --md-sys-color-surface-container-high: #20293d;
+      --md-sys-color-primary: #7cf0c4;
+      --md-sys-color-on-primary: #003827;
+      --md-sys-color-primary-container: rgba(124, 240, 196, 0.12);
+      --md-sys-color-secondary: #a8c8ff;
+      --md-sys-color-secondary-container: rgba(168, 200, 255, 0.12);
+      --md-sys-color-outline: rgba(255, 255, 255, 0.1);
+      --md-sys-color-outline-variant: rgba(255, 255, 255, 0.05);
+      --md-sys-color-on-surface: #f0f3f8;
+      --md-sys-color-on-surface-variant: #9aa4b2;
+      --md-sys-color-error: #ffb4ab;
+      --md-sys-color-error-container: rgba(255, 180, 171, 0.12);
+
+      /* Shape Tokens */
+      --md-shape-corner-small: 8px;
+      --md-shape-corner-medium: 14px;
+      --md-shape-corner-large: 20px;
+      --md-shape-corner-full: 9999px;
+
+      /* Elevation Shadows */
+      --md-elevation-1: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.4);
+      --md-elevation-2: 0 4px 12px rgba(0,0,0,0.4);
+      --md-elevation-3: 0 12px 32px rgba(0,0,0,0.6);
+
+      --font-family-base: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-family-mono: 'JetBrains Mono', monospace;
+      --transition-standard: cubic-bezier(0.2, 0, 0, 1);
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: var(--font-main);
+      font-family: var(--font-family-base);
       -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background-color: var(--bg);
-      color: var(--text);
+      background-color: var(--md-sys-color-background);
+      color: var(--md-sys-color-on-surface);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -63,13 +74,13 @@
       line-height: 1.5;
     }
 
-    /* HEADER */
+    /* M3 TOP APP BAR */
     header {
-      background: rgba(15, 19, 29, 0.9);
+      background: rgba(18, 23, 34, 0.92);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 24px;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      padding: 12px 24px;
       position: sticky;
       top: 0;
       z-index: 50;
@@ -87,18 +98,18 @@
     }
 
     .brand-logo {
-      background: linear-gradient(135deg, var(--surface-raised), #1f293d);
-      border: 1px solid var(--accent);
-      color: var(--accent);
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid var(--md-sys-color-primary);
+      color: var(--md-sys-color-primary);
       width: 36px;
       height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 10px;
+      border-radius: var(--md-shape-corner-medium);
       font-weight: 800;
       font-size: 16px;
-      box-shadow: 0 0 16px var(--accent-glow);
+      box-shadow: 0 0 16px var(--md-sys-color-primary-container);
     }
 
     .brand-title h1 {
@@ -109,12 +120,12 @@
     }
 
     .brand-title h1 span {
-      color: var(--accent);
+      color: var(--md-sys-color-primary);
     }
 
     .brand-title p {
       font-size: 11px;
-      color: var(--text-muted);
+      color: var(--md-sys-color-on-surface-variant);
       font-weight: 500;
     }
 
@@ -125,26 +136,26 @@
       flex-wrap: wrap;
     }
 
-    .badge-status {
-      display: flex;
+    /* M3 CHIPS & BADGES */
+    .chip-status {
+      display: inline-flex;
       align-items: center;
       gap: 7px;
-      background: var(--accent-dim);
-      color: var(--accent);
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-primary);
       padding: 6px 14px;
-      border-radius: 20px;
+      border-radius: var(--md-shape-corner-full);
       font-size: 11px;
       font-weight: 700;
-      border: 1px solid rgba(0, 242, 173, 0.3);
-      letter-spacing: 0.2px;
+      border: 1px solid rgba(124, 240, 196, 0.25);
     }
 
-    .badge-dot {
-      width: 7px;
-      height: 7px;
-      background: var(--accent);
+    .chip-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--md-sys-color-primary);
       border-radius: 50%;
-      box-shadow: 0 0 8px var(--accent);
+      box-shadow: 0 0 8px var(--md-sys-color-primary);
       animation: pulseDot 2s infinite ease-in-out;
     }
 
@@ -153,98 +164,62 @@
       50% { opacity: 0.4; transform: scale(0.85); }
     }
 
-    .btn-auth-header {
-      background: linear-gradient(135deg, #00f2ad, #00b884);
-      color: #080a0f;
+    .btn-m3-primary {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
       border: none;
-      padding: 8px 16px;
-      border-radius: 10px;
+      padding: 8px 18px;
+      border-radius: var(--md-shape-corner-full);
       font-size: 12px;
       font-weight: 800;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 6px;
-      transition: transform 0.2s var(--transition), filter 0.2s;
-      box-shadow: 0 4px 14px var(--accent-glow);
+      transition: all 0.2s var(--transition-standard);
+      box-shadow: var(--md-elevation-1);
     }
 
-    .btn-auth-header:hover {
-      filter: brightness(1.1);
+    .btn-m3-primary:hover {
+      filter: brightness(1.08);
       transform: translateY(-1px);
+      box-shadow: var(--md-elevation-2);
     }
 
     .user-profile-badge {
       display: none;
       align-items: center;
       gap: 8px;
-      background: var(--surface-raised);
-      border: 1px solid var(--border);
-      padding: 6px 12px;
-      border-radius: 10px;
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid var(--md-sys-color-outline);
+      padding: 4px 10px;
+      border-radius: var(--md-shape-corner-full);
       font-size: 12px;
     }
 
     .user-credits-pill {
-      background: var(--accent-dim);
-      color: var(--accent);
-      padding: 3px 8px;
-      border-radius: 12px;
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-primary);
+      padding: 2px 8px;
+      border-radius: var(--md-shape-corner-full);
       font-weight: 800;
       font-size: 11px;
-      border: 1px solid rgba(0, 242, 173, 0.25);
     }
 
-    /* CONTAINER & HERO */
+    /* CONTAINER & M3 NAVIGATION RAIL / TABS */
     .container {
-      max-width: 1240px;
+      max-width: 1280px;
       width: 100%;
       margin: 0 auto;
       padding: 20px 16px;
       flex: 1;
     }
 
-    .hero-banner {
-      background: linear-gradient(135deg, rgba(0, 242, 173, 0.08) 0%, rgba(22, 28, 43, 0.6) 100%);
-      border: 1px solid rgba(0, 242, 173, 0.2);
-      border-radius: var(--radius);
-      padding: 16px 20px;
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .hero-banner-text h2 {
-      font-size: 15px;
-      font-weight: 800;
-      color: #fff;
-    }
-
-    .hero-banner-text p {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .hero-signature {
-      font-size: 12px;
-      font-weight: 800;
-      color: var(--accent);
-      background: rgba(0, 0, 0, 0.4);
-      padding: 6px 14px;
-      border-radius: 20px;
-      border: 1px solid rgba(0, 242, 173, 0.25);
-    }
-
-    /* TABS */
     .tabs-nav {
       display: flex;
       gap: 8px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 20px;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      margin-bottom: 24px;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       padding-bottom: 8px;
@@ -256,30 +231,30 @@
     }
 
     .tab-btn {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      padding: 10px 16px;
+      background: var(--md-sys-color-surface);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      color: var(--md-sys-color-on-surface-variant);
+      padding: 10px 18px;
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
-      border-radius: 10px;
-      transition: all 0.2s var(--transition);
+      border-radius: var(--md-shape-corner-full);
+      transition: all 0.2s var(--transition-standard);
       white-space: nowrap;
       flex-shrink: 0;
     }
 
     .tab-btn:hover {
-      color: var(--text);
-      background: var(--surface-hover);
-      border-color: rgba(255, 255, 255, 0.15);
+      color: var(--md-sys-color-on-surface);
+      background: var(--md-sys-color-surface-container);
+      border-color: var(--md-sys-color-outline);
     }
 
     .tab-btn.active {
-      color: #080a0f;
-      background: var(--accent);
-      border-color: var(--accent);
-      box-shadow: 0 0 16px var(--accent-glow);
+      color: var(--md-sys-color-on-primary);
+      background: var(--md-sys-color-primary);
+      border-color: var(--md-sys-color-primary);
+      box-shadow: 0 0 16px var(--md-sys-color-primary-container);
     }
 
     .tab-panel {
@@ -289,10 +264,10 @@
     .tab-panel.active {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      gap: 24px;
     }
 
-    @media (max-width: 880px) {
+    @media (max-width: 900px) {
       header {
         flex-direction: column;
         align-items: stretch;
@@ -303,31 +278,28 @@
       .tab-panel.active {
         grid-template-columns: 1fr;
       }
-      .form-row {
-        grid-template-columns: 1fr !important;
-      }
     }
 
-    /* CARDS */
+    /* M3 CARDS & SURFACES */
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
+      background: var(--md-sys-color-surface);
+      border: 1px solid var(--md-sys-color-outline);
+      border-radius: var(--md-shape-corner-large);
+      padding: 24px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      gap: 18px;
+      box-shadow: var(--md-elevation-1);
     }
 
     .card-title {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 800;
       display: flex;
       align-items: center;
-      gap: 8px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 12px;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      padding-bottom: 14px;
       color: #fff;
     }
 
@@ -340,17 +312,17 @@
     .form-group label {
       font-size: 11px;
       font-weight: 700;
-      color: var(--text-muted);
+      color: var(--md-sys-color-on-surface-variant);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
     }
 
     input, textarea, select {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 12px 14px;
-      border-radius: var(--radius-sm);
+      background: var(--md-sys-color-background);
+      border: 1px solid var(--md-sys-color-outline);
+      color: var(--md-sys-color-on-surface);
+      padding: 12px 16px;
+      border-radius: var(--md-shape-corner-medium);
       font-size: 13px;
       outline: none;
       width: 100%;
@@ -358,13 +330,13 @@
     }
 
     input:focus, textarea:focus, select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px var(--accent-glow);
+      border-color: var(--md-sys-color-primary);
+      box-shadow: 0 0 0 2px var(--md-sys-color-primary-container);
     }
 
     textarea {
       resize: vertical;
-      min-height: 85px;
+      min-height: 90px;
       line-height: 1.5;
     }
 
@@ -375,13 +347,13 @@
     }
 
     .upload-box {
-      border: 2px dashed var(--border);
-      border-radius: var(--radius-sm);
-      padding: 16px;
+      border: 2px dashed var(--md-sys-color-outline);
+      border-radius: var(--md-shape-corner-medium);
+      padding: 18px;
       text-align: center;
       cursor: pointer;
       background: rgba(255,255,255,0.01);
-      transition: all 0.2s var(--transition);
+      transition: all 0.2s var(--transition-standard);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -389,53 +361,54 @@
     }
 
     .upload-box:hover {
-      border-color: var(--accent);
-      background: var(--accent-dim);
+      border-color: var(--md-sys-color-primary);
+      background: var(--md-sys-color-primary-container);
     }
 
     .upload-preview-thumb {
-      max-height: 85px;
-      border-radius: 6px;
+      max-height: 90px;
+      border-radius: var(--md-shape-corner-small);
       margin-top: 6px;
       display: none;
-      border: 1px solid var(--accent);
+      border: 1px solid var(--md-sys-color-primary);
     }
 
     .btn-submit {
-      background: linear-gradient(135deg, var(--accent), #00b884);
-      color: #080a0f;
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
       border: none;
-      padding: 13px 20px;
+      padding: 14px 22px;
       font-size: 14px;
       font-weight: 800;
-      border-radius: 10px;
+      border-radius: var(--md-shape-corner-medium);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      min-height: 46px;
-      transition: transform 0.2s var(--transition), filter 0.2s;
-      box-shadow: 0 4px 18px var(--accent-glow);
+      min-height: 48px;
+      transition: all 0.2s var(--transition-standard);
+      box-shadow: var(--md-elevation-1);
     }
 
     .btn-submit:hover {
-      filter: brightness(1.1);
+      filter: brightness(1.08);
       transform: translateY(-1px);
+      box-shadow: var(--md-elevation-2);
     }
 
     .btn-submit:disabled {
-      opacity: 0.5;
+      opacity: 0.4;
       cursor: not-allowed;
       transform: none;
     }
 
     .btn-secondary {
-      background: var(--surface-raised);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 8px 14px;
-      border-radius: 8px;
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid var(--md-sys-color-outline);
+      color: var(--md-sys-color-on-surface);
+      padding: 8px 16px;
+      border-radius: var(--md-shape-corner-medium);
       font-size: 12px;
       cursor: pointer;
       font-weight: 700;
@@ -443,15 +416,15 @@
     }
 
     .btn-secondary:hover {
-      background: var(--surface-hover);
+      background: var(--md-sys-color-surface-container-high);
     }
 
     .preview-box {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 16px;
-      min-height: 260px;
+      background: var(--md-sys-color-background);
+      border: 1px solid var(--md-sys-color-outline);
+      border-radius: var(--md-shape-corner-medium);
+      padding: 18px;
+      min-height: 280px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -460,7 +433,7 @@
     }
 
     .preview-placeholder {
-      color: var(--text-muted);
+      color: var(--md-sys-color-on-surface-variant);
       font-size: 13px;
       text-align: center;
       line-height: 1.6;
@@ -469,15 +442,15 @@
     .preview-video {
       width: 100%;
       max-height: 440px;
-      border-radius: 10px;
+      border-radius: var(--md-shape-corner-medium);
       background: #000;
-      border: 1px solid var(--border);
+      border: 1px solid var(--md-sys-color-outline);
     }
 
     .preview-img {
       max-width: 100%;
       max-height: 380px;
-      border-radius: 10px;
+      border-radius: var(--md-shape-corner-medium);
       object-fit: contain;
     }
 
@@ -488,20 +461,20 @@
 
     .meta-box {
       width: 100%;
-      background: rgba(0,0,0,0.4);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 14px;
-      margin-top: 12px;
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid var(--md-sys-color-outline);
+      border-radius: var(--md-shape-corner-medium);
+      padding: 14px 16px;
+      margin-top: 14px;
       font-size: 12px;
-      color: var(--text-muted);
+      color: var(--md-sys-color-on-surface-variant);
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
 
     .meta-box a {
-      color: var(--accent);
+      color: var(--md-sys-color-primary);
       text-decoration: none;
       word-break: break-all;
     }
@@ -514,11 +487,11 @@
     }
 
     .action-pill {
-      background: var(--accent-dim);
-      border: 1px solid rgba(0, 242, 173, 0.35);
+      background: var(--md-sys-color-primary-container);
+      border: 1px solid rgba(124, 240, 196, 0.3);
       color: #fff;
-      padding: 6px 12px;
-      border-radius: 8px;
+      padding: 6px 14px;
+      border-radius: var(--md-shape-corner-full);
       font-size: 11px;
       font-weight: 700;
       text-decoration: none;
@@ -530,31 +503,31 @@
     }
 
     .action-pill:hover {
-      background: var(--accent);
-      color: #080a0f;
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
     }
 
     .progress-bar-wrap {
       width: 100%;
       background: rgba(255,255,255,0.06);
-      border-radius: 20px;
+      border-radius: var(--md-shape-corner-full);
       height: 8px;
       margin: 14px 0 6px;
       overflow: hidden;
     }
 
     .progress-bar-fill {
-      background: linear-gradient(90deg, #00f2ad, #38bdf8);
+      background: linear-gradient(90deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
       height: 100%;
       width: 15%;
       transition: width 0.4s ease;
     }
 
     .loader {
-      width: 34px;
-      height: 34px;
-      border: 3px solid rgba(0, 242, 173, 0.2);
-      border-top-color: var(--accent);
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--md-sys-color-primary-container);
+      border-top-color: var(--md-sys-color-primary);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
       margin-bottom: 12px;
@@ -564,39 +537,76 @@
       to { transform: rotate(360deg); }
     }
 
+    /* STATS GRID (ADMIN & DASHBOARD) */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid var(--md-sys-color-outline);
+      border-radius: var(--md-shape-corner-medium);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-number {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--md-sys-color-primary);
+      font-family: var(--font-family-mono);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--md-sys-color-on-surface-variant);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    /* TABLES */
     .table-container {
       width: 100%;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: var(--md-shape-corner-medium);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 12px;
-      min-width: 480px;
+      min-width: 540px;
     }
 
     th, td {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      text-align: left;
     }
 
     th {
-      color: var(--text-muted);
+      color: var(--md-sys-color-on-surface-variant);
       font-weight: 700;
-      background: rgba(0,0,0,0.3);
+      background: var(--md-sys-color-surface-container);
       text-transform: uppercase;
-      font-size: 11px;
-      letter-spacing: 0.5px;
+      font-size: 10px;
+      letter-spacing: 0.6px;
     }
 
-    /* MODAL AUTH AVEC VÉRIFICATION GMAIL OTP */
+    /* M3 MODAL */
     .modal-backdrop {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.88);
+      background: rgba(0, 0, 0, 0.85);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       z-index: 100;
@@ -610,16 +620,16 @@
     }
 
     .modal-card {
-      background: var(--surface);
-      border: 1px solid rgba(0, 242, 173, 0.3);
-      border-radius: 18px;
+      background: var(--md-sys-color-surface);
+      border: 1px solid var(--md-sys-color-outline);
+      border-radius: var(--md-shape-corner-large);
       width: 100%;
       max-width: 440px;
       padding: 28px 24px;
       display: flex;
       flex-direction: column;
       gap: 18px;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 30px var(--accent-glow);
+      box-shadow: var(--md-elevation-3);
       position: relative;
     }
 
@@ -629,7 +639,7 @@
       right: 18px;
       background: none;
       border: none;
-      color: var(--text-muted);
+      color: var(--md-sys-color-on-surface-variant);
       font-size: 20px;
       cursor: pointer;
     }
@@ -637,7 +647,7 @@
     .modal-tabs {
       display: flex;
       gap: 8px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
       padding-bottom: 10px;
     }
 
@@ -645,24 +655,23 @@
       flex: 1;
       background: none;
       border: none;
-      color: var(--text-muted);
+      color: var(--md-sys-color-on-surface-variant);
       font-size: 13px;
       font-weight: 700;
       padding: 9px;
-      border-radius: 8px;
+      border-radius: var(--md-shape-corner-medium);
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .modal-tab-btn.active {
-      color: #080a0f;
-      background: var(--accent);
-      box-shadow: 0 0 12px var(--accent-glow);
+      color: var(--md-sys-color-on-primary);
+      background: var(--md-sys-color-primary);
     }
 
     .auth-alert {
       padding: 12px;
-      border-radius: 8px;
+      border-radius: var(--md-shape-corner-small);
       font-size: 12px;
       display: none;
       line-height: 1.4;
@@ -670,16 +679,16 @@
 
     .auth-alert.error {
       display: block;
-      background: var(--danger-dim);
-      border: 1px solid var(--danger);
-      color: #fca5a5;
+      background: var(--md-sys-color-error-container);
+      border: 1px solid var(--md-sys-color-error);
+      color: var(--md-sys-color-error);
     }
 
     .auth-alert.success {
       display: block;
-      background: var(--accent-dim);
-      border: 1px solid var(--accent);
-      color: var(--accent);
+      background: var(--md-sys-color-primary-container);
+      border: 1px solid var(--md-sys-color-primary);
+      color: var(--md-sys-color-primary);
     }
 
     .otp-input-group {
@@ -688,47 +697,48 @@
     }
 
     .btn-otp-send {
-      background: var(--surface-raised);
-      border: 1px solid var(--accent);
-      color: var(--accent);
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid var(--md-sys-color-primary);
+      color: var(--md-sys-color-primary);
       font-weight: 700;
       font-size: 12px;
       padding: 0 14px;
-      border-radius: var(--radius-sm);
+      border-radius: var(--md-shape-corner-medium);
       cursor: pointer;
       white-space: nowrap;
       transition: background 0.2s;
     }
 
     .btn-otp-send:hover {
-      background: var(--accent-dim);
+      background: var(--md-sys-color-primary-container);
     }
 
     .btn-otp-send:disabled {
-      opacity: 0.5;
+      opacity: 0.4;
       cursor: not-allowed;
-      border-color: var(--border);
-      color: var(--text-muted);
+      border-color: var(--md-sys-color-outline);
+      color: var(--md-sys-color-on-surface-variant);
     }
 
     footer {
-      background: rgba(15, 19, 29, 0.95);
-      border-top: 1px solid var(--border);
+      background: var(--md-sys-color-surface);
+      border-top: 1px solid var(--md-sys-color-outline-variant);
       padding: 18px 24px;
       text-align: center;
       font-size: 12px;
-      color: var(--text-muted);
+      color: var(--md-sys-color-on-surface-variant);
       margin-top: auto;
     }
 
     footer span {
-      color: var(--accent);
+      color: var(--md-sys-color-primary);
       font-weight: 800;
     }
   </style>
 </head>
 <body>
 
+  <!-- M3 TOP APP BAR -->
   <header>
     <div class="brand">
       <div class="brand-logo">★</div>
@@ -744,52 +754,48 @@
         <span id="userEmailLabel">Mon Compte</span>
         <span id="userCreditsLabel" class="user-credits-pill">100 Crédits</span>
         <button class="action-pill" onclick="copyMyApiKey()" title="Copier ma clé API">Clé API</button>
-        <button class="action-pill" style="background:var(--danger-dim);border-color:var(--danger);color:#fca5a5;" onclick="deleteMyAccount()" title="Supprimer définitivement mon compte">Supprimer Compte</button>
-        <button class="action-pill" style="background:var(--surface-hover);border-color:var(--border);" onclick="logoutUser()" title="Se déconnecter">Déconnexion</button>
+        <button class="action-pill" style="background:var(--md-sys-color-error-container);border-color:var(--md-sys-color-error);color:var(--md-sys-color-error);" onclick="deleteMyAccount()">Supprimer Compte</button>
+        <button class="action-pill" style="background:var(--md-sys-color-surface-container-high);border-color:var(--md-sys-color-outline);" onclick="logoutUser()">Déconnexion</button>
       </div>
 
       <!-- Bouton Connexion / Inscription -->
-      <button id="btnOpenAuth" class="btn-auth-header" onclick="openAuthModal('register')">
+      <button id="btnOpenAuth" class="btn-m3-primary" onclick="openAuthModal('register')">
         Inscription (+100 Crédits) / Connexion
       </button>
 
-      <input type="hidden" id="apiKeyInput" value="stawa_live_9f83a7c4e2b1d680">
+      <input type="hidden" id="apiKeyInput" value="stanleystawa_live_9f83a7c4e2b1d680a7e4b9c1d2e3f5">
     </div>
   </header>
 
   <div class="container">
 
-    <div class="hero-banner">
-      <div class="hero-banner-text">
-        <h2>Moteur Neural de Production Vidéo par Stanley Stawa</h2>
-        <p>Validez votre compte Gmail par code de vérification pour obtenir votre clé d'accès et 100 crédits de bienvenue (limite de 2 créations par e-mail).</p>
-      </div>
-      <div class="hero-signature">★ Stanley stawa Verified</div>
-    </div>
-
+    <!-- NAVIGATION TABS -->
     <div class="tabs-nav">
-      <button class="tab-btn active" onclick="switchTab('video')">Vidéo Multi-Scènes</button>
-      <button class="tab-btn" onclick="switchTab('image')">Image HD</button>
-      <button class="tab-btn" onclick="switchTab('edit')">Retouche & Cohérence</button>
-      <button class="tab-btn" onclick="switchTab('story')">Scénario IA</button>
-      <button class="tab-btn" onclick="switchTab('voice')">Voix TTS</button>
-      <button class="tab-btn" onclick="switchTab('accounts')">Cluster & Nœuds</button>
+      <button class="tab-btn active" onclick="switchTab('video')">Vidéo Studio</button>
+      <button class="tab-btn" onclick="switchTab('image')">Image & Vision</button>
+      <button class="tab-btn" onclick="switchTab('voice')">Voix Studio</button>
+      <button class="tab-btn" onclick="switchTab('story')">Laboratoire Scénario</button>
+      <button class="tab-btn" onclick="switchTab('creations')">Mes Créations</button>
+      <button class="tab-btn" onclick="switchTab('admin')">Panel Administrateur</button>
     </div>
 
     <!-- 1. TAB VIDEO -->
     <div id="tab-video" class="tab-panel active">
       <div class="card">
-        <div class="card-title">Production Vidéo IA — Stanley Stawa</div>
+        <div class="card-title">
+          <span>Production Vidéo Multi-Scènes</span>
+          <button type="button" class="btn-secondary" onclick="enhancePrompt()">Améliorer le Prompt IA</button>
+        </div>
         <div class="form-group">
           <label>Scénario / Description de l'histoire</label>
           <textarea id="videoPrompt" placeholder="Décrivez l'histoire (ex: Un jeune aventurier découvre un grimoire magique)">Un jeune aventurier courageux avec une cape rouge découvre un grimoire magique dans une bibliothèque antique</textarea>
         </div>
 
         <div class="form-group">
-          <label>Personnage de Référence (Optionnel — Cohérence garantie)</label>
+          <label>Personnage de Référence (Optionnel — Cohérence 100%)</label>
           <div class="upload-box" onclick="document.getElementById('videoCharFile').click()">
             <input type="file" id="videoCharFile" accept="image/*" style="display:none" onchange="handleImageUpload(event, 'videoCharPreview', 'videoCharData')">
-            <span id="videoCharPlaceholder">Sélectionner l'image de référence du personnage</span>
+            <span id="videoCharPlaceholder">Sélectionner l'image du personnage de référence</span>
             <img id="videoCharPreview" class="upload-preview-thumb" alt="Aperçu">
           </div>
           <input type="hidden" id="videoCharData">
@@ -839,9 +845,9 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Lecteur & Résultat Vidéo</div>
+        <div class="card-title">Lecteur & Rendu Vidéo</div>
         <div id="videoPreviewBox" class="preview-box">
-          <div class="preview-placeholder">Le film final s'affichera ici dès la fin du rendu.<br>Cohérence personnage avec filigrane officiel <strong>★ Stanley stawa</strong>.</div>
+          <div class="preview-placeholder">Le film généré apparaîtra ici dès la fin du rendu.<br>Cohérence personnage avec filigrane officiel <strong>★ Stanley stawa</strong>.</div>
         </div>
       </div>
     </div>
@@ -849,7 +855,7 @@
     <!-- 2. TAB IMAGE -->
     <div id="tab-image" class="tab-panel">
       <div class="card">
-        <div class="card-title">Génération d'Image HD — Stanley Stawa Vision</div>
+        <div class="card-title">Génération d'Image HD — Vision Studio</div>
         <div class="form-group">
           <label>Prompt Visuel</label>
           <textarea id="imagePrompt" placeholder="Description visuelle détaillée">A majestic futuristic cyberpunk warrior with glowing neon armor, 8k masterpiece</textarea>
@@ -873,65 +879,10 @@
       </div>
     </div>
 
-    <!-- 3. TAB EDIT -->
-    <div id="tab-edit" class="tab-panel">
-      <div class="card">
-        <div class="card-title">Retouche & Cohérence Visuelle — Stanley Stawa</div>
-        <div class="form-group">
-          <label>Image Source (Upload ou URL)</label>
-          <div class="upload-box" onclick="document.getElementById('editFile').click()">
-            <input type="file" id="editFile" accept="image/*" style="display:none" onchange="handleImageUpload(event, 'editPreview', 'editData')">
-            <span id="editPlaceholder">Sélectionner l'image à retoucher</span>
-            <img id="editPreview" class="upload-preview-thumb" alt="Aperçu">
-          </div>
-          <input type="hidden" id="editData">
-          <input type="text" id="editImgUrl" placeholder="Ou collez l'URL d'une image existante" style="margin-top: 6px;">
-        </div>
-        <div class="form-group">
-          <label>Consigne de Retouche</label>
-          <textarea id="editPrompt" placeholder="Ex: Change the background into a snowy mountain, add sunglasses">Change the background into an enchanted forest with bioluminescent mushrooms</textarea>
-        </div>
-        <button id="btnEditImg" class="btn-submit" onclick="editImage()">Appliquer la Retouche</button>
-      </div>
-      <div class="card">
-        <div class="card-title">Résultat de la Retouche</div>
-        <div id="editPreviewBox" class="preview-box">
-          <div class="preview-placeholder">L'image retouchée avec le même personnage apparaîtra ici.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 4. TAB STORY -->
-    <div id="tab-story" class="tab-panel">
-      <div class="card">
-        <div class="card-title">Scénarisation IA — Stanley Stawa Story Engine</div>
-        <div class="form-group">
-          <label>Idée ou Résumé</label>
-          <textarea id="storyIdea" placeholder="Une courte idée d'histoire...">Une aventure magique dans un château volant dans les nuages</textarea>
-        </div>
-        <div class="form-group">
-          <label>Langue</label>
-          <select id="storyLang">
-            <option value="french" selected>Français</option>
-            <option value="english">Anglais</option>
-            <option value="spanish">Espagnol</option>
-            <option value="german">Allemand</option>
-          </select>
-        </div>
-        <button id="btnStory" class="btn-submit" onclick="expandStory()">Découper en Scènes</button>
-      </div>
-      <div class="card">
-        <div class="card-title">Scènes & Dialogues Découpés</div>
-        <div id="storyPreviewBox" class="preview-box">
-          <div class="preview-placeholder">Les scènes découpées apparaîtront ici.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 5. TAB VOICE -->
+    <!-- 3. TAB VOICE -->
     <div id="tab-voice" class="tab-panel">
       <div class="card">
-        <div class="card-title">Synthèse Vocale HD — Stanley Stawa Voice Core</div>
+        <div class="card-title">Synthèse Vocale HD — Voice Studio</div>
         <div class="form-group">
           <label>Texte à Synthétiser</label>
           <textarea id="voiceText" placeholder="Entrez le texte parlé...">Bienvenue dans le studio Stanley Stawa AI. Voici une voix naturelle et ultra-réaliste pour vos projets vidéo.</textarea>
@@ -950,27 +901,91 @@
       <div class="card">
         <div class="card-title">Lecteur Audio</div>
         <div id="voicePreviewBox" class="preview-box">
-          <div class="preview-placeholder">Le fichier audio MP3 généré apparaîtra ici.</div>
+          <div class="preview-placeholder">Le fichier audio MP3 apparaîtra ici.</div>
         </div>
       </div>
     </div>
 
-    <!-- 6. TAB ACCOUNTS -->
-    <div id="tab-accounts" class="tab-panel">
-      <div class="card" style="grid-column: 1 / -1;">
-        <div class="card-title" style="justify-content: space-between;">
-          <span>État du Cluster — Stanley Stawa Engine</span>
-          <button class="btn-secondary" onclick="refillAccount()">Recharger le Cluster</button>
+    <!-- 4. TAB STORY LAB -->
+    <div id="tab-story" class="tab-panel">
+      <div class="card">
+        <div class="card-title">Découpage & Scénarisation IA</div>
+        <div class="form-group">
+          <label>Idée de départ</label>
+          <textarea id="storyIdea" placeholder="Une courte idée d'histoire...">Une aventure magique dans un château volant dans les nuages</textarea>
         </div>
-        <div class="table-container" id="accountsTableContainer">
-          <div style="text-align: center; color: var(--text-muted); padding: 16px;"><div class="loader" style="margin: 0 auto 8px;"></div>Chargement du cluster...</div>
+        <div class="form-group">
+          <label>Langue</label>
+          <select id="storyLang">
+            <option value="french" selected>Français</option>
+            <option value="english">Anglais</option>
+            <option value="spanish">Espagnol</option>
+            <option value="german">Allemand</option>
+          </select>
+        </div>
+        <button id="btnStory" class="btn-submit" onclick="expandStory()">Découper en Scènes</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Scènes Découpées</div>
+        <div id="storyPreviewBox" class="preview-box">
+          <div class="preview-placeholder">Les scènes découpées apparaîtront ici.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. TAB MES CREATIONS -->
+    <div id="tab-creations" class="tab-panel">
+      <div class="card" style="grid-column: 1 / -1;">
+        <div class="card-title">
+          <span>Mes Créations & Historique Vidéo</span>
+          <button class="btn-secondary" onclick="loadMyCreations()">Actualiser</button>
+        </div>
+        <div id="myCreationsGrid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;">
+          <div style="text-align:center;color:var(--md-sys-color-on-surface-variant);padding:24px;grid-column:1/-1;">Aucune vidéo enregistrée pour le moment.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. TAB PANEL ADMINISTRATEUR -->
+    <div id="tab-admin" class="tab-panel">
+      <div class="card" style="grid-column: 1 / -1;">
+        <div class="card-title">
+          <span>Panel Administrateur — Stanley Stawa Core</span>
+          <button class="btn-secondary" onclick="loadAdminDashboard()">Actualiser Données</button>
+        </div>
+
+        <div id="adminAuthLock" style="padding:24px;text-align:center;">
+          <p style="color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;">Entrez votre clé administrateur pour déverrouiller la console de gestion.</p>
+          <div style="max-width:320px;margin:0 auto;display:flex;gap:8px;">
+            <input type="password" id="adminSecretKeyInput" placeholder="Clé Maître Admin" value="">
+            <button class="btn-m3-primary" onclick="unlockAdminPanel()">Déverrouiller</button>
+          </div>
+        </div>
+
+        <div id="adminContent" style="display:none;flex-direction:column;gap:20px;">
+          
+          <!-- STATS GLOBALES -->
+          <div class="stats-grid" id="adminStatsGrid"></div>
+
+          <!-- GESTION DES UTILISATEURS -->
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="font-weight:800;font-size:14px;color:#fff;">Utilisateurs Enregistrés</div>
+            <div class="table-container" id="adminUsersTable"></div>
+          </div>
+
+          <!-- TÂCHES VIDÉO RÉCENTES -->
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="font-weight:800;font-size:14px;color:#fff;">Tâches Vidéo Récentes</div>
+            <div class="table-container" id="adminTasksTable"></div>
+          </div>
+
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- MODAL AUTHENTIFICATION / INSCRIPTION AVEC VÉRIFICATION OTP -->
+  <!-- MODAL AUTHENTIFICATION AVEC OTP GMAIL -->
   <div id="authModal" class="modal-backdrop">
     <div class="modal-card">
       <button class="modal-close" onclick="closeAuthModal()">✕</button>
@@ -982,22 +997,22 @@
 
       <div id="authAlert" class="auth-alert"></div>
 
-      <!-- FORMULAIRE INSCRIPTION AVEC VALIDATION OTP STRICTE -->
+      <!-- FORMULAIRE INSCRIPTION -->
       <form id="formRegister" onsubmit="handleRegisterSubmit(event)">
         <div class="form-group" style="margin-bottom: 12px;">
-          <label>Adresse Gmail Réelle (Max 2 créations par e-mail)</label>
+          <label>Adresse Gmail Réelle</label>
           <div class="otp-input-group">
             <input type="email" id="regEmail" required placeholder="votre_compte@gmail.com">
             <button type="button" id="btnSendOtp" class="btn-otp-send" onclick="sendOtpCode()">
               Envoyer Code
             </button>
           </div>
-          <span style="font-size:11px;color:var(--text-muted);">Un code à 6 chiffres sera expédié à votre boîte de réception.</span>
+          <span style="font-size:11px;color:var(--md-sys-color-on-surface-variant);">Un code de vérification à 6 chiffres vous sera envoyé par e-mail.</span>
         </div>
 
         <div class="form-group" style="margin-bottom: 12px;">
-          <label>Code de Vérification (6 chiffres reçus par e-mail)</label>
-          <input type="text" id="regOtp" required maxlength="6" pattern="[0-9]{6}" placeholder="------" style="letter-spacing: 6px; font-family: var(--font-mono); font-weight: 700; text-align: center;">
+          <label>Code de Vérification (6 chiffres)</label>
+          <input type="text" id="regOtp" required maxlength="6" pattern="[0-9]{6}" placeholder="------" style="letter-spacing: 6px; font-family: var(--font-family-mono); font-weight: 700; text-align: center;">
         </div>
 
         <div class="form-group" style="margin-bottom: 18px;">
@@ -1030,7 +1045,7 @@
   </div>
 
   <footer>
-    Plateforme de Production IA développée par <span>★ Stanley stawa</span> • Tous droits réservés • Moteur Neural v2.7
+    Plateforme de Production IA développée par <span>★ Stanley stawa</span> • Tous droits réservés • Moteur Neural v2.8 (M3 Engine)
   </footer>
 
   <script>
@@ -1055,9 +1070,20 @@
       document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
       event.target.classList.add("active");
       document.getElementById("tab-" + tabId).classList.add("active");
+
+      if (tabId === "creations") loadMyCreations();
+      if (tabId === "admin") checkAdminAccess();
     }
 
-    // --- MODAL & AUTHENTIFICATION ---
+    // --- PROMPT ENHANCER IA ---
+    function enhancePrompt() {
+      const p = document.getElementById("videoPrompt");
+      const current = p.value.trim();
+      if (!current) return alert("Veuillez d'abord écrire une courte idée.");
+      p.value = current + ", cinematic 8k masterpiece, dramatic volumetric lighting, highly detailed environment, ultra-realistic texture, studio grade cinematography";
+    }
+
+    // --- MODAL AUTHENTIFICATION ---
 
     function openAuthModal(mode = "register", customMessage = "") {
       currentAuthMode = mode;
@@ -1100,7 +1126,6 @@
       }
     }
 
-    // Envoi réel du code OTP par e-mail avec contrôle max 2 créations
     async function sendOtpCode() {
       const email = document.getElementById("regEmail").value.trim();
       const alertBox = document.getElementById("authAlert");
@@ -1152,7 +1177,6 @@
       }
     }
 
-    // Inscription avec validation OTP obligatoire
     async function handleRegisterSubmit(e) {
       e.preventDefault();
       const email = document.getElementById("regEmail").value.trim();
@@ -1199,7 +1223,6 @@
       }
     }
 
-    // Connexion
     async function handleLoginSubmit(e) {
       e.preventDefault();
       const email = document.getElementById("loginEmail").value.trim();
@@ -1239,7 +1262,6 @@
       }
     }
 
-    // Suppression définitive de compte
     async function deleteMyAccount() {
       if (!isUserLoggedIn()) return;
       const key = getApiKey();
@@ -1367,7 +1389,7 @@
       box.innerHTML = `
         <div class="loader"></div>
         <div id="progressLabel" style="font-weight: 800; font-size: 14px; margin-bottom: 4px; color: #fff;">Initialisation par Stanley Stawa Engine...</div>
-        <div id="progressDetail" style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Scénarisation & cohérence personnage...</div>
+        <div id="progressDetail" style="font-size: 12px; color: var(--md-sys-color-on-surface-variant); margin-bottom: 8px;">Scénarisation & cohérence personnage...</div>
         <div class="progress-bar-wrap"><div id="progressBar" class="progress-bar-fill" style="width: 15%"></div></div>
       `;
 
@@ -1401,6 +1423,7 @@
                   </div>
                 </div>
               `;
+              saveCreationLocally({ taskId, prompt, videoUrl: statusData.video_url, duration: statusData.duration, date: new Date().toLocaleString() });
               initUserSession();
               break;
             } else if (statusData.status === "failed") {
@@ -1424,10 +1447,41 @@
           throw new Error("Rendu en cours sur les serveurs. Réinterrogez /stanleystawa/status?task_id=" + taskId);
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: var(--danger); padding: 16px; font-weight: 700;">Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px; font-weight: 700;">Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
+    }
+
+    function saveCreationLocally(item) {
+      const items = JSON.parse(localStorage.getItem("stanley_my_creations") || "[]");
+      items.unshift(item);
+      localStorage.setItem("stanley_my_creations", JSON.stringify(items.slice(0, 20)));
+    }
+
+    function loadMyCreations() {
+      const grid = document.getElementById("myCreationsGrid");
+      const items = JSON.parse(localStorage.getItem("stanley_my_creations") || "[]");
+
+      if (!items.length) {
+        grid.innerHTML = `<div style="text-align:center;color:var(--md-sys-color-on-surface-variant);padding:24px;grid-column:1/-1;">Aucune vidéo enregistrée pour le moment. Lancez un rendu pour la voir ici.</div>`;
+        return;
+      }
+
+      grid.innerHTML = items.map(it => `
+        <div class="card" style="padding:16px;">
+          <video src="${it.videoUrl}" controls playsinline style="width:100%;border-radius:10px;background:#000;max-height:220px;"></video>
+          <div style="font-size:12px;font-weight:700;margin-top:8px;color:#fff;">${it.prompt}</div>
+          <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);display:flex;justify-content:space-between;margin-top:4px;">
+            <span>${it.duration}s</span>
+            <span>${it.date}</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px;">
+            <a class="action-pill" href="${it.videoUrl}" target="_blank" style="flex:1;justify-content:center;">Lien direct</a>
+            <a class="action-pill" href="${it.videoUrl}&dl=1" style="flex:1;justify-content:center;">Télécharger</a>
+          </div>
+        </div>
+      `).join("");
     }
 
     // --- 2. IMAGE HD ---
@@ -1444,7 +1498,7 @@
       if (!prompt) return alert("Veuillez saisir un prompt pour l'image.");
 
       btn.disabled = true;
-      box.innerHTML = `<div class="loader"></div><div>Génération de l'image par Stanley Stawa Vision...</div>`;
+      box.innerHTML = `<div class="loader"></div><div>Génération de l'image par Vision Studio...</div>`;
 
       try {
         const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/image`, {
@@ -1457,14 +1511,14 @@
           box.innerHTML = `
             <img class="preview-img" src="${data.image_url}" alt="Image générée">
             <div class="meta-box">
-              <div><strong>Ratio :</strong> ${data.ratio} | <strong>Moteur :</strong> Stanley Stawa Neural Vision</div>
+              <div><strong>Ratio :</strong> ${data.ratio} | <strong>Moteur :</strong> Vision Studio</div>
               <div><strong>Lien direct :</strong> <a href="${data.image_url}" target="_blank">${data.image_url}</a></div>
             </div>
           `;
           initUserSession();
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: var(--danger); padding: 16px;">Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px;">Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
@@ -1507,13 +1561,13 @@
           initUserSession();
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: var(--danger); padding: 16px;">Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px;">Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
     }
 
-    // --- 4. SCÉNARIO IA ---
+    // --- 4. SCENARIO IA ---
     async function expandStory() {
       if (!isUserLoggedIn()) {
         return openAuthModal("register", "Inscription requise : Veuillez valider votre e-mail pour créer des scénarios.");
@@ -1527,32 +1581,32 @@
       if (!idea) return alert("Veuillez saisir une idée.");
 
       btn.disabled = true;
-      box.innerHTML = `<div class="loader"></div><div>Scénarisation par Stanley Stawa Story Engine...</div>`;
+      box.innerHTML = `<div class="loader"></div><div>Scénarisation en cours...</div>`;
 
       try {
         const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/story?idea=${encodeURIComponent(idea)}&language=${language}`);
 
         let scenesHtml = data.scenes.map((s, i) => `
-          <div class="scene-item" style="background: rgba(255,255,255,0.03); padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; border-left: 3px solid var(--accent);">
-            <div style="font-weight: 800; color: var(--accent); margin-bottom: 2px;">Section #${i+1}</div>
+          <div style="background:var(--md-sys-color-surface-container);padding:10px 14px;border-radius:8px;margin-bottom:8px;font-size:13px;border-left:3px solid var(--md-sys-color-primary);">
+            <div style="font-weight:800;color:var(--md-sys-color-primary);margin-bottom:2px;">Section #${i+1}</div>
             <div>${s}</div>
           </div>
         `).join("");
 
         box.innerHTML = `
-          <div style="font-weight: 800; font-size: 15px; margin-bottom: 6px; color: var(--accent);">${data.title}</div>
-          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">${data.expanded_story}</div>
-          <div style="font-weight: 700; font-size: 12px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Sections découpées (${data.scenes.length}) :</div>
-          <div class="scenes-grid">${scenesHtml}</div>
+          <div style="font-weight:800;font-size:15px;margin-bottom:6px;color:var(--md-sys-color-primary);">${data.title}</div>
+          <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;line-height:1.5;">${data.expanded_story}</div>
+          <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;">Sections découpées (${data.scenes.length}) :</div>
+          <div>${scenesHtml}</div>
         `;
       } catch (err) {
-        box.innerHTML = `<div style="color: var(--danger); padding: 16px;">Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px;">Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
     }
 
-    // --- 5. SYNTHÈSE VOCALE ---
+    // --- 5. SYNTHESE VOCALE ---
     async function synthesizeVoice() {
       if (!isUserLoggedIn()) {
         return openAuthModal("register", "Inscription requise : Veuillez valider votre e-mail pour générer des voix.");
@@ -1566,7 +1620,7 @@
       if (!text) return alert("Veuillez saisir un texte.");
 
       btn.disabled = true;
-      box.innerHTML = `<div class="loader"></div><div>Synthèse vocale en cours par Stanley Stawa Voice Core...</div>`;
+      box.innerHTML = `<div class="loader"></div><div>Synthèse vocale en cours...</div>`;
 
       try {
         const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/voice?text=${encodeURIComponent(text)}&voice_id=${voiceId}`);
@@ -1575,65 +1629,220 @@
           box.innerHTML = `
             <audio class="preview-audio" src="${data.audio_url}" controls autoplay></audio>
             <div class="meta-box">
-              <div><strong>Moteur :</strong> Stanley Stawa Neural Voice HD</div>
+              <div><strong>Moteur :</strong> Voice Studio HD</div>
               <div><strong>Lien direct audio :</strong> <a href="${data.audio_url}" target="_blank">${data.audio_url}</a></div>
             </div>
           `;
           initUserSession();
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: var(--danger); padding: 16px;">Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px;">Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
     }
 
-    // --- 6. ACCOUNTS & CLUSTER ---
-    async function loadAccounts() {
-      const container = document.getElementById("accountsTableContainer");
-      container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 16px;"><div class="loader" style="margin: 0 auto 8px;"></div>Chargement du cluster...</div>`;
+    // --- 6. PANEL ADMINISTRATEUR ---
+    function checkAdminAccess() {
+      const savedAdminKey = localStorage.getItem("stanley_admin_key");
+      if (savedAdminKey) {
+        document.getElementById("adminSecretKeyInput").value = savedAdminKey;
+        unlockAdminPanel();
+      }
+    }
+
+    async function unlockAdminPanel() {
+      const key = document.getElementById("adminSecretKeyInput").value.trim();
+      if (!key) return alert("Veuillez entrer votre clé administrateur maître.");
 
       try {
-        const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/accounts`);
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_stats&key=${encodeURIComponent(key)}`);
+        const data = await res.json();
 
-        let rowsHtml = data.accounts.map((acc, idx) => `
-          <tr>
-            <td><strong>${acc.node_id}</strong></td>
-            <td><span style="font-weight: 800; color: var(--accent);">${acc.credits}</span> crédits</td>
-            <td><span class="badge-status">Actif & Sécurisé</span></td>
-            <td style="color: var(--text-muted);">${acc.created_at || '—'}</td>
-          </tr>
-        `).join("");
+        if (!res.ok) throw new Error(data.error || "Clé administrateur invalide.");
+
+        localStorage.setItem("stanley_admin_key", key);
+        document.getElementById("adminAuthLock").style.display = "none";
+        document.getElementById("adminContent").style.display = "flex";
+
+        renderAdminStats(data.stats);
+        loadAdminUsers(key);
+        loadAdminTasks(key);
+
+      } catch (err) {
+        alert("Accès refusé : " + err.message);
+      }
+    }
+
+    function renderAdminStats(stats) {
+      const grid = document.getElementById("adminStatsGrid");
+      grid.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-number">${stats.total_registered_users}</div>
+          <div class="stat-label">Utilisateurs Inscrits</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">${stats.total_video_tasks}</div>
+          <div class="stat-label">Vidéos Initiées</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">${stats.completed_videos}</div>
+          <div class="stat-label">Films Finalisés</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">${stats.cluster_credits_pool}</div>
+          <div class="stat-label">Crédits Cluster Restants</div>
+        </div>
+      `;
+    }
+
+    async function loadAdminUsers(key) {
+      const container = document.getElementById("adminUsersTable");
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_users&key=${encodeURIComponent(key)}`);
+        const data = await res.json();
+
+        if (!data.users || !data.users.length) {
+          container.innerHTML = `<div style="padding:14px;color:var(--md-sys-color-on-surface-variant);">Aucun utilisateur.</div>`;
+          return;
+        }
 
         container.innerHTML = `
           <table>
             <thead>
               <tr>
-                <th>Instance Serveur</th>
-                <th>Solde Crédits</th>
-                <th>Statut</th>
-                <th>Date d'ajout</th>
+                <th>ID</th>
+                <th>E-mail</th>
+                <th>Crédits</th>
+                <th>Rôle</th>
+                <th>Clé API</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              ${rowsHtml}
+              ${data.users.map(u => `
+                <tr>
+                  <td>#${u.id}</td>
+                  <td><strong>${u.email}</strong></td>
+                  <td><span style="color:var(--md-sys-color-primary);font-weight:700;">${u.credits}</span></td>
+                  <td>${u.role}</td>
+                  <td><code style="font-size:10px;color:var(--md-sys-color-on-surface-variant);">${u.api_key.slice(0, 20)}...</code></td>
+                  <td>
+                    <button class="btn-secondary" style="padding:4px 8px;font-size:11px;" onclick="adminEditCredits('${u.email}', ${u.credits})">+ Crédits</button>
+                    <button class="btn-secondary" style="padding:4px 8px;font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteUser('${u.id}')">Supprimer</button>
+                  </td>
+                </tr>
+              `).join("")}
             </tbody>
           </table>
         `;
-      } catch (err) {
-        container.innerHTML = `<div style="color: var(--danger); padding: 12px;">Erreur chargement : ${err.message}</div>`;
+      } catch (e) {
+        container.innerHTML = `<div style="color:var(--md-sys-color-error);padding:14px;">Erreur chargement utilisateurs: ${e.message}</div>`;
       }
     }
 
-    async function refillAccount() {
-      if (!confirm("Voulez-vous ajouter un nouveau nœud de calcul au cluster ?")) return;
+    async function loadAdminTasks(key) {
+      const container = document.getElementById("adminTasksTable");
       try {
-        const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/refill`);
-        alert(`Nœud ajouté avec succès (+${data.account.credits} crédits) !`);
-        loadAccounts();
-      } catch (err) {
-        alert(`Erreur: ${err.message}`);
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_tasks&key=${encodeURIComponent(key)}`);
+        const data = await res.json();
+
+        if (!data.tasks || !data.tasks.length) {
+          container.innerHTML = `<div style="padding:14px;color:var(--md-sys-color-on-surface-variant);">Aucune tâche récente.</div>`;
+          return;
+        }
+
+        container.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Task ID</th>
+                <th>Scénario</th>
+                <th>Statut</th>
+                <th>Durée</th>
+                <th>Lien MP4</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.tasks.map(t => `
+                <tr>
+                  <td><code>${t.task_id}</code></td>
+                  <td>${t.prompt.slice(0, 45)}...</td>
+                  <td><span class="chip-status">${t.status}</span></td>
+                  <td>${t.duration || 0}s</td>
+                  <td>${t.video_url ? `<a href="${t.video_url}" target="_blank" style="color:var(--md-sys-color-primary);">Regarder</a>` : '—'}</td>
+                  <td>
+                    <button class="btn-secondary" style="padding:4px 8px;font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteTask('${t.task_id}')">Suppr</button>
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        `;
+      } catch (e) {
+        container.innerHTML = `<div style="color:var(--md-sys-color-error);padding:14px;">Erreur chargement tâches: ${e.message}</div>`;
       }
+    }
+
+    async function adminEditCredits(email, currentCredits) {
+      const key = localStorage.getItem("stanley_admin_key");
+      const amount = prompt(`Entrez le nouveau solde de crédits pour ${email} :`, currentCredits);
+      if (amount === null) return;
+
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_update_credits&key=${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, credits: parseInt(amount, 10) })
+        });
+        const data = await res.json();
+        alert(data.message || "Crédits mis à jour !");
+        loadAdminUsers(key);
+      } catch (err) {
+        alert("Erreur: " + err.message);
+      }
+    }
+
+    async function adminDeleteUser(id) {
+      const key = localStorage.getItem("stanley_admin_key");
+      if (!confirm(`Voulez-vous vraiment supprimer l'utilisateur #${id} ?`)) return;
+
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_delete_user&key=${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: id })
+        });
+        const data = await res.json();
+        alert(data.message || "Utilisateur supprimé !");
+        loadAdminUsers(key);
+      } catch (err) {
+        alert("Erreur: " + err.message);
+      }
+    }
+
+    async function adminDeleteTask(taskId) {
+      const key = localStorage.getItem("stanley_admin_key");
+      if (!confirm(`Supprimer la tâche ${taskId} ?`)) return;
+
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_delete_task&key=${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ task_id: taskId })
+        });
+        const data = await res.json();
+        alert(data.message || "Tâche supprimée !");
+        loadAdminTasks(key);
+      } catch (err) {
+        alert("Erreur: " + err.message);
+      }
+    }
+
+    function loadAdminDashboard() {
+      const key = localStorage.getItem("stanley_admin_key");
+      if (key) unlockAdminPanel();
     }
 
     initUserSession();

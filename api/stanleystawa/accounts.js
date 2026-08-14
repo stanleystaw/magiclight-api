@@ -1,13 +1,5 @@
 /**
- * api/stanleystawa/accounts.js — Authentification, Inscription Sécurisée par OTP, Limite de 2 créations par Gmail & Suppression de Compte
- *
- * Actions :
- * - POST /stanleystawa/accounts?action=send_otp { email }
- * - POST /stanleystawa/accounts?action=register { email, password, otp }
- * - POST /stanleystawa/accounts?action=login { email, password }
- * - POST /stanleystawa/accounts?action=delete_account (avec x-api-key ou ?key=)
- * - GET  /stanleystawa/accounts?action=me (avec x-api-key ou ?key=)
- * - GET  /stanleystawa/accounts (Cluster status)
+ * api/stanleystawa/accounts.js — Authentification, Inscription Sécurisée par OTP Réel, Quotas & Panel Administrateur
  */
 
 const url = require("url");
@@ -15,7 +7,7 @@ const turso = require("../../lib/turso");
 const security = require("../../lib/security");
 const mailer = require("../../lib/mailer");
 
-const MAX_REGISTRATIONS_PER_GMAIL = 2; // Limite stricte : Maximum 2 créations par adresse Gmail
+const MAX_REGISTRATIONS_PER_GMAIL = 2;
 
 function readBody(req) {
   return new Promise((resolve) => {
@@ -56,9 +48,91 @@ module.exports = async function handler(req, res) {
   const params = { ...query, ...body };
   const action = String(params.action || query.action || body.action || "").toLowerCase();
 
-  // ----------------------------------------------------
-  // ACTION 1 : ENVOI DU CODE OTP AVEC CONTRÔLE DE LIMITE (MAX 2 PAR GMAIL)
-  // ----------------------------------------------------
+  // ====================================================
+  // ACTIONS ADMINISTRATEUR (PANEL ADMIN SECURISE)
+  // ====================================================
+
+  if (action.startsWith("admin_")) {
+    const auth = await security.authenticateRequest(req);
+    if (!auth.authorized || !auth.is_admin) {
+      return res.status(403).json({ error: "Accès refusé : Droits administrateur requis pour cette action." });
+    }
+
+    // 1. Statistiques globales
+    if (action === "admin_stats") {
+      try {
+        const stats = await turso.getSystemStats();
+        return res.status(200).json({ status: "success", stats });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    // 2. Liste des utilisateurs
+    if (action === "admin_users") {
+      try {
+        const users = await turso.getAllUsers(100);
+        return res.status(200).json({ status: "success", users });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    // 3. Modifier les crédits d'un utilisateur
+    if (action === "admin_update_credits") {
+      const target = params.email || params.user_id || params.id;
+      const credits = parseInt(params.credits, 10);
+      if (!target || isNaN(credits)) {
+        return res.status(400).json({ error: "Paramètres 'email' (ou 'user_id') et 'credits' requis." });
+      }
+      try {
+        await turso.updateUserCredits(target, credits);
+        return res.status(200).json({ status: "success", message: `Crédits mis à jour : ${credits} crédits pour ${target}.` });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    // 4. Supprimer / Bannir un utilisateur
+    if (action === "admin_delete_user") {
+      const target = params.email || params.user_id || params.id;
+      if (!target) return res.status(400).json({ error: "Paramètre 'email' ou 'user_id' requis." });
+      try {
+        await turso.deleteUserByAdmin(target);
+        return res.status(200).json({ status: "success", message: `Utilisateur ${target} supprimé.` });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    // 5. Liste des tâches vidéo
+    if (action === "admin_tasks") {
+      try {
+        const tasks = await turso.getRecentTasks(40);
+        return res.status(200).json({ status: "success", tasks });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    // 6. Supprimer une tâche vidéo
+    if (action === "admin_delete_task") {
+      const taskId = params.task_id || params.taskId;
+      if (!taskId) return res.status(400).json({ error: "Paramètre 'task_id' requis." });
+      try {
+        await turso.deleteTask(taskId);
+        return res.status(200).json({ status: "success", message: `Tâche ${taskId} supprimée.` });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+  }
+
+  // ====================================================
+  // ACTIONS UTILISATEUR (AUTHENTIFICATION & PROFIL)
+  // ====================================================
+
+  // 1. Envoi OTP
   if (action === "send_otp" || action === "sendotp" || action === "otp") {
     if (!security.checkRateLimit(req, 6)) {
       return res.status(429).json({ error: "Trop de demandes d'OTP. Veuillez patienter une minute." });
@@ -70,7 +144,6 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: "Veuillez saisir une adresse e-mail valide." });
     }
 
-    // 1. Blocage strict des domaines jetables
     if (mailer.isDisposableEmail(email)) {
       return res.status(400).json({
         error: "Les adresses e-mails temporaires ou jetables sont strictement interdites. Veuillez utiliser une vraie adresse Gmail, Outlook ou Yahoo."
@@ -78,7 +151,6 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-      // 2. Vérification de la limite stricte de 2 inscriptions par Gmail
       const regCount = await turso.getEmailRegistrationCount(email);
       if (regCount >= MAX_REGISTRATIONS_PER_GMAIL) {
         return res.status(403).json({
@@ -86,17 +158,14 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      // 3. Vérification si un compte est déjà actif avec cet e-mail
       const existing = await turso.getUserByEmail(email);
       if (existing) {
         return res.status(409).json({ error: "Un compte actif existe déjà avec cette adresse e-mail. Veuillez vous connecter." });
       }
 
-      // 4. Génération et enregistrement du code OTP à 6 chiffres
       const otpCode = mailer.generateOtp();
       await turso.saveOtp(email, otpCode, 10);
 
-      // 5. Envoi réel de l'e-mail
       const sendResult = await mailer.sendOtpEmail(email, otpCode);
 
       if (!sendResult.sent) {
@@ -119,9 +188,7 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // ----------------------------------------------------
-  // ACTION 2 : INSCRIPTION AVEC VALIDATION OTP & ENREGISTREMENT HISTORIQUE
-  // ----------------------------------------------------
+  // 2. Inscription
   if (action === "register" || action === "signup") {
     if (!security.checkRateLimit(req, 10)) {
       return res.status(429).json({ error: "Trop de tentatives d'inscription. Veuillez patienter." });
@@ -150,7 +217,6 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-      // 1. Vérification de la limite de 2 créations par e-mail
       const regCount = await turso.getEmailRegistrationCount(email);
       if (regCount >= MAX_REGISTRATIONS_PER_GMAIL) {
         return res.status(403).json({
@@ -158,7 +224,6 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      // 2. Vérification du code OTP dans Turso DB
       const otpValidation = await turso.verifyOtp(email, otp);
       if (!otpValidation.valid) {
         return res.status(400).json({
@@ -166,13 +231,11 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      // 3. Vérification compte existant
       const existing = await turso.getUserByEmail(email);
       if (existing) {
         return res.status(409).json({ error: "Un compte existe déjà avec cette adresse e-mail." });
       }
 
-      // 4. Création du compte et incrémentation de l'historique d'inscriptions
       const passwordHash = security.hashPassword(password);
       const userApiKey = security.generateUserApiKey();
       const welcomeCredits = 100;
@@ -195,9 +258,7 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // ----------------------------------------------------
-  // ACTION 3 : CONNEXION (LOGIN)
-  // ----------------------------------------------------
+  // 3. Connexion
   if (action === "login" || action === "signin") {
     if (!security.checkRateLimit(req, 15)) {
       return res.status(429).json({ error: "Trop de tentatives de connexion. Veuillez patienter." });
@@ -238,9 +299,7 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // ----------------------------------------------------
-  // ACTION 4 : SUPPRESSION DÉFINITIVE DE COMPTE
-  // ----------------------------------------------------
+  // 4. Suppression de compte
   if (action === "delete_account" || action === "delete" || action === "deleteaccount") {
     try {
       const auth = await security.authenticateRequest(req);
@@ -248,7 +307,7 @@ module.exports = async function handler(req, res) {
         return res.status(401).json({ error: "Authentification requise pour supprimer votre compte." });
       }
 
-      if (auth.is_admin && auth.key === security.MASTER_API_KEY) {
+      if (auth.is_admin && auth.key.startsWith("stanleystawa_live_")) {
         return res.status(400).json({ error: "Le compte administrateur maître ne peut pas être supprimé." });
       }
 
@@ -267,9 +326,7 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // ----------------------------------------------------
-  // ACTION 5 : PROFIL & CRÉDITS (ME)
-  // ----------------------------------------------------
+  // 5. Profil & Crédits (Me)
   if (action === "me" || action === "profile") {
     try {
       const auth = await security.authenticateRequest(req);
@@ -291,9 +348,7 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // ----------------------------------------------------
-  // ACTION 6 : ÉTAT DU CLUSTER (PAR DÉFAUT)
-  // ----------------------------------------------------
+  // 6. État du Cluster (Par défaut)
   if (!security.checkRateLimit(req, 30)) {
     return res.status(429).json({ error: "Trop de requêtes. Veuillez patienter." });
   }
