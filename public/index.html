@@ -113,7 +113,6 @@
       font-size: 11px;
       font-weight: 700;
       border: 1px solid rgba(124, 240, 196, 0.4);
-      box-shadow: 0 0 10px rgba(124, 240, 196, 0.15);
     }
 
     .badge-dot {
@@ -124,14 +123,44 @@
       box-shadow: 0 0 6px var(--stanley-neon);
     }
 
-    .base-url-input {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      color: var(--text-main);
-      padding: 6px 10px;
+    .btn-auth-header {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff;
+      border: none;
+      padding: 7px 14px;
       border-radius: 8px;
       font-size: 12px;
-      width: 200px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-auth-header:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .user-profile-badge {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+
+    .user-credits-pill {
+      background: rgba(124, 240, 196, 0.15);
+      color: var(--stanley-neon);
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 11px;
     }
 
     .container {
@@ -234,9 +263,6 @@
       }
       .header-actions {
         justify-content: space-between;
-      }
-      .base-url-input {
-        width: 100%;
       }
       .tab-panel.active {
         grid-template-columns: 1fr;
@@ -522,6 +548,93 @@
       color: #6ee7b7;
     }
 
+    /* MODAL AUTH */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 420px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .modal-tabs {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .modal-tab-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .modal-tab-btn.active {
+      color: #fff;
+      background: var(--primary);
+    }
+
+    .auth-alert {
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      display: none;
+    }
+
+    .auth-alert.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+    }
+
+    .auth-alert.success {
+      display: block;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid #10b981;
+      color: #6ee7b7;
+    }
+
     footer {
       background: rgba(17, 24, 39, 0.95);
       border-top: 1px solid var(--border);
@@ -545,18 +658,25 @@
       <div class="brand-logo">⚡</div>
       <div class="brand-title">
         <h1>★ Stanley Stawa <span>AI Studio</span></h1>
-        <p>Console Officielle de Création & Rendu Vidéo — Stanley Stawa</p>
+        <p>Console Officielle de Création & Rendu Vidéo</p>
       </div>
     </div>
     <div class="header-actions">
-      <div class="badge-stanley">
-        <div class="badge-dot"></div>
-        <span id="tursoStats">★ Stanley Stawa Core</span>
+      
+      <!-- Profil Utilisateur Connecté -->
+      <div id="userProfileBadge" class="user-profile-badge">
+        <span id="userEmailLabel">👤 Mon Compte</span>
+        <span id="userCreditsLabel" class="user-credits-pill">⚡ 100 Crédits</span>
+        <button class="action-pill" onclick="copyMyApiKey()" title="Copier ma clé API">🔑 Clé</button>
+        <button class="action-pill" style="background:rgba(239,68,68,0.2);border-color:#ef4444;" onclick="logoutUser()">🚪</button>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <input type="password" id="apiKeyInput" class="base-url-input" style="width:150px;" placeholder="🔑 Clé API Secrète" value="stawa_live_9f83a7c4e2b1d680" onchange="localStorage.setItem('stanley_api_key', this.value)">
-        <input type="text" id="apiBaseUrl" class="base-url-input" value="" placeholder="Base URL">
-      </div>
+
+      <!-- Bouton Connexion / Inscription -->
+      <button id="btnOpenAuth" class="btn-auth-header" onclick="openAuthModal('register')">
+        🔐 Connexion / Inscription (+100 Crédits)
+      </button>
+
+      <input type="hidden" id="apiKeyInput" value="stawa_live_9f83a7c4e2b1d680">
     </div>
   </header>
 
@@ -565,7 +685,7 @@
     <div class="hero-banner">
       <div class="hero-banner-text">
         <h2>🎬 Stanley Stawa Multi-Scene Video Production Engine</h2>
-        <p>Création de films complets par IA avec voix parlée, cohérence personnage absolue et filigrane dynamique.</p>
+        <p>Inscrivez-vous pour obtenir votre propre clé API et 100 crédits offerts pour créer vos films IA.</p>
       </div>
       <div class="hero-signature">★ Stanley stawa Verified</div>
     </div>
@@ -576,7 +696,7 @@
       <button class="tab-btn" onclick="switchTab('edit')">✨ Retouche & Cohérence</button>
       <button class="tab-btn" onclick="switchTab('story')">📖 Scénario IA</button>
       <button class="tab-btn" onclick="switchTab('voice')">🎙️ Voix TTS</button>
-      <button class="tab-btn" onclick="switchTab('accounts')">👥 Comptes & Pool</button>
+      <button class="tab-btn" onclick="switchTab('accounts')">👥 Cluster & Nœuds</button>
     </div>
 
     <!-- 1. TAB VIDEO -->
@@ -638,7 +758,7 @@
           </div>
         </div>
 
-        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">⚡ Lancer la Génération Vidéo</button>
+        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">⚡ Lancer la Génération Vidéo (Coût : 5 Crédits)</button>
       </div>
 
       <div class="card">
@@ -762,8 +882,8 @@
     <div id="tab-accounts" class="tab-panel">
       <div class="card" style="grid-column: 1 / -1;">
         <div class="card-title" style="justify-content: space-between;">
-          <span>👥 Pool de Serveurs — Stanley Stawa Engine</span>
-          <button class="btn-secondary" onclick="refillAccount()">⚡ Recharger le Pool (+800 crédits)</button>
+          <span>👥 État du Cluster — Stanley Stawa Engine</span>
+          <button class="btn-secondary" onclick="refillAccount()">⚡ Recharger le Cluster</button>
         </div>
         <div class="table-container" id="accountsTableContainer">
           <div style="text-align: center; color: var(--text-muted); padding: 16px;">Chargement des données...</div>
@@ -773,23 +893,179 @@
 
   </div>
 
+  <!-- MODAL AUTHENTIFICATION / INSCRIPTION -->
+  <div id="authModal" class="modal-backdrop">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeAuthModal()">✕</button>
+
+      <div class="modal-tabs">
+        <button id="tabAuthRegister" class="modal-tab-btn active" onclick="switchAuthTab('register')">✨ Créer un compte (+100 Crédits)</button>
+        <button id="tabAuthLogin" class="modal-tab-btn" onclick="switchAuthTab('login')">🔐 Connexion</button>
+      </div>
+
+      <div id="authAlert" class="auth-alert"></div>
+
+      <form id="authForm" onsubmit="handleAuthSubmit(event)">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label>Adresse E-mail</label>
+          <input type="email" id="authEmail" required placeholder="nom@exemple.com">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label>Mot de passe (min 6 caractères)</label>
+          <input type="password" id="authPassword" required minlength="6" placeholder="••••••••">
+        </div>
+
+        <button type="submit" id="btnAuthSubmit" class="btn-submit" style="width: 100%;">
+          ✨ Obtenir ma Clé API & 100 Crédits
+        </button>
+      </form>
+    </div>
+  </div>
+
   <footer>
     Plateforme de Génération IA développée par <span>★ Stanley stawa</span> • Tous droits réservés • Moteur Neural v2.5
   </footer>
 
   <script>
+    let currentAuthMode = "register";
+    let currentUser = null;
+
     function getBaseUrl() {
-      const custom = document.getElementById("apiBaseUrl").value.trim();
-      return custom ? custom.replace(/\/$/, "") : window.location.origin;
+      return window.location.origin;
     }
 
-    document.getElementById("apiBaseUrl").value = window.location.origin;
+    function getApiKey() {
+      return currentUser?.api_key || localStorage.getItem("stanley_user_key") || localStorage.getItem("stanley_api_key") || "stawa_live_9f83a7c4e2b1d680";
+    }
 
     function switchTab(tabId) {
       document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
       document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
       event.target.classList.add("active");
       document.getElementById("tab-" + tabId).classList.add("active");
+    }
+
+    // --- GESTION DE L'AUTHENTIFICATION & DU COMPTE ---
+
+    function openAuthModal(mode = "register") {
+      currentAuthMode = mode;
+      switchAuthTab(mode);
+      document.getElementById("authModal").classList.add("open");
+    }
+
+    function closeAuthModal() {
+      document.getElementById("authModal").classList.remove("open");
+      document.getElementById("authAlert").className = "auth-alert";
+      document.getElementById("authAlert").innerText = "";
+    }
+
+    function switchAuthTab(mode) {
+      currentAuthMode = mode;
+      const tabReg = document.getElementById("tabAuthRegister");
+      const tabLog = document.getElementById("tabAuthLogin");
+      const btn = document.getElementById("btnAuthSubmit");
+
+      if (mode === "register") {
+        tabReg.classList.add("active");
+        tabLog.classList.remove("active");
+        btn.innerText = "✨ Obtenir ma Clé API & 100 Crédits";
+      } else {
+        tabLog.classList.add("active");
+        tabReg.classList.remove("active");
+        btn.innerText = "🔐 Se connecter";
+      }
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById("authEmail").value.trim();
+      const password = document.getElementById("authPassword").value.trim();
+      const alertBox = document.getElementById("authAlert");
+      const btn = document.getElementById("btnAuthSubmit");
+
+      btn.disabled = true;
+      alertBox.className = "auth-alert";
+      alertBox.innerText = "";
+
+      const endpoint = currentAuthMode === "register" ? "/stanleystawa/auth/register" : "/stanleystawa/auth/login";
+
+      try {
+        const res = await fetch(`${getBaseUrl()}${endpoint}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Échec de l'authentification.");
+
+        currentUser = data.user;
+        localStorage.setItem("stanley_user_key", data.user.api_key);
+        localStorage.setItem("stanley_user_email", data.user.email);
+
+        alertBox.className = "auth-alert success";
+        alertBox.innerText = data.message || "Opération réussie !";
+
+        updateUserUI();
+
+        setTimeout(() => {
+          closeAuthModal();
+        }, 1200);
+
+      } catch (err) {
+        alertBox.className = "auth-alert error";
+        alertBox.innerText = err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function updateUserUI() {
+      const email = currentUser?.email || localStorage.getItem("stanley_user_email");
+      const key = getApiKey();
+
+      if (email && key && key.startsWith("stawa_usr_")) {
+        document.getElementById("btnOpenAuth").style.display = "none";
+        const badge = document.getElementById("userProfileBadge");
+        badge.style.display = "flex";
+        document.getElementById("userEmailLabel").innerText = "👤 " + email;
+        document.getElementById("userCreditsLabel").innerText = "⚡ " + (currentUser?.credits ?? 100) + " Crédits";
+      } else {
+        document.getElementById("btnOpenAuth").style.display = "flex";
+        document.getElementById("userProfileBadge").style.display = "none";
+      }
+    }
+
+    function copyMyApiKey() {
+      const key = getApiKey();
+      navigator.clipboard.writeText(key);
+      alert(`🔑 Clé API copiée dans le presse-papier :\n${key}\n\nUtilisez-la dans votre bot Facebook avec : &key=${key}`);
+    }
+
+    function logoutUser() {
+      if (!confirm("Voulez-vous vous déconnecter ?")) return;
+      currentUser = null;
+      localStorage.removeItem("stanley_user_key");
+      localStorage.removeItem("stanley_user_email");
+      updateUserUI();
+      alert("Déconnexion réussie.");
+    }
+
+    async function initUserSession() {
+      const savedKey = localStorage.getItem("stanley_user_key");
+      if (savedKey) {
+        try {
+          const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/auth/me?key=${savedKey}`);
+          if (data.user) {
+            currentUser = { ...data.user, api_key: savedKey };
+            updateUserUI();
+          }
+        } catch (e) {
+          console.warn("Session check fallback:", e);
+        }
+      }
+      updateUserUI();
     }
 
     function handleImageUpload(e, previewId, dataId) {
@@ -806,12 +1082,6 @@
       reader.readAsDataURL(file);
     }
 
-    function getApiKey() {
-      const el = document.getElementById("apiKeyInput");
-      const val = (el ? el.value.trim() : "") || localStorage.getItem("stanley_api_key") || "stawa_live_9f83a7c4e2b1d680";
-      return val;
-    }
-
     async function safeFetchJson(url, options = {}) {
       const key = getApiKey();
       const headers = {
@@ -819,7 +1089,6 @@
         ...(options.headers || {})
       };
       
-      // Also add key query param if not present
       let finalUrl = url;
       if (!finalUrl.includes("key=") && !finalUrl.includes("apiKey=")) {
         finalUrl += (finalUrl.includes("?") ? "&" : "?") + "key=" + encodeURIComponent(key);
@@ -882,7 +1151,7 @@
                   </div>
                 </div>
               `;
-              loadAccounts();
+              initUserSession();
               break;
             } else if (statusData.status === "failed") {
               throw new Error(statusData.error || "Échec du rendu vidéo.");
@@ -938,7 +1207,7 @@
               <div><strong>Lien direct :</strong> <a href="${data.image_url}" target="_blank">${data.image_url}</a></div>
             </div>
           `;
-          loadAccounts();
+          initUserSession();
         }
       } catch (err) {
         box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;
@@ -977,7 +1246,7 @@
               <div><strong>Lien direct :</strong> <a href="${data.image_url}" target="_blank">Ouvrir l'image</a></div>
             </div>
           `;
-          loadAccounts();
+          initUserSession();
         }
       } catch (err) {
         box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;
@@ -1044,7 +1313,7 @@
               <div><strong>Lien direct audio :</strong> <a href="${data.audio_url}" target="_blank">${data.audio_url}</a></div>
             </div>
           `;
-          loadAccounts();
+          initUserSession();
         }
       } catch (err) {
         box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;
@@ -1056,16 +1325,14 @@
     // --- 6. ACCOUNTS & TURSO ---
     async function loadAccounts() {
       const container = document.getElementById("accountsTableContainer");
-      container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 16px;"><div class="loader" style="margin: 0 auto 8px;"></div>Chargement du cluster Stanley Stawa...</div>`;
+      container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 16px;"><div class="loader" style="margin: 0 auto 8px;"></div>Chargement du cluster...</div>`;
 
       try {
         const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/accounts`);
 
-        document.getElementById("tursoStats").innerText = `★ Stanley Stawa : ${data.total_credits_pool} Crédits (${data.active_accounts_count} Nœuds)`;
-
         let rowsHtml = data.accounts.map((acc, idx) => `
           <tr>
-            <td><strong>Nœud AI #${idx + 1}</strong></td>
+            <td><strong>${acc.node_id}</strong></td>
             <td><span style="font-weight: 700; color: #34d399;">${acc.credits}</span> crédits</td>
             <td><span class="badge-status status-active">Actif & Sécurisé</span></td>
             <td style="color: var(--text-muted);">${acc.created_at || '—'}</td>
@@ -1093,17 +1360,17 @@
     }
 
     async function refillAccount() {
-      if (!confirm("Voulez-vous ajouter un nouveau nœud de calcul au cluster Stanley Stawa ?")) return;
+      if (!confirm("Voulez-vous ajouter un nouveau nœud de calcul au cluster ?")) return;
       try {
         const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/refill`);
-        alert(`✅ Nœud de calcul ajouté avec succès (+${data.account.credits} crédits) !`);
+        alert(`✅ Nœud ajouté avec succès (+${data.account.credits} crédits) !`);
         loadAccounts();
       } catch (err) {
-        alert(`❌ Erreur refill: ${err.message}`);
+        alert(`❌ Erreur: ${err.message}`);
       }
     }
 
-    loadAccounts();
+    initUserSession();
   </script>
 </body>
 </html>

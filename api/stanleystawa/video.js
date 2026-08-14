@@ -1,5 +1,5 @@
 /**
- * api/stanleystawa/video.js — Déclencheur vidéo sécurisé avec Authentification & Anti-Abus
+ * api/stanleystawa/video.js — Déclencheur vidéo sécurisé avec Authentification Utilisateur & Gestion de Crédits
  *
  * GET/POST /stanleystawa/video?prompt=...&key=...&sections=6&duration=10&quality=medium
  */
@@ -20,15 +20,16 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // 1. Authentification stricte par clé API secrète
-  if (!security.isAuthorized(req)) {
+  // 1. Authentification (Clé Maître Bot ou Clé Utilisateur Turso)
+  const auth = await security.authenticateRequest(req);
+  if (!auth.authorized) {
     return res.status(401).json({
-      error: "Accès refusé : Clé API secrète invalide ou manquante.",
-      auth_methods: "Passez votre clé via l'en-tête 'x-api-key: ...' ou le paramètre '?key=...'"
+      error: auth.reason || "Accès refusé : Clé API secrète invalide ou manquante.",
+      auth_methods: "Inscrivez-vous sur le site pour obtenir votre clé d'accès (+100 crédits) ou passez votre clé '?key=...' / 'x-api-key'"
     });
   }
 
-  // 2. Limitation de débit anti-spam par IP (max 10 requêtes de création vidéo par minute par client)
+  // 2. Limitation de débit anti-spam par IP
   if (!security.checkRateLimit(req, 10)) {
     return res.status(429).json({
       error: "Trop de requêtes vidéo initiées. Veuillez patienter une minute avant de relancer un rendu."
@@ -49,8 +50,14 @@ module.exports = async function handler(req, res) {
     if (!prompt) {
       return res.status(400).json({
         error: "Le paramètre 'prompt' ou 'text' est requis.",
-        example: `https://${req.headers.host || 'magiclight-api.vercel.app'}/stanleystawa/video?prompt=Un+jeune+magicien+explore+la+lune&key=${security.MASTER_API_KEY}`
+        example: `https://${req.headers.host || 'magiclight-api.vercel.app'}/stanleystawa/video?prompt=Un+jeune+magicien+explore+la+lune&key=${auth.key || security.MASTER_API_KEY}`
       });
+    }
+
+    // Déduction des crédits pour les utilisateurs réguliers (5 crédits par film)
+    let remainingCredits = null;
+    if (!auth.is_admin && auth.key) {
+      remainingCredits = await turso.deductUserCredits(auth.key, 5);
     }
 
     const taskId = `vid_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
@@ -116,6 +123,7 @@ module.exports = async function handler(req, res) {
       duration_per_section: parseInt(duration, 10),
       total_duration_estimate: `${parseInt(sections, 10) * parseInt(duration, 10)}s`,
       ratio: ratio === "2" ? "9:16" : "16:9",
+      credits_remaining: remainingCredits !== null ? remainingCredits : "unlimited",
       character_image: initialImage ? "Fournie (Référence cohérente 100%)" : "Génération IA",
       check_url: checkUrl,
       download_url: downloadUrl,
