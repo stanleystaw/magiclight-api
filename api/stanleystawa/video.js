@@ -1,7 +1,5 @@
 /**
- * api/stanleystawa/video.js — Déclencheur vidéo sécurisé avec Authentification Utilisateur & Gestion de Crédits
- *
- * GET/POST /stanleystawa/video?prompt=...&key=...&sections=6&duration=10&quality=medium
+ * api/stanleystawa/video.js — Déclencheur vidéo sécurisé avec Tarification Dynamique (1 Crédit / Section)
  */
 
 const turso = require("../../lib/turso");
@@ -13,9 +11,6 @@ const WORKFLOW_ID = "332930279";
 
 module.exports = async function handler(req, res) {
   security.applySecurityHeaders(res);
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-api-key");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -26,7 +21,7 @@ module.exports = async function handler(req, res) {
   if (!auth.authorized) {
     return res.status(401).json({
       error: auth.reason || "Accès refusé : Clé API secrète invalide ou manquante.",
-      auth_methods: "Inscrivez-vous sur le site pour obtenir votre clé d'accès (+100 crédits) ou passez votre clé '?key=...' / 'x-api-key'"
+      auth_methods: "Inscrivez-vous sur le site pour obtenir votre clé d'accès (+30 crédits) ou passez votre clé '?key=...' / 'x-api-key'"
     });
   }
 
@@ -55,22 +50,34 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Déduction des crédits pour les utilisateurs réguliers (5 crédits par film)
+    // 3. Tarification Dynamique proportionnelle : 1 crédit par section
+    const numSections = Math.max(2, parseInt(sections, 10) || 6);
+    const creditCost = numSections; // 2 sections = 2 crédits, 6 sections = 6 crédits, etc.
     let remainingCredits = null;
+
     if (!auth.is_admin && auth.key) {
-      remainingCredits = await turso.deductUserCredits(auth.key, 5);
+      const user = await turso.getUserByApiKey(auth.key);
+      const userCredits = parseInt(user?.credits || 0, 10);
+      if (userCredits < creditCost) {
+        return res.status(402).json({
+          error: `Crédits insuffisants : Cette vidéo de ${numSections} sections requiert ${creditCost} crédits (Votre solde actuel : ${userCredits} crédits).`,
+          required_credits: creditCost,
+          current_credits: userCredits
+        });
+      }
+      remainingCredits = await turso.deductUserCredits(auth.key, creditCost);
     }
 
     const taskId = `vid_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
-    // 3. Enregistrement sécurisé dans Turso DB
+    // 4. Enregistrement dans Turso DB
     const sql = `
       INSERT INTO video_tasks (task_id, prompt, initial_image, status, progress, step, message)
-      VALUES (?, ?, ?, 'queued', 10, 'queued', 'Initialisation du film IA (6 sections, 60s)...');
+      VALUES (?, ?, ?, 'queued', 10, 'queued', 'Initialisation du film IA (${numSections} sections, ${numSections * parseInt(duration, 10)}s)...');
     `;
     await turso.execute(sql, [taskId, prompt, initialImage]);
 
-    // 4. Déclenchement du worker GitHub Actions
+    // 5. Déclenchement du worker GitHub Actions
     const ghHeaders = {
       "Authorization": `token ${GITHUB_TOKEN}`,
       "Accept": "application/vnd.github.v3+json",
@@ -92,7 +99,7 @@ module.exports = async function handler(req, res) {
             initial_image: inputImageUrl,
             ratio,
             language,
-            sections,
+            sections: String(numSections),
             quality,
             duration
           }
@@ -119,17 +126,18 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       status: "queued",
       task_id: taskId,
-      sections: parseInt(sections, 10),
+      sections: numSections,
       quality: quality,
       duration_per_section: parseInt(duration, 10),
-      total_duration_estimate: `${parseInt(sections, 10) * parseInt(duration, 10)}s`,
-      ratio: ratio === "2" ? "9:16" : "16:9",
+      total_duration_estimate: `${numSections * parseInt(duration, 10)}s`,
+      credits_deducted: creditCost,
       credits_remaining: remainingCredits !== null ? remainingCredits : "unlimited",
+      ratio: ratio === "2" ? "9:16" : "16:9",
       character_image: initialImage ? "Fournie (Référence cohérente 100%)" : "Génération IA",
       check_url: checkUrl,
       download_url: downloadUrl,
       mp4_direct_url: mp4PollUrl,
-      message: `Rendu initié avec succès (${sections} sections de ${duration}s, qualité ${quality}).`
+      message: `Rendu initié avec succès (${numSections} sections, coût : ${creditCost} crédits).`
     });
 
   } catch (err) {

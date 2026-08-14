@@ -40,14 +40,32 @@ module.exports = function handler(req, res) {
       description: "Plateforme de Production Vidéo IA Multi-Scènes, Synthèse Vocale et Création Visuelle HD par Stanley Stawa.",
       status: "online",
       author: "Stanley Stawa",
-      version: "3.1.0",
+      version: "3.2.0",
       watermark: "★ Stanley stawa",
+      pricing: {
+        welcome_credits: 30,
+        video: "1 credit per section (e.g. 2 sections = 2 credits, 6 sections = 6 credits)",
+        image: "1 credit",
+        edit: "2 credits",
+        voice: "1 credit",
+        story: "1 credit"
+      },
       auth: {
         otp_verification: "/stanleystawa/accounts?action=send_otp",
         register: "/stanleystawa/accounts?action=register",
         login: "/stanleystawa/accounts?action=login",
         delete_account: "/stanleystawa/accounts?action=delete_account",
         me: "/stanleystawa/accounts?action=me"
+      },
+      admin: {
+        stats: "/stanleystawa/accounts?action=admin_stats",
+        users: "/stanleystawa/accounts?action=admin_users",
+        tasks: "/stanleystawa/accounts?action=admin_tasks",
+        update_credits: "/stanleystawa/accounts?action=admin_update_credits",
+        delete_user: "/stanleystawa/accounts?action=admin_delete_user",
+        delete_task: "/stanleystawa/accounts?action=admin_delete_task",
+        cluster_nodes: "/stanleystawa/accounts?action=admin_cluster_nodes",
+        clean_nodes: "/stanleystawa/accounts?action=admin_clean_nodes"
       },
       endpoints: {
         video: "/stanleystawa/video?prompt=...&imageUrl=...&key=...&sections=6&duration=10&quality=medium",

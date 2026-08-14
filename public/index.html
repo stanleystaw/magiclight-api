@@ -139,7 +139,7 @@
       flex-wrap: wrap;
     }
 
-    /* USER PROFILE BAR DEDIEE AVEC CLE VISIBLE DIRECTEMENT */
+    /* USER PROFILE BADGE */
     .user-profile-badge {
       display: none;
       align-items: center;
@@ -183,7 +183,7 @@
       font-family: var(--font-family-mono);
       font-size: 11px;
       color: var(--md-sys-color-primary);
-      display: inline-flex;
+      display: none;
       align-items: center;
       gap: 6px;
     }
@@ -646,7 +646,7 @@
       border: 1px solid var(--md-sys-color-outline);
       border-radius: var(--md-shape-corner-large);
       width: 100%;
-      max-width: min(440px, 94vw);
+      max-width: min(460px, 94vw);
       padding: clamp(20px, 5vw, 28px);
       display: flex;
       flex-direction: column;
@@ -745,6 +745,32 @@
       color: var(--md-sys-color-on-surface-variant);
     }
 
+    /* M3 ACCOUNT TYPE SELECTOR */
+    .account-type-box {
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid var(--md-sys-color-outline);
+      border-radius: var(--md-shape-corner-medium);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .account-type-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: var(--md-shape-corner-small);
+      transition: background 0.2s;
+    }
+
+    .account-type-option:hover {
+      background: var(--md-sys-color-surface-container-high);
+    }
+
     /* M3 SNACKBAR / TOAST NOTIFICATION */
     .m3-snackbar {
       position: fixed;
@@ -805,14 +831,14 @@
     </div>
     <div class="header-actions">
       
-      <!-- Profil Utilisateur Connecté (CLE API DIRECTEMENT VISIBLE) -->
+      <!-- Profil Utilisateur Connecté (CLE DIRECTEMENT COPIABLE SANS POPUP) -->
       <div id="userProfileBadge" class="user-profile-badge">
         <div class="user-avatar-circle" id="userAvatarChar">S</div>
         <span id="userEmailLabel" style="font-weight:700;color:#fff;">Mon Compte</span>
-        <span id="userCreditsLabel" class="user-credits-pill">100 Crédits</span>
+        <span id="userCreditsLabel" class="user-credits-pill">30 Crédits</span>
         
-        <!-- Clé affichée directement avec bouton copier instantané -->
-        <div class="key-display-chip" title="Votre clé API personnelle">
+        <!-- Clé affichée pour les comptes Développeur -->
+        <div id="userKeyChip" class="key-display-chip" title="Votre clé API personnelle">
           <span id="userKeyText">stanleystawa_usr_...</span>
           <button type="button" class="action-pill" style="padding:2px 8px;font-size:10px;" onclick="copyDirectApiKey()">Copier</button>
         </div>
@@ -823,7 +849,7 @@
 
       <!-- Bouton Connexion / Inscription -->
       <button id="btnOpenAuth" class="btn-m3-primary" onclick="openAuthModal('register')">
-        Inscription (+100 Crédits) / Connexion
+        Inscription (+30 Crédits) / Connexion
       </button>
 
       <input type="hidden" id="apiKeyInput" value="stanleystawa_live_9f83a7c4e2b1d680a7e4b9c1d2e3f5">
@@ -868,15 +894,15 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label>Nombre de Sections</label>
-            <select id="videoSections">
-              <option value="2">2 Sections (~1.5 Mo)</option>
-              <option value="3">3 Sections (~2.2 Mo)</option>
-              <option value="4">4 Sections (~2.9 Mo)</option>
-              <option value="5">5 Sections (~3.5 Mo)</option>
-              <option value="6" selected>6 Sections (Film complet ~4 Mo)</option>
-              <option value="8">8 Sections (Histoire longue)</option>
-              <option value="10">10 Sections (Épisode complet)</option>
+            <label>Nombre de Sections (Tarif : 1 Crédit / Section)</label>
+            <select id="videoSections" onchange="updateVideoPriceLabel()">
+              <option value="2">2 Sections (~1.5 Mo) — Coût: 2 Crédits</option>
+              <option value="3">3 Sections (~2.2 Mo) — Coût: 3 Crédits</option>
+              <option value="4">4 Sections (~2.9 Mo) — Coût: 4 Crédits</option>
+              <option value="5">5 Sections (~3.5 Mo) — Coût: 5 Crédits</option>
+              <option value="6" selected>6 Sections (Film complet ~4 Mo) — Coût: 6 Crédits</option>
+              <option value="8">8 Sections (Histoire longue) — Coût: 8 Crédits</option>
+              <option value="10">10 Sections (Épisode complet) — Coût: 10 Crédits</option>
             </select>
           </div>
           <div class="form-group">
@@ -906,7 +932,9 @@
           </div>
         </div>
 
-        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">Lancer la Production Vidéo (Coût : 5 Crédits)</button>
+        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">
+          Lancer la Production Vidéo (Coût : 6 Crédits)
+        </button>
       </div>
 
       <div class="card">
@@ -920,7 +948,7 @@
     <!-- 2. TAB IMAGE -->
     <div id="tab-image" class="tab-panel">
       <div class="card">
-        <div class="card-title">Génération d'Image HD — Vision Studio</div>
+        <div class="card-title">Génération d'Image HD (Tarif : 1 Crédit)</div>
         <div class="form-group">
           <label>Prompt Visuel</label>
           <textarea id="imagePrompt" placeholder="Description visuelle détaillée">A majestic futuristic cyberpunk warrior with glowing neon armor, 8k masterpiece</textarea>
@@ -934,7 +962,7 @@
             <option value="4:3">4:3</option>
           </select>
         </div>
-        <button id="btnGenImg" class="btn-submit" onclick="generateImage()">Générer l'Image HD</button>
+        <button id="btnGenImg" class="btn-submit" onclick="generateImage()">Générer l'Image HD (Coût : 1 Crédit)</button>
       </div>
       <div class="card">
         <div class="card-title">Aperçu de l'Image</div>
@@ -947,7 +975,7 @@
     <!-- 3. TAB VOICE -->
     <div id="tab-voice" class="tab-panel">
       <div class="card">
-        <div class="card-title">Synthèse Vocale HD — Voice Studio</div>
+        <div class="card-title">Synthèse Vocale HD (Tarif : 1 Crédit)</div>
         <div class="form-group">
           <label>Texte à Synthétiser</label>
           <textarea id="voiceText" placeholder="Entrez le texte parlé...">Bienvenue dans le studio Stanley Stawa AI. Voici une voix naturelle et ultra-réaliste pour vos projets vidéo.</textarea>
@@ -961,7 +989,7 @@
             <option value="MM:baqi_zongcai">Voix Profonde (Grave / Cinématique)</option>
           </select>
         </div>
-        <button id="btnVoice" class="btn-submit" onclick="synthesizeVoice()">Générer la Voix</button>
+        <button id="btnVoice" class="btn-submit" onclick="synthesizeVoice()">Générer la Voix (Coût : 1 Crédit)</button>
       </div>
       <div class="card">
         <div class="card-title">Lecteur Audio</div>
@@ -974,7 +1002,7 @@
     <!-- 4. TAB STORY LAB -->
     <div id="tab-story" class="tab-panel">
       <div class="card">
-        <div class="card-title">Découpage & Scénarisation IA</div>
+        <div class="card-title">Découpage & Scénarisation IA (Tarif : 1 Crédit)</div>
         <div class="form-group">
           <label>Idée de départ</label>
           <textarea id="storyIdea" placeholder="Une courte idée d'histoire...">Une aventure magique dans un château volant dans les nuages</textarea>
@@ -988,7 +1016,7 @@
             <option value="german">Allemand</option>
           </select>
         </div>
-        <button id="btnStory" class="btn-submit" onclick="expandStory()">Découper en Scènes</button>
+        <button id="btnStory" class="btn-submit" onclick="expandStory()">Découper en Scènes (Coût : 1 Crédit)</button>
       </div>
       <div class="card">
         <div class="card-title">Scènes Découpées</div>
@@ -1011,12 +1039,12 @@
       </div>
     </div>
 
-    <!-- 6. TAB PANEL ADMINISTRATEUR (CHARGE DIRECTEMENT POUR LE COMPTE ADMIN) -->
+    <!-- 6. TAB PANEL ADMINISTRATEUR -->
     <div id="tab-admin" class="tab-panel">
       <div class="card" style="grid-column: 1 / -1;">
         <div class="card-title">
           <span>Console d'Administration — Stanley Stawa Core</span>
-          <div style="display:flex;gap:8px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button type="button" class="btn-secondary" onclick="adminRefillCluster()">+ Ajouter Nœud Cluster</button>
             <button type="button" class="btn-secondary" onclick="adminCleanDeadNodes()">Nettoyer Nœuds 0 Crédit</button>
             <button type="button" class="btn-secondary" onclick="loadAdminDashboard()">Actualiser</button>
@@ -1046,13 +1074,13 @@
 
   </div>
 
-  <!-- MODAL AUTHENTIFICATION AVEC OTP GMAIL -->
+  <!-- MODAL AUTHENTIFICATION AVEC CHOIX DE TYPE DE COMPTE -->
   <div id="authModal" class="modal-backdrop">
     <div class="modal-card">
       <button type="button" class="modal-close" onclick="closeAuthModal()">✕</button>
 
       <div class="modal-tabs">
-        <button type="button" id="tabAuthRegister" class="modal-tab-btn active" onclick="switchAuthTab('register')">Inscription (+100 Crédits)</button>
+        <button type="button" id="tabAuthRegister" class="modal-tab-btn active" onclick="switchAuthTab('register')">Inscription (+30 Crédits)</button>
         <button type="button" id="tabAuthLogin" class="modal-tab-btn" onclick="switchAuthTab('login')">Connexion</button>
       </div>
 
@@ -1060,7 +1088,27 @@
 
       <!-- FORMULAIRE INSCRIPTION -->
       <form id="formRegister" onsubmit="handleRegisterSubmit(event)">
-        <div class="form-group" style="margin-bottom: 12px;">
+        
+        <!-- CHOIX DU TYPE DE COMPTE (SANS OU AVEC CLE API) -->
+        <div class="account-type-box">
+          <label style="font-size:10px;font-weight:800;color:var(--md-sys-color-primary);text-transform:uppercase;">Type d'utilisation :</label>
+          <label class="account-type-option">
+            <input type="radio" name="accountTypeChoice" value="studio" checked onchange="toggleKeyOption(false)" style="width:auto;margin-top:2px;">
+            <div>
+              <div style="font-size:12px;font-weight:800;color:#fff;">Compte Studio (Sans Clé API)</div>
+              <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);">Recommandé : Utilisation directe simplifiée, historique et prompt enhancer inclus.</div>
+            </div>
+          </label>
+          <label class="account-type-option">
+            <input type="radio" name="accountTypeChoice" value="developer" onchange="toggleKeyOption(true)" style="width:auto;margin-top:2px;">
+            <div>
+              <div style="font-size:12px;font-weight:800;color:#fff;">Compte Développeur (Avec Clé API)</div>
+              <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);">Pour les Bots Facebook Messenger, requêtes cURL et scripts externes.</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 10px;">
           <label>Adresse Gmail Réelle (Max 2 créations par e-mail)</label>
           <div class="otp-input-group">
             <input type="email" id="regEmail" required placeholder="votre_compte@gmail.com">
@@ -1068,21 +1116,21 @@
               Envoyer Code
             </button>
           </div>
-          <span style="font-size:11px;color:var(--md-sys-color-on-surface-variant);">Un code de vérification à 6 chiffres vous sera envoyé par e-mail.</span>
+          <span style="font-size:10px;color:var(--md-sys-color-on-surface-variant);">Un code de vérification à 6 chiffres vous sera envoyé par e-mail.</span>
         </div>
 
-        <div class="form-group" style="margin-bottom: 12px;">
+        <div class="form-group" style="margin-bottom: 10px;">
           <label>Code de Vérification (6 chiffres)</label>
           <input type="text" id="regOtp" required maxlength="6" pattern="[0-9]{6}" placeholder="------" style="letter-spacing: 6px; font-family: var(--font-family-mono); font-weight: 700; text-align: center;">
         </div>
 
-        <div class="form-group" style="margin-bottom: 18px;">
+        <div class="form-group" style="margin-bottom: 16px;">
           <label>Mot de passe (min 6 caractères)</label>
           <input type="password" id="regPassword" required minlength="6" placeholder="••••••••">
         </div>
 
         <button type="submit" id="btnRegisterSubmit" class="btn-submit" style="width: 100%;">
-          Valider & Obtenir ma Clé (+100 Crédits)
+          Valider & Créer mon Compte (+30 Crédits)
         </button>
       </form>
 
@@ -1112,7 +1160,7 @@
   </div>
 
   <footer>
-    Plateforme de Production IA développée par <span>★ Stanley stawa</span> • Tous droits réservés • Moteur Neural v3.0 (M3 Engine)
+    Plateforme de Production IA développée par <span>★ Stanley stawa</span> • Tous droits réservés • Moteur Neural v3.1 (M3 Engine)
   </footer>
 
   <script>
@@ -1148,6 +1196,15 @@
       toastTimer = setTimeout(() => {
         el.classList.remove("show");
       }, 3500);
+    }
+
+    function updateVideoPriceLabel() {
+      const sections = parseInt(document.getElementById("videoSections").value, 10) || 6;
+      document.getElementById("btnGenVideo").innerText = `Lancer la Production Vidéo (Coût : ${sections} Crédits)`;
+    }
+
+    function toggleKeyOption(show) {
+      // Choix visuel
     }
 
     function switchTab(tabId) {
@@ -1281,6 +1338,7 @@
       const email = document.getElementById("regEmail").value.trim();
       const password = document.getElementById("regPassword").value.trim();
       const otp = document.getElementById("regOtp").value.trim();
+      const accountType = document.querySelector('input[name="accountTypeChoice"]:checked')?.value || "studio";
       const alertBox = document.getElementById("authAlert");
       const btn = document.getElementById("btnRegisterSubmit");
 
@@ -1298,19 +1356,20 @@
         const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, otp })
+          body: JSON.stringify({ email, password, otp, account_type: accountType })
         });
         const data = await res.json();
 
         if (!res.ok) throw new Error(data.error || "Échec de l'inscription.");
 
-        currentUser = data.user;
+        currentUser = { ...data.user, account_type: accountType };
         localStorage.setItem("stanley_user_key", data.user.api_key);
         localStorage.setItem("stanley_user_email", data.user.email);
+        localStorage.setItem("stanley_account_type", accountType);
 
         alertBox.className = "auth-alert success";
-        alertBox.innerText = data.message || "E-mail vérifié ! 100 crédits offerts.";
-        showToast("Compte créé avec succès (+100 Crédits) !", "success");
+        alertBox.innerText = data.message || "E-mail vérifié ! 30 crédits offerts.";
+        showToast("Compte créé avec succès (+30 Crédits) !", "success");
 
         updateUserUI();
         setTimeout(() => closeAuthModal(), 1400);
@@ -1383,6 +1442,7 @@
         currentUser = null;
         localStorage.removeItem("stanley_user_key");
         localStorage.removeItem("stanley_user_email");
+        localStorage.removeItem("stanley_account_type");
         updateUserUI();
 
       } catch (err) {
@@ -1393,24 +1453,31 @@
     function updateUserUI() {
       const email = currentUser?.email || localStorage.getItem("stanley_user_email");
       const key = getApiKey();
+      const accountType = currentUser?.account_type || localStorage.getItem("stanley_account_type") || "studio";
 
       const authBtn = document.getElementById("btnOpenAuth");
       const profileBadge = document.getElementById("userProfileBadge");
       const adminTabBtn = document.getElementById("tabBtnAdmin");
+      const keyChip = document.getElementById("userKeyChip");
 
       if (email && key && (key.startsWith("stanleystawa_") || key.startsWith("stawa_"))) {
         authBtn.style.display = "none";
         profileBadge.style.display = "inline-flex";
         document.getElementById("userAvatarChar").innerText = email.charAt(0).toUpperCase();
         document.getElementById("userEmailLabel").innerText = email.length > 20 ? email.slice(0, 18) + "..." : email;
-        document.getElementById("userCreditsLabel").innerText = (currentUser?.credits ?? 100) + " Crédits";
+        document.getElementById("userCreditsLabel").innerText = (currentUser?.credits ?? 30) + " Crédits";
         
-        // Affichage direct de la clé dans le chip
-        const shortKey = key.length > 24 ? key.slice(0, 18) + "..." : key;
-        document.getElementById("userKeyText").innerText = shortKey;
-        document.getElementById("userKeyText").title = key;
+        // Afficher la clé API uniquement si compte développeur ou admin
+        if (accountType === "developer" || currentUser?.role === "admin" || currentUser?.is_admin) {
+          keyChip.style.display = "inline-flex";
+          const shortKey = key.length > 22 ? key.slice(0, 16) + "..." : key;
+          document.getElementById("userKeyText").innerText = shortKey;
+          document.getElementById("userKeyText").title = key;
+        } else {
+          keyChip.style.display = "none";
+        }
 
-        // Afficher l'onglet Admin UNIQUEMENT si le compte est administrateur
+        // Afficher l'onglet Admin UNIQUEMENT pour l'administrateur
         if (currentUser?.role === "admin" || currentUser?.is_admin || email.toLowerCase().includes("stanleystawa")) {
           adminTabBtn.style.display = "inline-flex";
         } else {
@@ -1428,6 +1495,7 @@
       currentUser = null;
       localStorage.removeItem("stanley_user_key");
       localStorage.removeItem("stanley_user_email");
+      localStorage.removeItem("stanley_account_type");
       updateUserUI();
       switchTab("video");
       showToast("Déconnexion réussie.", "info");
@@ -1649,7 +1717,7 @@
               <div><strong>Lien direct :</strong> <a href="${fullImgUrl}" target="_blank">${fullImgUrl}</a></div>
             </div>
           `;
-          showToast("Image HD générée avec succès !", "success");
+          showToast("Image HD générée avec succès (Coût: 1 Crédit) !", "success");
           initUserSession();
         }
       } catch (err) {
@@ -1694,7 +1762,7 @@
               <div><strong>Lien direct :</strong> <a href="${data.image_url}" target="_blank">Ouvrir l'image</a></div>
             </div>
           `;
-          showToast("Retouche appliquée avec succès !", "success");
+          showToast("Retouche appliquée avec succès (Coût: 2 Crédits) !", "success");
           initUserSession();
         }
       } catch (err) {
@@ -1737,7 +1805,7 @@
           <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;">Sections découpées (${data.scenes.length}) :</div>
           <div>${scenesHtml}</div>
         `;
-        showToast("Scénario découpé avec succès !", "success");
+        showToast("Scénario découpé avec succès (Coût: 1 Crédit) !", "success");
       } catch (err) {
         box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px;">Erreur: ${err.message}</div>`;
         showToast(err.message, "error");
@@ -1773,7 +1841,7 @@
               <div><strong>Lien direct audio :</strong> <a href="${data.audio_url}" target="_blank">${data.audio_url}</a></div>
             </div>
           `;
-          showToast("Voix générée avec succès !", "success");
+          showToast("Voix générée avec succès (Coût: 1 Crédit) !", "success");
           initUserSession();
         }
       } catch (err) {

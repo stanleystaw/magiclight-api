@@ -1,17 +1,13 @@
-const security = require("../../lib/security");
 /**
- * api/stanleystawa/voice.js — Synthèse vocale IA avec Proxy Direct Sécurisé
- *
- * GET/POST /stanleystawa/voice?text=...&format=audio
+ * api/stanleystawa/voice.js — Synthèse vocale IA (Tarif : 1 Crédit)
  */
 
 const engine = require("../../lib/magiclight");
+const turso = require("../../lib/turso");
+const security = require("../../lib/security");
 
 module.exports = async function handler(req, res) {
   security.applySecurityHeaders(res);
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -25,6 +21,12 @@ module.exports = async function handler(req, res) {
 
     if (!text) {
       return res.status(400).json({ error: "Le paramètre 'text' est requis." });
+    }
+
+    const auth = await security.authenticateRequest(req);
+    let remainingCredits = null;
+    if (auth.authorized && !auth.is_admin && auth.key) {
+      remainingCredits = await turso.deductUserCredits(auth.key, 1);
     }
 
     const result = await engine.synthesizeVoice({
@@ -53,7 +55,8 @@ module.exports = async function handler(req, res) {
       text,
       voice_id: voiceId,
       audio_url: publicAudioUrl,
-      engine: "MagicLight Studio AI Voice"
+      credits_remaining: remainingCredits !== null ? remainingCredits : "unlimited",
+      engine: "Stanley Stawa Neural Voice HD"
     });
   } catch (err) {
     console.error("[API Voice Error]", err);

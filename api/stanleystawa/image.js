@@ -1,9 +1,10 @@
 /**
- * api/stanleystawa/image.js — Génération d'images HD avec Moteur Résilient Multi-Sources
+ * api/stanleystawa/image.js — Génération d'images HD avec Tarification (1 Crédit)
  *
  * GET/POST /stanleystawa/image?prompt=...&ratio=16:9&format=image
  */
 
+const turso = require("../../lib/turso");
 const security = require("../../lib/security");
 
 async function fetchImageBuffer(prompt, ratio = "16:9") {
@@ -12,10 +13,8 @@ async function fetchImageBuffer(prompt, ratio = "16:9") {
   const width = isPortrait ? 576 : (isSquare ? 768 : 1024);
   const height = isPortrait ? 1024 : (isSquare ? 768 : 576);
   const seed = Math.floor(Math.random() * 999999);
-
   const cleanPrompt = String(prompt || "").trim();
 
-  // Source 1 : Pollinations AI avec en-têtes réalistes
   try {
     const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=${width}&height=${height}&seed=${seed}&nologo=true&nofeed=true`;
     const res = await fetch(url, {
@@ -36,7 +35,6 @@ async function fetchImageBuffer(prompt, ratio = "16:9") {
     console.warn("[Image Source 1 Warning]", err.message);
   }
 
-  // Source 2 : Source de secours HD
   try {
     const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt + ", cinematic lighting, 8k masterpiece")}?seed=${seed}&nologo=true`;
     const res = await fetch(fallbackUrl, {
@@ -75,6 +73,13 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: "Le paramètre 'prompt' est requis." });
     }
 
+    // Déduction de 1 crédit si utilisateur authentifié
+    const auth = await security.authenticateRequest(req);
+    let remainingCredits = null;
+    if (auth.authorized && !auth.is_admin && auth.key) {
+      remainingCredits = await turso.deductUserCredits(auth.key, 1);
+    }
+
     const host = req.headers.host || "magiclight-api.vercel.app";
     const protocol = req.headers["x-forwarded-proto"] || "https";
     const publicImageUrl = `${protocol}://${host}/stanleystawa/image?prompt=${encodeURIComponent(prompt)}&ratio=${ratioStr}&format=image`;
@@ -86,7 +91,6 @@ module.exports = async function handler(req, res) {
         res.setHeader("Cache-Control", "public, max-age=86400");
         return res.status(200).send(imgData.buffer);
       } else {
-        // Redirection vers le flux direct
         return res.redirect(302, `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?nologo=true`);
       }
     }
@@ -96,6 +100,7 @@ module.exports = async function handler(req, res) {
       image_url: publicImageUrl,
       prompt,
       ratio: ratioStr,
+      credits_remaining: remainingCredits !== null ? remainingCredits : "unlimited",
       engine: "Stanley Stawa Neural Vision HD"
     });
   } catch (err) {
