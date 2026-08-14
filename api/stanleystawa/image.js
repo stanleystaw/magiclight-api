@@ -1,3 +1,4 @@
+const security = require("../../lib/security");
 /**
  * api/stanleystawa/image.js — Génération d'images HD avec Proxy Direct Sécurisé
  *

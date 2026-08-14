@@ -1,3 +1,4 @@
+const security = require("../../lib/security");
 /**
  * api/stanleystawa/voice.js — Synthèse vocale IA avec Proxy Direct Sécurisé
  *
