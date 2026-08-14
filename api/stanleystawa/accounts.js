@@ -74,17 +74,20 @@ const QUESTS_LIST = [
 ];
 
 function readBody(req) {
-  return new Promise((resolve) => {
-    if (req.body) {
-      if (typeof req.body === "object") return resolve(req.body);
-      if (typeof req.body === "string") {
-        try {
-          return resolve(JSON.parse(req.body));
-        } catch {
-          return resolve({});
-        }
+  if (req.body) {
+    if (typeof req.body === "object") return Promise.resolve(req.body);
+    if (typeof req.body === "string") {
+      try {
+        return Promise.resolve(JSON.parse(req.body));
+      } catch {
+        return Promise.resolve({});
       }
     }
+  }
+  if (!req.on || typeof req.on !== "function" || req.readableEnded || req.complete) {
+    return Promise.resolve({});
+  }
+  return new Promise((resolve) => {
     let data = "";
     req.on("data", (c) => (data += c));
     req.on("end", () => {
@@ -95,7 +98,7 @@ function readBody(req) {
       }
     });
     req.on("error", () => resolve({}));
-    setTimeout(() => resolve({}), 800);
+    setTimeout(() => resolve({}), 250);
   });
 }
 

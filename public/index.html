@@ -1763,28 +1763,26 @@
       const otp = document.getElementById("regOtp").value.trim();
       const accountType = document.querySelector('input[name="accountTypeChoice"]:checked')?.value || "studio";
       const referral = localStorage.getItem("stanley_referrer") || "";
-      const alertBox = document.getElementById("authAlert");
+      const alertBox = document.getElementById("regAlert");
       const btn = document.getElementById("btnRegisterSubmit");
 
       if (!email) {
-        alertBox.className = "auth-alert error";
-        alertBox.innerText = "Veuillez entrer une adresse Gmail valide.";
+        if (alertBox) { alertBox.className = "auth-alert error"; alertBox.innerText = "Veuillez entrer une adresse Gmail valide."; }
         return;
       }
 
       if (!otp || otp.length !== 6) {
-        alertBox.className = "auth-alert error";
-        alertBox.innerText = "Veuillez d'abord cliquer sur 'Envoyer Code' et entrer le code à 6 chiffres reçu dans votre boîte Gmail.";
+        if (alertBox) { alertBox.className = "auth-alert error"; alertBox.innerText = "Veuillez d'abord cliquer sur 'Envoyer Code' et entrer le code à 6 chiffres reçu dans votre boîte Gmail."; }
         return;
       }
 
       btn.disabled = true;
       btn.innerText = "Création en cours...";
-      alertBox.className = "auth-alert";
-      alertBox.innerText = "";
+      if (alertBox) { alertBox.className = "auth-alert"; alertBox.innerText = ""; }
 
       try {
-        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=register`, {
+        const regUrl = `${getBaseUrl()}/stanleystawa/accounts?action=register&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&otp=${encodeURIComponent(otp)}&account_type=${encodeURIComponent(accountType)}&ref=${encodeURIComponent(referral)}`;
+        const res = await fetch(regUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "register", email, password, otp, account_type: accountType, ref: referral })
@@ -1798,21 +1796,19 @@
         localStorage.setItem("stanley_user_email", data.user.email);
         localStorage.setItem("stanley_account_type", accountType);
 
-        alertBox.className = "auth-alert success";
-        alertBox.innerText = data.message || "E-mail vérifié ! Crédits offerts.";
+        if (alertBox) { alertBox.className = "auth-alert success"; alertBox.innerText = data.message || "Compte créé avec succès !"; }
         showToast(data.message || "Compte créé avec succès !", "success");
 
         updateUserUI();
         loadQuests();
         setTimeout(() => {
-          closeAuthModal();
+          closeAuthModals();
           btn.disabled = false;
           btn.innerText = "Valider & Créer mon Compte (+30 Crédits)";
-        }, 800);
+        }, 600);
 
       } catch (err) {
-        alertBox.className = "auth-alert error";
-        alertBox.innerText = err.message;
+        if (alertBox) { alertBox.className = "auth-alert error"; alertBox.innerText = err.message; }
         showToast(err.message, "error");
         btn.disabled = false;
         btn.innerText = "Valider & Créer mon Compte (+30 Crédits)";
@@ -1823,22 +1819,21 @@
       e.preventDefault();
       const email = document.getElementById("loginEmail").value.trim();
       const password = document.getElementById("loginPassword").value.trim();
-      const alertBox = document.getElementById("authAlert");
+      const alertBox = document.getElementById("loginAlert");
       const btn = document.getElementById("btnLoginSubmit");
 
       if (!email || !password) {
-        alertBox.className = "auth-alert error";
-        alertBox.innerText = "Veuillez renseigner votre e-mail et votre mot de passe.";
+        if (alertBox) { alertBox.className = "auth-alert error"; alertBox.innerText = "Veuillez renseigner votre e-mail et votre mot de passe."; }
         return;
       }
 
       btn.disabled = true;
       btn.innerText = "Connexion en cours...";
-      alertBox.className = "auth-alert";
-      alertBox.innerText = "";
+      if (alertBox) { alertBox.className = "auth-alert"; alertBox.innerText = ""; }
 
       try {
-        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=login`, {
+        const loginUrl = `${getBaseUrl()}/stanleystawa/accounts?action=login&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
+        const res = await fetch(loginUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "login", email, password })
@@ -1852,8 +1847,7 @@
         localStorage.setItem("stanley_user_email", data.user.email);
         localStorage.setItem("stanley_account_type", data.user.account_type || "studio");
 
-        alertBox.className = "auth-alert success";
-        alertBox.innerText = "Connexion réussie !";
+        if (alertBox) { alertBox.className = "auth-alert success"; alertBox.innerText = "Connexion réussie !"; }
         showToast("Connexion réussie !", "success");
 
         updateUserUI();
@@ -1862,14 +1856,13 @@
           switchTab("admin");
         }
         setTimeout(() => {
-          closeAuthModal();
+          closeAuthModals();
           btn.disabled = false;
           btn.innerText = "Se connecter";
-        }, 800);
+        }, 600);
 
       } catch (err) {
-        alertBox.className = "auth-alert error";
-        alertBox.innerText = err.message;
+        if (alertBox) { alertBox.className = "auth-alert error"; alertBox.innerText = err.message; }
         showToast(err.message, "error");
         btn.disabled = false;
         btn.innerText = "Se connecter";
