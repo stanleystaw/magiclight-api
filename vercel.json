@@ -1,13 +1,49 @@
 {
-  "version": 2,
-  "cleanUrls": true,
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 10
+    },
+    "api/stanleystawa/video.js": {
+      "maxDuration": 60
+    },
+    "api/stanleystawa/image.js": {
+      "maxDuration": 60
+    },
+    "api/stanleystawa/status.js": {
+      "maxDuration": 10
+    },
+    "api/stanleystawa/download.js": {
+      "maxDuration": 30
+    },
+    "api/stanleystawa/accounts.js": {
+      "maxDuration": 20
+    },
+    "api/stanleystawa/edit.js": {
+      "maxDuration": 60
+    },
+    "api/stanleystawa/story.js": {
+      "maxDuration": 30
+    },
+    "api/stanleystawa/voice.js": {
+      "maxDuration": 30
+    },
+    "api/stanleystawa/refill.js": {
+      "maxDuration": 60
+    }
+  },
   "rewrites": [
     { "source": "/", "destination": "/api/index" },
-    { "source": "/stanleystawa/:path*", "destination": "/api/stanleystawa/:path*" }
-  ],
-  "env": {
-    "STANLEY_API_KEY": "stawa_live_9f83a7c4e2b1d680",
-    "TURSO_DATABASE_URL": "libsql://magicligth-stanleystawa354.aws-eu-west-1.turso.io",
-    "TURSO_AUTH_TOKEN": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODY1NDMwODcsImlkIjoiMDE5ZmY2NDMtZmEwMS03NzBkLWE3YjgtMWFkMDQzOWEzN2Q0Iiwia2lkIjoiRUowd0tEaER4WmxUYlZ5MHJLX1VRRnhGZml6NF9nTEp2WXBPdFdiQlM2USIsInJpZCI6ImYzNDE1MGEzLTJkMzMtNDBjOC05ZmFmLWViMDBhODFhOGFhMiJ9.DVj4IWSi5WgU1frG8BVvUmINQYQRN77Kqe0-GLT2qgTv_w6M4ccKOP-GsEkNnaL3jX7Ikb4g7Eo45llVcQAgBQ"
-  }
+    { "source": "/stanleystawa/video", "destination": "/api/stanleystawa/video" },
+    { "source": "/stanleystawa/image", "destination": "/api/stanleystawa/image" },
+    { "source": "/stanleystawa/status", "destination": "/api/stanleystawa/status" },
+    { "source": "/stanleystawa/download", "destination": "/api/stanleystawa/download" },
+    { "source": "/stanleystawa/accounts", "destination": "/api/stanleystawa/accounts" },
+    { "source": "/stanleystawa/edit", "destination": "/api/stanleystawa/edit" },
+    { "source": "/stanleystawa/story", "destination": "/api/stanleystawa/story" },
+    { "source": "/stanleystawa/voice", "destination": "/api/stanleystawa/voice" },
+    { "source": "/stanleystawa/refill", "destination": "/api/stanleystawa/refill" },
+    { "source": "/stanleystawa/register", "destination": "/api/stanleystawa/register" },
+    { "source": "/stanleystawa/login", "destination": "/api/stanleystawa/login" },
+    { "source": "/stanleystawa/me", "destination": "/api/stanleystawa/me" }
+  ]
 }
