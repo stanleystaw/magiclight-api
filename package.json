@@ -1,10 +1,10 @@
 {
-  "name": "vercel-animate-api",
-  "version": "1.0.0",
+  "name": "magiclight-api",
+  "version": "2.6.0",
   "private": true,
-  "description": "API serverless qui anime une image en vidéo (10s) via l'API Glam — déployable sur Vercel",
+  "description": "Stanley Stawa AI Studio Serverless API",
   "engines": {
-    "node": "24.x"
+    "node": "20.x"
   },
   "dependencies": {
     "axios": "^1.7.9",
