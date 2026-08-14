@@ -1,12 +1,11 @@
 /**
  * scripts/render-video.js — Moteur de Production Vidéo Multi-Scènes Stanley Stawa AI
  *
- * Résilience Totale :
- * 1. Génération d'images résiliente multi-sources (Pollinations Flux HD -> Turbo -> Creative Studio -> Procedural Pillow)
- * 2. Cohérence du personnage et sous-titres synchronisés
+ * 1. Image de personnage de référence 100% OBLIGATOIRE (Zéro génération aléatoire)
+ * 2. Cohérence visuelle absolue sur toutes les scènes
  * 3. Filigrane dynamique "★ Stanley stawa" cyclé sur 6 positions
  * 4. Compression H.264 ultra-compacte (< 2-4 Mo) + FastStart streaming
- * 5. Remboursement automatique des crédits utilisateur en cas d'échec
+ * 5. Remboursement automatique et strict des crédits en cas d'échec
  */
 
 const fs = require("fs");
@@ -19,8 +18,6 @@ const GITHUB_TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || ("ghp_"
 const REPO = process.env.GITHUB_REPOSITORY || "foctaveluka-eng/magiclight-api";
 
 const MAGICLIGHT_API = "https://api.magiclight.ai";
-const CREATIVE_STUDIO_API = "https://creative-image-studio.onrender.com";
-const ANIMATE_API = "https://vercel-animate-api.vercel.app";
 const VERCEL_PUBLIC_HOST = "https://magiclight-api.vercel.app";
 
 async function executeTurso(sql, args = []) {
@@ -114,113 +111,6 @@ async function downloadFile(url, destPath) {
   if (!res.ok) throw new Error(`Échec téléchargement ${url}`);
   const arrayBuffer = await res.arrayBuffer();
   fs.writeFileSync(destPath, Buffer.from(arrayBuffer));
-}
-
-// Générateur d'image multi-moteurs résilient (Pollinations Flux HD -> Turbo -> Render -> Procedural Pillow)
-async function generateSceneImage(promptText, outputPath, width = 1280, height = 720, ratioStr = "16:9") {
-  // 1. Moteur A : Pollinations AI Flux HD (100% sans cold-start)
-  try {
-    const seed = Math.floor(Math.random() * 1000000);
-    const fluxUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText + ", cinematic lighting, 8k masterpiece, detailed")}?width=${width}&height=${height}&nologo=true&seed=${seed}&model=flux`;
-    const res = await fetch(fluxUrl, { signal: AbortSignal.timeout(12000) });
-    if (res.ok) {
-      const arrBuf = await res.arrayBuffer();
-      if (arrBuf.byteLength > 4000) {
-        fs.writeFileSync(outputPath, Buffer.from(arrBuf));
-        console.log(` ✨ Image générée avec succès via Pollinations Flux HD !`);
-        return true;
-      }
-    }
-  } catch (e) {
-    console.warn(" [ImageGen Fallback A Pollinations Flux]:", e.message);
-  }
-
-  // 2. Moteur B : Pollinations Turbo
-  try {
-    const seed = Math.floor(Math.random() * 1000000);
-    const turboUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText + ", cinematic wallpaper")}?width=${width}&height=${height}&nologo=true&seed=${seed}&model=turbo`;
-    const res = await fetch(turboUrl, { signal: AbortSignal.timeout(10000) });
-    if (res.ok) {
-      const arrBuf = await res.arrayBuffer();
-      if (arrBuf.byteLength > 4000) {
-        fs.writeFileSync(outputPath, Buffer.from(arrBuf));
-        console.log(` ✨ Image générée avec succès via Pollinations Turbo !`);
-        return true;
-      }
-    }
-  } catch (e) {
-    console.warn(" [ImageGen Fallback B Pollinations Turbo]:", e.message);
-  }
-
-  // 3. Moteur C : Creative Studio Render (timeout 8s)
-  try {
-    const renderUrl = `${CREATIVE_STUDIO_API}/generate?prompt=${encodeURIComponent(promptText)}&ratio=${ratioStr}`;
-    const res = await fetch(renderUrl, { signal: AbortSignal.timeout(8000) });
-    if (res.ok) {
-      const arrBuf = await res.arrayBuffer();
-      if (arrBuf.byteLength > 4000) {
-        fs.writeFileSync(outputPath, Buffer.from(arrBuf));
-        console.log(` ✨ Image générée avec succès via Creative Studio Render !`);
-        return true;
-      }
-    }
-  } catch (e) {
-    console.warn(" [ImageGen Fallback C Render]:", e.message);
-  }
-
-  // 4. Moteur D : Rendu Procédural Haute Définition Pillow (Garantie 0 Crash)
-  try {
-    const pyGen = `
-from PIL import Image, ImageDraw
-import hashlib
-
-w, h = ${width}, ${height}
-prompt = """${promptText.replace(/"/g, '\\"')}"""
-h_val = int(hashlib.md5(prompt.encode()).hexdigest(), 16)
-r = (h_val % 45) + 20
-g = ((h_val >> 4) % 55) + 25
-b = ((h_val >> 8) % 75) + 40
-
-img = Image.new('RGB', (w, h), (r, g, b))
-draw = ImageDraw.Draw(img)
-
-for y in range(h):
-    alpha = int(255 * (y / h) * 0.4)
-    draw.line([(0, y), (w, y)], fill=(max(0, r - alpha//4), max(0, g - alpha//4), max(0, b - alpha//4)))
-
-draw.ellipse([w//4, h//4, w*3//4, h*3//4], fill=(r+25, g+35, b+45))
-img.save("${outputPath.replace(/\\/g, "/")}", "JPEG", quality=92)
-`;
-    execSync(`python3 -c '${pyGen}'`);
-    console.log(` 🎨 Rendu visuel cinématique procédural généré !`);
-    return true;
-  } catch (e) {
-    console.error("Critical fallback error:", e.message);
-  }
-  return false;
-}
-
-// Upload direct et public d'une image pour l'animateur (Catbox/Litterbox 24h)
-async function uploadDirectPublicImage(filePath) {
-  try {
-    const form = new FormData();
-    const fileBuf = fs.readFileSync(filePath);
-    form.append("reqtype", "fileupload");
-    form.append("time", "24h");
-    form.append("fileToUpload", new Blob([fileBuf], { type: "image/jpeg" }), "scene.jpg");
-
-    const res = await fetch("https://litterbox.catbox.moe/resources/internals/api.php", {
-      method: "POST",
-      body: form
-    });
-    if (res.ok) {
-      const url = (await res.text()).trim();
-      if (url.startsWith("http")) return url;
-    }
-  } catch (err) {
-    console.warn("Upload public image fallback:", err.message);
-  }
-  return null;
 }
 
 // Upload d'un asset sur GitHub Releases
@@ -322,7 +212,6 @@ out_path = sys.argv[5]
 img = Image.new('RGBA', (w, h), (0, 0, 0, 0))
 draw = ImageDraw.Draw(img)
 
-# Polices système TrueType
 font_paths = [
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
     "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
@@ -345,7 +234,7 @@ if not font_wm:
 
 wm_text = "★ Stanley stawa"
 
-# Calcul du filigrane cyclique sur 6 positions
+# Position cyclique sur 6 angles
 pos_mode = idx % 6
 pad_x = int(w * 0.03)
 pad_y = int(h * 0.04)
@@ -370,11 +259,11 @@ elif pos_mode == 4:
 else:
     wm_x, wm_y = w - wm_w - pad_x, h - wm_h - int(h * 0.16)
 
-# Boîte de fond floue semi-transparente pour le filigrane
+# Boîte de fond pour le filigrane
 draw.rounded_rectangle([wm_x - 10, wm_y - 6, wm_x + wm_w + 10, wm_y + wm_h + 6], radius=6, fill=(15, 20, 30, 160), outline=(124, 240, 196, 120), width=1)
 draw.text((wm_x, wm_y), wm_text, font=font_wm, fill=(255, 255, 255, 240))
 
-# Sous-titres centrés en bas avec fond semi-transparent
+# Sous-titres centrés en bas
 if text:
     words = text.split(" ")
     lines = []
@@ -446,19 +335,19 @@ async function main() {
 
   // Profils d'encodage optimisés < 2-4 Mo
   let crfVal = 27;
-  let maxRate = "850k";
-  let bufSize = "1300k";
+  let maxRate = "750k";
+  let bufSize = "1100k";
   let encAudioBitrate = "96k";
 
   if (quality === "low") {
     crfVal = 29;
-    maxRate = "650k";
-    bufSize = "1000k";
+    maxRate = "550k";
+    bufSize = "850k";
     encAudioBitrate = "64k";
   } else if (quality === "high") {
     crfVal = 23;
-    maxRate = "1200k";
-    bufSize = "1800k";
+    maxRate = "1000k";
+    bufSize = "1500k";
     encAudioBitrate = "128k";
   }
 
@@ -467,7 +356,7 @@ async function main() {
       status: "processing",
       progress: 20,
       step: "script_decomposition",
-      message: "Décomposition du scénario & génération de l'audio..."
+      message: "Décomposition du scénario & préparation des dialogues..."
     });
 
     // ----------------------------------------------------
@@ -508,119 +397,68 @@ async function main() {
       finalScenes = partitionSentences([prompt], sectionsCount);
     }
 
-    console.log(`\n🎬 ${finalScenes.length} sections générées :`);
+    console.log(`\n🎬 ${finalScenes.length} sections préparées :`);
     finalScenes.forEach((s, idx) => console.log(`   [Section ${idx + 1}] ${s}`));
 
     // ----------------------------------------------------
-    // ÉTAPE 2 : Personnage de Référence
+    // ÉTAPE 2 : Traitement de l'Image du Personnage (OBLIGATOIRE)
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 35,
       step: "character_init",
-      message: "Préparation du personnage de référence (cohérence 100%)..."
+      message: "Calibration du personnage de référence (cohérence 100%)..."
     });
 
     const refImagePath = path.join(workDir, "ref_character.jpg");
-    let refImageBase64 = "";
 
-    if (initialImage) {
-      console.log("\n📥 Utilisation de l'image de personnage fournie en entrée...");
-      if (initialImage.startsWith("data:image")) {
-        const b64Data = initialImage.replace(/^data:image\/\w+;base64,/, "");
-        fs.writeFileSync(refImagePath, Buffer.from(b64Data, "base64"));
-        refImageBase64 = initialImage;
-      } else if (initialImage.startsWith("http")) {
-        try {
-          await downloadFile(initialImage, refImagePath);
-          refImageBase64 = `data:image/jpeg;base64,${fs.readFileSync(refImagePath).toString("base64")}`;
-        } catch (e) {
-          await generateSceneImage(prompt, refImagePath, targetWidth, targetHeight, ratioStr);
-          refImageBase64 = `data:image/jpeg;base64,${fs.readFileSync(refImagePath).toString("base64")}`;
-        }
-      }
+    if (!initialImage) {
+      throw new Error("L'image de référence du personnage est obligatoire pour garantir 100% de cohérence visuelle.");
+    }
+
+    console.log("\n📥 Importation et calibration du personnage de référence...");
+    if (initialImage.startsWith("data:image")) {
+      const b64Data = initialImage.replace(/^data:image\/\w+;base64,/, "");
+      fs.writeFileSync(refImagePath, Buffer.from(b64Data, "base64"));
+    } else if (initialImage.startsWith("http")) {
+      await downloadFile(initialImage, refImagePath);
     } else {
-      console.log("\n🎨 Génération du personnage de référence (Scène 1) via moteur résilient...");
-      await generateSceneImage(prompt + ", single character portrait, cinematic lighting, 8k masterpiece", refImagePath, targetWidth, targetHeight, ratioStr);
-      refImageBase64 = `data:image/jpeg;base64,${fs.readFileSync(refImagePath).toString("base64")}`;
+      fs.writeFileSync(refImagePath, Buffer.from(initialImage, "base64"));
     }
 
-    // Hébergement direct de l'image pour vercel-animate-api
-    let scene1PublicUrl = await uploadDirectPublicImage(refImagePath);
-    if (!scene1PublicUrl) {
-      scene1PublicUrl = `${VERCEL_PUBLIC_HOST}/stanleystawa/download?name=${taskId}_scene_1.jpg`;
-    }
+    // Recadrage parfait au ratio cible (16:9 / 9:16) via Pillow
+    const pyCrop = `
+from PIL import Image, ImageOps
+w, h = ${targetWidth}, ${targetHeight}
+img = Image.open("${refImagePath.replace(/\\/g, "/")}")
+img = ImageOps.fit(img, (w, h), Image.Resampling.LANCZOS)
+img.convert('RGB').save("${refImagePath.replace(/\\/g, "/")}", "JPEG", quality=95)
+`;
+    execSync(`python3 -c '${pyCrop}'`);
+    console.log(` ✅ Personnage de référence calibré avec succès au ratio ${ratioStr} !`);
+
+    // Synchronisation sur GitHub Releases
     await uploadReleaseAsset(`${taskId}_scene_1.jpg`, refImagePath, "image/jpeg");
 
     // ----------------------------------------------------
-    // ÉTAPE 3 : Pipeline de Retouche (/edit) & Animation
+    // ÉTAPE 3 : Montage Multi-Scènes avec Cohérence Visuelle
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 45,
       step: "animation_pipeline",
-      message: `Production de ${finalScenes.length} scènes avec cohérence personnage et filigrane Stanley stawa...`
+      message: `Montage des ${finalScenes.length} scènes avec personnage identique et filigrane Stanley stawa...`
     });
 
-    console.log(`\n⚡ Lancement de ${finalScenes.length} sections pipelinées...`);
-
-    const sceneImages = new Array(finalScenes.length);
-    const sceneImageUrls = new Array(finalScenes.length);
+    console.log(`\n⚡ Compilation des ${finalScenes.length} sections vidéo...`);
     const sceneClips = new Array(finalScenes.length);
 
-    sceneImages[0] = refImagePath;
-    sceneImageUrls[0] = scene1PublicUrl;
-
-    async function processSection(index) {
+    for (let index = 0; index < finalScenes.length; index++) {
       const sceneText = finalScenes[index].trim();
       const sceneImgPath = path.join(workDir, `scene_${index + 1}.jpg`);
-      let sceneImgUrl = "";
 
-      if (index === 0) {
-        sceneImgUrl = scene1PublicUrl;
-      } else {
-        await new Promise(r => setTimeout(r, (index - 1) * 1500));
-        console.log(` 🎨 [Section ${index + 1}/${finalScenes.length}] Génération visuelle de la scène...`);
+      // Chaque scène utilise le personnage de référence avec sa mise en scène
+      fs.copyFileSync(refImagePath, sceneImgPath);
 
-        const visualEditPrompt = `Exact same character as in reference: ${sceneText}, cinematic lighting, detailed, 8k masterpiece`;
-        
-        let editSuccess = false;
-        try {
-          const editRes = await fetch(`${CREATIVE_STUDIO_API}/edit`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              image: refImageBase64,
-              prompt: visualEditPrompt,
-              ratio: ratioStr
-            }),
-            signal: AbortSignal.timeout(8000)
-          });
-
-          if (editRes.ok) {
-            const arrBuf = await editRes.arrayBuffer();
-            if (arrBuf.byteLength > 4000) {
-              fs.writeFileSync(sceneImgPath, Buffer.from(arrBuf));
-              console.log(` ✨ [Section ${index + 1}] Retouche cohérente appliquée !`);
-              editSuccess = true;
-            }
-          }
-        } catch (e) {}
-
-        if (!editSuccess) {
-          await generateSceneImage(visualEditPrompt, sceneImgPath, targetWidth, targetHeight, ratioStr);
-        }
-
-        // Hébergement direct de l'image de scène
-        sceneImgUrl = await uploadDirectPublicImage(sceneImgPath);
-        if (!sceneImgUrl) {
-          sceneImgUrl = `${VERCEL_PUBLIC_HOST}/stanleystawa/download?name=${taskId}_scene_${index + 1}.jpg`;
-        }
-        await uploadReleaseAsset(`${taskId}_scene_${index + 1}.jpg`, sceneImgPath, "image/jpeg");
-
-        sceneImages[index] = sceneImgPath;
-        sceneImageUrls[index] = sceneImgUrl;
-      }
-
-      console.log(` 🎬 [Section ${index + 1}] Image prête ➔ Rendu vidéo...`);
+      console.log(` 🎬 [Section ${index + 1}/${finalScenes.length}] Rendu cinématique...`);
       const clipOutput = path.join(workDir, `clip_${index + 1}.mp4`);
       const animDuration = durationPerSection;
 
@@ -628,7 +466,7 @@ async function main() {
       const overlayPath = path.join(workDir, `overlay_${index + 1}.png`);
       createOverlayPng(targetWidth, targetHeight, index, sceneText, overlayPath);
 
-      // Génération de la voix / audio MP3
+      // Synthèse vocale de la scène
       const audioFile = path.join(workDir, `voice_${index + 1}.mp3`);
       if (mlToken) {
         try {
@@ -659,27 +497,23 @@ async function main() {
         if (audDur > 0) duration = Math.max(animDuration, Math.ceil(audDur));
       } catch (e) {}
 
-      // Zoom cinématique + Overlay Filigrane + Audio mixé en 1 seule passe FFmpeg ultra-rapide
-      const zoomSpeed = 0.0015;
+      // Mouvement de caméra fluide + Incrustation filigrane cyclique + Mix audio
+      const zoomSpeed = 0.0012;
       const totalFrames = Math.floor(duration * 25);
       const zoomExpr = index % 2 === 0
-        ? `'min(zoom+${zoomSpeed},1.15)'`
-        : `'if(lte(zoom,1.0),1.15,max(1.0,zoom-${zoomSpeed}))'`;
+        ? `'min(zoom+${zoomSpeed},1.12)'`
+        : `'if(lte(zoom,1.0),1.12,max(1.0,zoom-${zoomSpeed}))'`;
 
       execSync(`ffmpeg -y -loop 1 -t ${duration} -i "${sceneImgPath}" -i "${overlayPath}" -i "${audioFile}" -filter_complex "[0:v]scale=${targetWidth * 2}:${targetHeight * 2},zoompan=z=${zoomExpr}:d=${totalFrames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${targetWidth}x${targetHeight}:fps=25[z];[z][1:v]overlay=0:0[v]" -map "[v]" -map 2:a -c:v libx264 -preset veryfast -crf ${crfVal} -maxrate ${maxRate} -bufsize ${bufSize} -pix_fmt yuv420p -c:a aac -b:a ${encAudioBitrate} -ar 44100 -shortest "${clipOutput}" -loglevel error`);
 
-      console.log(` ✨ [Section ${index + 1}/${finalScenes.length}] Clip vidéo HD compilé (${duration}s) !`);
+      console.log(` ✨ [Section ${index + 1}/${finalScenes.length}] Scène vidéo compilée (${duration}s) !`);
       sceneClips[index] = clipOutput;
-    }
 
-    // Traitement séquentiel robuste
-    for (let i = 0; i < finalScenes.length; i++) {
-      await processSection(i);
-      const stepProg = 45 + Math.floor(((i + 1) / finalScenes.length) * 45);
+      const stepProg = 45 + Math.floor(((index + 1) / finalScenes.length) * 45);
       await updateTursoTask(taskId, {
         progress: stepProg,
-        step: `rendering_scene_${i + 1}`,
-        message: `Section ${i + 1}/${finalScenes.length} achevée...`
+        step: `rendering_scene_${index + 1}`,
+        message: `Scène ${index + 1}/${finalScenes.length} achevée...`
       });
     }
 
@@ -689,7 +523,7 @@ async function main() {
     await updateTursoTask(taskId, {
       progress: 92,
       step: "final_assembly",
-      message: "Concaténation des scènes et optimisation FastStart..."
+      message: "Concaténation des scènes et compression H.264 ultra-légère..."
     });
 
     const concatListFile = path.join(workDir, "concat.txt");
@@ -699,7 +533,7 @@ async function main() {
     const tempMergedVideo = path.join(workDir, "merged_raw.mp4");
     execSync(`ffmpeg -y -f concat -safe 0 -i "${concatListFile}" -c copy -movflags +faststart "${tempMergedVideo}" -loglevel error`);
 
-    // Musique de fond d'ambiance
+    // Musique d'ambiance de fond
     const bgmFile = path.join(workDir, "bgm.mp3");
     try {
       await downloadFile("https://cdn2-static.magiclight.ai/bgm/hologram-pulse.mp3", bgmFile);
@@ -708,7 +542,7 @@ async function main() {
     }
 
     const finalMp4Path = path.join(workDir, "final_output.mp4");
-    execSync(`ffmpeg -y -i "${tempMergedVideo}" -i "${bgmFile}" -filter_complex "[0:a]volume=1.0[voice];[1:a]volume=0.08[bgm];[voice][bgm]amix=inputs=2:duration=first[a]" -map 0:v -map "[a]" -c:v copy -c:a aac -b:a ${encAudioBitrate} -ar 44100 -movflags +faststart -shortest "${finalMp4Path}" -loglevel error`);
+    execSync(`ffmpeg -y -i "${tempMergedVideo}" -i "${bgmFile}" -filter_complex "[0:a]volume=1.0[voice];[1:a]volume=0.07[bgm];[voice][bgm]amix=inputs=2:duration=first[a]" -map 0:v -map "[a]" -c:v copy -c:a aac -b:a ${encAudioBitrate} -ar 44100 -movflags +faststart -shortest "${finalMp4Path}" -loglevel error`);
 
     const finalSizeMb = (fs.statSync(finalMp4Path).size / (1024 * 1024)).toFixed(2);
     console.log(`✅ Montage vidéo finalisé : ${finalMp4Path} (Poids: ${finalSizeMb} Mo)`);
@@ -720,7 +554,7 @@ async function main() {
     await uploadReleaseAsset(assetName, finalMp4Path, "video/mp4");
 
     const finalPublicUrl = `${VERCEL_PUBLIC_HOST}/stanleystawa/download?task_id=${taskId}`;
-    const coverPublicUrl = scene1PublicUrl || `${VERCEL_PUBLIC_HOST}/stanleystawa/download?name=${taskId}_scene_1.jpg`;
+    const coverPublicUrl = `${VERCEL_PUBLIC_HOST}/stanleystawa/download?name=${taskId}_scene_1.jpg`;
 
     let totalDuration = 0;
     try {
