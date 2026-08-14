@@ -1455,13 +1455,15 @@
       </div>
 
       <div id="referralIndicatorBox" style="display:none;background:rgba(124,240,196,0.1);border:1px dashed var(--md-sys-color-primary);border-radius:var(--md-shape-corner-small);padding:8px 12px;font-size:11px;color:var(--md-sys-color-primary);font-weight:700;">
-        🎁 Bonus Parrainage actif : Vous recevrez 40 Crédits de bienvenue au lieu de 30 !
+        🎁 Bonus Parrainage actif : Vous recevrez 35 Crédits de bienvenue au lieu de 30 !
       </div>
 
       <div id="authAlert" class="auth-alert"></div>
 
       <!-- FORMULAIRE INSCRIPTION -->
       <form id="formRegister" onsubmit="handleRegisterSubmit(event)">
+        <div style="font-weight:800;font-size:14px;color:#fff;margin-bottom:4px;">Créer un Nouveau Compte (+30 Crédits)</div>
+        <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);margin-bottom:12px;">Vérification sécurisée par code OTP envoyé sur votre boîte Gmail.</div>
         
         <!-- CHOIX DU TYPE DE COMPTE -->
         <div class="account-type-box">
@@ -1470,14 +1472,14 @@
             <input type="radio" name="accountTypeChoice" value="studio" checked onchange="toggleKeyOption(false)" style="width:auto;margin-top:2px;">
             <div>
               <div style="font-size:12px;font-weight:800;color:#fff;">Compte Studio (Sans Clé API) — Récompenses x2</div>
-              <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);">Recommandé : Utilisation directe simplifiée, quêtes boostées (+50 crédits) et bonus parrainage.</div>
+              <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);">Recommandé : Utilisation directe simplifiée, quêtes boostées et bonus parrainage.</div>
             </div>
           </label>
           <label class="account-type-option">
             <input type="radio" name="accountTypeChoice" value="developer" onchange="toggleKeyOption(true)" style="width:auto;margin-top:2px;">
             <div>
               <div style="font-size:12px;font-weight:800;color:#fff;">Compte Développeur (Avec Clé API)</div>
-              <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);">Pour intégrations bots Messenger, scripts cURL et accès API automatisé.</div>
+              <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);">Pour intégrations bots Messenger, scripts cURL et requêtes externes.</div>
             </div>
           </label>
         </div>
@@ -1506,23 +1508,34 @@
         <button type="submit" id="btnRegisterSubmit" class="btn-submit" style="width: 100%;">
           Valider & Créer mon Compte (+30 Crédits)
         </button>
+
+        <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--md-sys-color-on-surface-variant);">
+          Vous avez déjà un compte ? <a href="javascript:void(0)" onclick="switchAuthTab('login')" style="color:var(--md-sys-color-primary);font-weight:700;text-decoration:none;">Se connecter</a>
+        </div>
       </form>
 
       <!-- FORMULAIRE CONNEXION -->
       <form id="formLogin" style="display:none;" onsubmit="handleLoginSubmit(event)">
+        <div style="font-weight:800;font-size:14px;color:#fff;margin-bottom:4px;">Connexion à votre Compte</div>
+        <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;">Entrez votre adresse Gmail et votre mot de passe pour vous connecter.</div>
+
         <div class="form-group" style="margin-bottom: 12px;">
           <label>Adresse E-mail</label>
-          <input type="email" id="loginEmail" required placeholder="votre_compte@gmail.com">
+          <input type="email" id="loginEmail" required placeholder="votre_compte@gmail.com" autocomplete="email">
         </div>
 
         <div class="form-group" style="margin-bottom: 18px;">
           <label>Mot de passe</label>
-          <input type="password" id="loginPassword" required minlength="6" placeholder="••••••••">
+          <input type="password" id="loginPassword" required minlength="6" placeholder="••••••••" autocomplete="current-password">
         </div>
 
         <button type="submit" id="btnLoginSubmit" class="btn-submit" style="width: 100%;">
           Se connecter
         </button>
+
+        <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--md-sys-color-on-surface-variant);">
+          Pas encore de compte ? <a href="javascript:void(0)" onclick="switchAuthTab('register')" style="color:var(--md-sys-color-primary);font-weight:700;text-decoration:none;">Créer un compte (+30 Crédits)</a>
+        </div>
       </form>
     </div>
   </div>
