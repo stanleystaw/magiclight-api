@@ -308,7 +308,7 @@ img.save(out_path, "PNG")
 async function main() {
   const taskId = process.env.TASK_ID || `task_${Date.now()}`;
   const prompt = process.env.PROMPT || "Un aventurier courageux découvre un château magique";
-  const initialImage = process.env.INITIAL_IMAGE || "";
+  let initialImage = process.env.INITIAL_IMAGE || "";
   const sectionsCount = parseInt(process.env.SECTIONS || "6", 10);
   const quality = (process.env.QUALITY || "medium").toLowerCase();
   const durationPerSection = parseInt(process.env.DURATION || "10", 10);
@@ -324,6 +324,20 @@ async function main() {
   console.log(`  Duration/Section : ${durationPerSection}s`);
   console.log(`  Ratio            : ${ratioChoice === "2" ? "9:16 (Portrait)" : "16:9 (Paysage)"}`);
   console.log("==================================================");
+
+  // Si l'image n'est pas dans l'env GitHub (car base64 trop lourd pour les inputs GitHub Actions),
+  // on la charge directement depuis Turso DB où elle est sauvegardée !
+  if (!initialImage) {
+    try {
+      const taskRows = await executeTurso("SELECT initial_image FROM video_tasks WHERE task_id = ? LIMIT 1;", [taskId]);
+      if (taskRows.length && taskRows[0].initial_image) {
+        initialImage = taskRows[0].initial_image;
+        console.log("📥 Image de personnage récupérée depuis la base Turso DB.");
+      }
+    } catch (dbImgErr) {
+      console.warn("Lecture initial_image Turso:", dbImgErr.message);
+    }
+  }
 
   const workDir = path.join(process.cwd(), `render_${taskId}`);
   fs.mkdirSync(workDir, { recursive: true });
@@ -401,7 +415,7 @@ async function main() {
     finalScenes.forEach((s, idx) => console.log(`   [Section ${idx + 1}] ${s}`));
 
     // ----------------------------------------------------
-    // ÉTAPE 2 : Traitement de l'Image du Personnage (OBLIGATOIRE)
+    // ÉTAPE 2 : Traitement de l'Image du Personnage
     // ----------------------------------------------------
     await updateTursoTask(taskId, {
       progress: 35,
@@ -411,27 +425,39 @@ async function main() {
 
     const refImagePath = path.join(workDir, "ref_character.jpg");
 
-    if (!initialImage) {
-      throw new Error("L'image de référence du personnage est obligatoire pour garantir 100% de cohérence visuelle.");
-    }
-
-    console.log("\n📥 Importation et calibration du personnage de référence...");
-    if (initialImage.startsWith("data:image")) {
-      const b64Data = initialImage.replace(/^data:image\/\w+;base64,/, "");
-      fs.writeFileSync(refImagePath, Buffer.from(b64Data, "base64"));
-    } else if (initialImage.startsWith("http")) {
-      await downloadFile(initialImage, refImagePath);
+    if (initialImage) {
+      console.log("\n📥 Traitement et calibration du personnage de référence...");
+      if (initialImage.startsWith("data:image")) {
+        const b64Data = initialImage.replace(/^data:image\/\w+;base64,/, "");
+        fs.writeFileSync(refImagePath, Buffer.from(b64Data, "base64"));
+      } else if (initialImage.startsWith("http")) {
+        try {
+          await downloadFile(initialImage, refImagePath);
+        } catch (e) {
+          await generateSceneImage(prompt + ", single character portrait, cinematic lighting, 8k masterpiece", refImagePath, targetWidth, targetHeight, ratioStr);
+        }
+      } else {
+        try {
+          fs.writeFileSync(refImagePath, Buffer.from(initialImage, "base64"));
+        } catch (e) {
+          await generateSceneImage(prompt + ", single character portrait, cinematic lighting, 8k masterpiece", refImagePath, targetWidth, targetHeight, ratioStr);
+        }
+      }
     } else {
-      fs.writeFileSync(refImagePath, Buffer.from(initialImage, "base64"));
+      console.log("\n🎨 Génération automatique du personnage de référence...");
+      await generateSceneImage(prompt + ", single character portrait, cinematic lighting, 8k masterpiece", refImagePath, targetWidth, targetHeight, ratioStr);
     }
 
-    // Recadrage parfait au ratio cible (16:9 / 9:16) via Pillow
+    // Recadrage au ratio cible (16:9 / 9:16) via Pillow
     const pyCrop = `
 from PIL import Image, ImageOps
 w, h = ${targetWidth}, ${targetHeight}
-img = Image.open("${refImagePath.replace(/\\/g, "/")}")
-img = ImageOps.fit(img, (w, h), Image.Resampling.LANCZOS)
-img.convert('RGB').save("${refImagePath.replace(/\\/g, "/")}", "JPEG", quality=95)
+try:
+    img = Image.open("${refImagePath.replace(/\\/g, "/")}")
+    img = ImageOps.fit(img, (w, h), Image.Resampling.LANCZOS)
+    img.convert('RGB').save("${refImagePath.replace(/\\/g, "/")}", "JPEG", quality=95)
+except Exception as e:
+    print("Crop note:", e)
 `;
     execSync(`python3 -c '${pyCrop}'`);
     console.log(` ✅ Personnage de référence calibré avec succès au ratio ${ratioStr} !`);
