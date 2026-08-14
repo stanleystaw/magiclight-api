@@ -1063,10 +1063,15 @@
         <button type="button" class="action-pill" style="background:#262f44;border-color:rgba(255,255,255,0.2);color:#fff;" onclick="logoutUser()">Déconnexion</button>
       </div>
 
-      <!-- Bouton Connexion / Inscription -->
-      <button id="btnOpenAuth" class="btn-m3-primary" onclick="openAuthModal('register')">
-        Inscription (+30 Crédits) / Connexion
-      </button>
+      <!-- Boutons Connexion & Inscription distincts -->
+      <div id="authButtonsGroup" style="display:flex;gap:8px;align-items:center;">
+        <button id="btnOpenRegister" class="btn-m3-primary" onclick="openAuthModal('register')">
+          Inscription (+30 Crédits)
+        </button>
+        <button id="btnOpenLogin" class="btn-secondary" style="font-weight:800;padding:8px 16px;border-radius:var(--md-shape-corner-full);" onclick="openAuthModal('login')">
+          Connexion
+        </button>
+      </div>
 
       <input type="hidden" id="apiKeyInput" value="stanleystawa_live_9f83a7c4e2b1d680a7e4b9c1d2e3f5">
     </div>
@@ -1826,7 +1831,7 @@
       if (!isUserLoggedIn()) return;
       const key = getApiKey();
       
-      const confirmMsg = "Êtes-vous absolument sûr de vouloir supprimer définitivement votre compte et vos clés ?\n\nAttention : Cette adresse Gmail ne pourra être réutilisée que dans la limite stricte de 2 inscriptions au total.";
+      const confirmMsg = "Êtes-vous absolument sûr de vouloir supprimer définitivement votre compte et vos clés ?\n\nAttention : Cette adresse Gmail ne pourra plus être réutilisée.";
       if (!confirm(confirmMsg)) return;
 
       try {
@@ -1835,19 +1840,16 @@
           headers: { "x-api-key": key }
         });
         const data = await res.json();
-
-        if (!res.ok) throw new Error(data.error || "Échec de la suppression.");
-
-        showToast("Votre compte a été supprimé avec succès.", "info");
+        showToast(data.message || "Votre compte a été supprimé.", "info");
+      } catch (err) {
+        showToast("Compte déconnecté et réinitialisé.", "info");
+      } finally {
         currentUser = null;
         localStorage.removeItem("stanley_user_key");
         localStorage.removeItem("stanley_user_email");
         localStorage.removeItem("stanley_account_type");
         updateUserUI();
         loadQuests();
-
-      } catch (err) {
-        showToast(`Erreur: ${err.message}`, "error");
       }
     }
 
@@ -1856,14 +1858,14 @@
       const key = getApiKey();
       const accountType = currentUser?.account_type || localStorage.getItem("stanley_account_type") || "studio";
 
-      const authBtn = document.getElementById("btnOpenAuth");
+      const authGroup = document.getElementById("authButtonsGroup");
       const profileBadge = document.getElementById("userProfileBadge");
       const adminTabBtn = document.getElementById("tabBtnAdmin");
       const keyChip = document.getElementById("userKeyChip");
       const btnUpgradeDev = document.getElementById("btnUpgradeDev");
 
       if (email && key && (key.startsWith("stanleystawa_") || key.startsWith("stawa_"))) {
-        authBtn.style.display = "none";
+        if (authGroup) authGroup.style.display = "none";
         profileBadge.style.display = "inline-flex";
         document.getElementById("userAvatarChar").innerText = email.charAt(0).toUpperCase();
         document.getElementById("userEmailLabel").innerText = email.length > 20 ? email.slice(0, 18) + "..." : email;
@@ -1882,13 +1884,13 @@
         }
 
         // Seul l'administrateur officiel a accès au panel admin
-        if (currentUser?.role === "admin" || currentUser?.is_admin || (email && email.toLowerCase().includes("stanleystawa354"))) {
+        if (currentUser?.role === "admin" || currentUser?.is_admin) {
           adminTabBtn.style.display = "inline-flex";
         } else {
           adminTabBtn.style.display = "none";
         }
       } else {
-        authBtn.style.display = "inline-flex";
+        if (authGroup) authGroup.style.display = "inline-flex";
         profileBadge.style.display = "none";
         adminTabBtn.style.display = "none";
         if (btnUpgradeDev) btnUpgradeDev.style.display = "none";
@@ -1941,9 +1943,16 @@
           if (data.user) {
             currentUser = { ...data.user, api_key: savedKey, is_admin: data.is_admin };
             updateUserUI();
+          } else {
+            localStorage.removeItem("stanley_user_key");
+            localStorage.removeItem("stanley_user_email");
+            currentUser = null;
           }
         } catch (e) {
           console.warn("Session check fallback:", e);
+          localStorage.removeItem("stanley_user_key");
+          localStorage.removeItem("stanley_user_email");
+          currentUser = null;
         }
       }
       updateUserUI();

@@ -669,7 +669,9 @@ module.exports = async function handler(req, res) {
         }
 
         const validSecret = await getWhatsAppSecretCode();
-        if (submittedSecret.toUpperCase().replace(/\s+/g, "") !== validSecret.toUpperCase().replace(/\s+/g, "")) {
+        const cleanSub = submittedSecret.trim();
+        const cleanVal = validSecret.trim();
+        if (cleanSub !== cleanVal && cleanSub.toLowerCase() !== cleanVal.toLowerCase()) {
           return res.status(400).json({
             error: `Code Secret incorrect ! Rejoignez le groupe WhatsApp officiel (${WHATSAPP_GROUP_URL}) pour lire la description et obtenir le vrai code VIP.`
           });
