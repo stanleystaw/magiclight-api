@@ -1056,6 +1056,9 @@
           <button type="button" class="action-pill" style="padding:2px 8px;font-size:10px;" onclick="copyDirectApiKey()">Copier</button>
         </div>
 
+        <!-- Bouton de conversion Compte Studio -> Compte Développeur -->
+        <button type="button" id="btnUpgradeDev" class="action-pill" style="background:rgba(168,200,255,0.15);border-color:var(--md-sys-color-secondary);color:var(--md-sys-color-secondary);display:none;" onclick="promptUpgradeToDev()">⚡ Clé API</button>
+
         <button type="button" class="action-pill" style="background:var(--md-sys-color-error-container);border-color:var(--md-sys-color-error);color:var(--md-sys-color-error);" onclick="deleteMyAccount()">Supprimer</button>
         <button type="button" class="action-pill" style="background:#262f44;border-color:rgba(255,255,255,0.2);color:#fff;" onclick="logoutUser()">Déconnexion</button>
       </div>
@@ -1073,10 +1076,10 @@
   <div id="promoWhatsAppBanner" class="promo-banner">
     <div class="promo-content">
       <span class="promo-tag">COMMUNAUTÉ VIP</span>
-      <span>Rejoignez le nouveau groupe officiel WhatsApp et débloquez <strong>+50 Crédits Gratuits</strong> avec le code secret !</span>
+      <span>Rejoignez le nouveau groupe officiel WhatsApp et débloquez <strong>+15 Crédits Gratuits</strong> avec le code secret !</span>
     </div>
     <div class="promo-actions">
-      <button type="button" class="btn-promo-join" onclick="switchTab('quests')">Voir les Quêtes (+50)</button>
+      <button type="button" class="btn-promo-join" onclick="switchTab('quests')">Voir les Quêtes (+15)</button>
       <button type="button" class="btn-promo-close" onclick="dismissPromoBanner()">✕</button>
     </div>
   </div>
@@ -1089,7 +1092,7 @@
       <button class="tab-btn" onclick="switchTab('image')">Image & Vision</button>
       <button class="tab-btn" onclick="switchTab('voice')">Voix Studio</button>
       <button class="tab-btn" onclick="switchTab('story')">Laboratoire Scénario</button>
-      <button class="tab-btn" id="tabBtnQuests" style="border-color: rgba(37,211,102,0.6); color: #fff;" onclick="switchTab('quests')">🎯 Quêtes & WhatsApp (+50)</button>
+      <button class="tab-btn" id="tabBtnQuests" style="border-color: rgba(37,211,102,0.6); color: #fff;" onclick="switchTab('quests')">🎯 Quêtes & WhatsApp (+15)</button>
       <button class="tab-btn" onclick="switchTab('creations')">Mes Créations</button>
       
       <!-- ONGLET ADMIN : MASQUE PAR DEFAUT -->
@@ -1300,12 +1303,12 @@
           <div class="quest-hero-text">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
               <div class="card-title" style="margin-bottom:0;color:#fff;">Quête VIP #1 : Rejoindre le Groupe WhatsApp Officiel</div>
-              <span class="quest-reward-pill">+50 Crédits Offerts</span>
+              <span class="quest-reward-pill">+15 Crédits Offerts</span>
             </div>
             <p style="font-size:13px;color:var(--md-sys-color-on-surface-variant);margin-top:6px;line-height:1.5;">
               1️⃣ Cliquez sur le bouton ci-dessous pour intégrer le groupe WhatsApp.<br>
               2️⃣ Ouvrez la <strong>description du groupe</strong> ou le message épinglé pour trouver le <strong>Code Secret VIP</strong>.<br>
-              3️⃣ Saisissez votre numéro WhatsApp et le code secret pour débloquer immédiatement vos <strong>+50 Crédits</strong> !
+              3️⃣ Saisissez votre numéro WhatsApp et le code secret pour débloquer immédiatement vos <strong>+15 Crédits</strong> (Vérification unique : 1 numéro WhatsApp = 1 réclamation) !
             </p>
           </div>
         </div>
@@ -1318,7 +1321,7 @@
             <input type="text" id="waJoinPhoneInput" placeholder="Votre Numéro WhatsApp (ex: +229 97 00 00 00)" style="flex:1;min-width:180px;">
             <input type="text" id="waJoinSecretInput" placeholder="Code Secret du Groupe" style="flex:1;min-width:140px;text-transform:uppercase;font-family:var(--font-family-mono);font-weight:700;">
             <button type="button" id="btnClaimJoinWhatsApp" class="btn-submit" onclick="submitWhatsAppJoinQuest()">
-              2. Valider ma Preuve (+50)
+              2. Valider ma Preuve (+15)
             </button>
           </div>
         </div>
@@ -1339,7 +1342,7 @@
       <div class="card" style="grid-column: 1 / -1;">
         <div class="card-title">Programme de Parrainage & Recrutement WhatsApp</div>
         <p style="font-size:13px;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;line-height:1.5;">
-          Partagez votre lien d'invitation avec vos amis, collègues et dans vos groupes WhatsApp. Pour chaque ami inscrit (Gmail vérifié par OTP), vous gagnez <strong>+30 Crédits</strong> et votre ami reçoit <strong>+40 Crédits</strong> de bienvenue !
+          Partagez votre lien d'invitation avec vos amis, collègues et dans vos groupes WhatsApp. Pour chaque ami inscrit (Gmail vérifié par OTP), vous gagnez <strong>+10 Crédits</strong> et votre ami reçoit <strong>+35 Crédits</strong> de bienvenue !
         </p>
         
         <div class="referral-box-layout">
@@ -1352,10 +1355,10 @@
           </div>
           <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
             <button type="button" class="btn-whatsapp-share" onclick="shareToWhatsAppContacts()">
-              Inviter mes Contacts WhatsApp (+30/Ami)
+              Inviter mes Contacts WhatsApp (+10/Ami)
             </button>
             <button type="button" class="btn-secondary" onclick="shareToWhatsAppStatus()">
-              Partager sur mon Statut (+25)
+              Partager sur mon Statut (+5)
             </button>
           </div>
         </div>
@@ -1854,6 +1857,7 @@
       const profileBadge = document.getElementById("userProfileBadge");
       const adminTabBtn = document.getElementById("tabBtnAdmin");
       const keyChip = document.getElementById("userKeyChip");
+      const btnUpgradeDev = document.getElementById("btnUpgradeDev");
 
       if (email && key && (key.startsWith("stanleystawa_") || key.startsWith("stawa_"))) {
         authBtn.style.display = "none";
@@ -1862,16 +1866,20 @@
         document.getElementById("userEmailLabel").innerText = email.length > 20 ? email.slice(0, 18) + "..." : email;
         document.getElementById("userCreditsLabel").innerText = (currentUser?.credits ?? 30) + " Crédits";
         
+        // Affichage Clé API ou Bouton Conversion
         if (accountType === "developer" || currentUser?.role === "admin" || currentUser?.is_admin) {
           keyChip.style.display = "inline-flex";
+          if (btnUpgradeDev) btnUpgradeDev.style.display = "none";
           const shortKey = key.length > 22 ? key.slice(0, 16) + "..." : key;
           document.getElementById("userKeyText").innerText = shortKey;
           document.getElementById("userKeyText").title = key;
         } else {
           keyChip.style.display = "none";
+          if (btnUpgradeDev) btnUpgradeDev.style.display = "inline-flex";
         }
 
-        if (currentUser?.role === "admin" || currentUser?.is_admin || email.toLowerCase().includes("stanleystawa") || email.toLowerCase().includes("ipoppolive")) {
+        // Seul l'administrateur officiel a accès au panel admin
+        if (currentUser?.role === "admin" || currentUser?.is_admin || (email && email.toLowerCase().includes("stanleystawa354"))) {
           adminTabBtn.style.display = "inline-flex";
         } else {
           adminTabBtn.style.display = "none";
@@ -1880,6 +1888,33 @@
         authBtn.style.display = "inline-flex";
         profileBadge.style.display = "none";
         adminTabBtn.style.display = "none";
+        if (btnUpgradeDev) btnUpgradeDev.style.display = "none";
+      }
+    }
+
+    async function promptUpgradeToDev() {
+      if (!isUserLoggedIn()) return;
+      const confirmMsg = "Passer au Compte Développeur (Avec Clé API) ?\n\n• Avantages : Vous obtiendrez votre Clé API personnelle active pour connecter des bots Messenger, requêtes cURL et scripts.\n• Sacrifices : Coût de conversion unique de 5 crédits et barème de quêtes au tarif développeur.\n\nVoulez-vous valider la conversion ?";
+      if (!confirm(confirmMsg)) return;
+
+      const key = getApiKey();
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=convert_to_developer&key=${encodeURIComponent(key)}`, {
+          method: "POST"
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Échec de la conversion.");
+
+        showToast(data.message || "Compte converti en Compte Développeur !", "success");
+        if (currentUser) {
+          currentUser.account_type = "developer";
+          currentUser.credits = data.user.credits;
+        }
+        localStorage.setItem("stanley_account_type", "developer");
+        updateUserUI();
+        loadQuests();
+      } catch (err) {
+        showToast(err.message, "error");
       }
     }
 

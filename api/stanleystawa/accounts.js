@@ -1,5 +1,5 @@
 /**
- * api/stanleystawa/accounts.js — Authentification, Inscription Sécurisée, Quêtes WhatsApp avec Vérification Réelle & Panel Admin
+ * api/stanleystawa/accounts.js — Authentification, Inscription Sécurisée, Quêtes WhatsApp Anti-Fraude & Panel Admin
  */
 
 const url = require("url");
@@ -10,50 +10,65 @@ const mailer = require("../../lib/mailer");
 const MAX_REGISTRATIONS_PER_GMAIL = 2;
 const WHATSAPP_GROUP_URL = "https://chat.whatsapp.com/C21rwzKmQlA3nA1MppQ4oO";
 
+/**
+ * Récupère le code secret WhatsApp : Priorité à la variable Vercel WHATSAPP_SECRET_CODE
+ */
+async function getWhatsAppSecretCode() {
+  if (process.env.WHATSAPP_SECRET_CODE && process.env.WHATSAPP_SECRET_CODE.trim()) {
+    return process.env.WHATSAPP_SECRET_CODE.trim();
+  }
+  if (process.env.QUEST_SECRET_CODE && process.env.QUEST_SECRET_CODE.trim()) {
+    return process.env.QUEST_SECRET_CODE.trim();
+  }
+  const dbCode = await turso.getSetting("whatsapp_secret_code");
+  if (dbCode) return dbCode;
+  return "STAWA-VIP-2026";
+}
+
 const QUESTS_LIST = [
   {
     id: "join_whatsapp",
     title: "Rejoindre le Groupe WhatsApp VIP",
     description: "Rejoignez le groupe WhatsApp officiel et entrez le code secret situé dans la description du groupe.",
-    reward_studio: 50,
-    reward_dev: 20,
+    reward_studio: 15,
+    reward_dev: 10,
     type: "one_time",
     verification_type: "secret_code_and_phone",
     action_url: WHATSAPP_GROUP_URL,
-    button_text: "Valider avec le Code Secret (+50)",
-    badge: "Vérification Réelle"
+    button_text: "Valider avec le Code Secret (+15)",
+    badge: "Vérification Unique"
   },
   {
     id: "share_whatsapp",
     title: "Partage Statut & Groupes WhatsApp",
     description: "Partagez l'invitation sur votre statut WhatsApp et renseignez votre numéro pour valider votre preuve.",
-    reward_studio: 25,
-    reward_dev: 10,
+    reward_studio: 5,
+    reward_dev: 3,
     type: "daily",
     verification_type: "phone_proof",
-    button_text: "Partager & Valider (+25/j)",
-    badge: "Quotidien (+25/j)"
+    button_text: "Partager & Valider (+5/j)",
+    badge: "Quotidien (+5/j)"
   },
   {
     id: "share_video",
     title: "Défi Créateur ★ Stanley stawa",
     description: "Générez au moins une vidéo complète sur la plateforme pour valider automatiquement ce défi.",
-    reward_studio: 20,
-    reward_dev: 10,
+    reward_studio: 5,
+    reward_dev: 3,
     type: "daily",
     verification_type: "video_generation_check",
-    button_text: "Vérifier ma Création (+20)",
+    button_text: "Vérifier ma Création (+5)",
     badge: "Preuve IA"
   },
   {
     id: "daily_checkin",
     title: "Bonus de Présence Journalière",
     description: "Connectez-vous chaque jour sur le studio pour récupérer vos crédits gratuits et maintenir votre streak.",
-    reward_studio: 10,
-    reward_dev: 5,
+    reward_studio: 2,
+    reward_dev: 1,
     type: "daily",
     verification_type: "instant",
-    button_text: "Récupérer mon bonus (+10)",
+    button_text: "Récupérer mon bonus (+2)",
     badge: "Tous les jours"
   }
 ];
@@ -102,7 +117,7 @@ module.exports = async function handler(req, res) {
     if (action === "admin_stats") {
       try {
         const stats = await turso.getSystemStats();
-        const secretCode = await turso.getSetting("whatsapp_secret_code", "STAWA-VIP-2026");
+        const secretCode = await getWhatsAppSecretCode();
         return res.status(200).json({ status: "success", stats, whatsapp_secret_code: secretCode });
       } catch (err) {
         return res.status(500).json({ error: err.message });
@@ -225,28 +240,37 @@ module.exports = async function handler(req, res) {
 
     const rawEmail = (params.email || "").trim().toLowerCase();
     const canonicalEmail = security.canonicalizeEmail(rawEmail);
-    const isAdm = security.isAdminEmail(rawEmail) || security.isAdminEmail(canonicalEmail);
+    const isExempt = security.isExemptFromLimits(rawEmail) || security.isExemptFromLimits(canonicalEmail);
 
     if (!rawEmail || !rawEmail.includes("@") || !rawEmail.includes(".")) {
       return res.status(400).json({ error: "Veuillez saisir une adresse e-mail valide." });
     }
 
-    if (!isAdm && (mailer.isDisposableEmail(rawEmail) || mailer.isDisposableEmail(canonicalEmail))) {
+    if (!isExempt && (mailer.isDisposableEmail(rawEmail) || mailer.isDisposableEmail(canonicalEmail))) {
       return res.status(400).json({
         error: "Les adresses e-mails temporaires ou jetables sont strictement interdites. Utilisez une vraie adresse Gmail."
       });
     }
 
     try {
-      const regCount = await turso.getEmailRegistrationCount(canonicalEmail);
-      if (!isAdm && regCount >= MAX_REGISTRATIONS_PER_GMAIL) {
-        return res.status(403).json({
-          error: `Limite maximale atteinte : Cette adresse Gmail a déjà été utilisée ${regCount} fois pour créer un compte (maximum autorisé : ${MAX_REGISTRATIONS_PER_GMAIL} fois).`
-        });
+      if (!isExempt) {
+        const isDeleted = await turso.isEmailPermanentlyDeleted(canonicalEmail);
+        if (isDeleted) {
+          return res.status(403).json({
+            error: "Ce compte Gmail a été définitivement supprimé. Conformément aux règles de sécurité, vous ne pouvez plus créer de compte avec cette adresse."
+          });
+        }
+
+        const regCount = await turso.getEmailRegistrationCount(canonicalEmail);
+        if (regCount >= MAX_REGISTRATIONS_PER_GMAIL) {
+          return res.status(403).json({
+            error: `Limite maximale atteinte : Cette adresse Gmail a déjà été utilisée ${regCount} fois pour créer un compte (maximum autorisé : ${MAX_REGISTRATIONS_PER_GMAIL} fois).`
+          });
+        }
       }
 
       const existing = await turso.getUserByEmail(canonicalEmail) || await turso.getUserByEmail(rawEmail);
-      if (existing && !isAdm) {
+      if (existing && !isExempt) {
         return res.status(409).json({ error: "Un compte actif existe déjà avec cette adresse e-mail. Veuillez vous connecter." });
       }
 
@@ -261,12 +285,13 @@ module.exports = async function handler(req, res) {
         });
       }
 
+      const regCount = await turso.getEmailRegistrationCount(canonicalEmail);
       return res.status(200).json({
         status: "success",
         message: `Code de vérification expédié à ${rawEmail} ! Vérifiez votre boîte Gmail.`,
         email: rawEmail,
         creations_used: regCount,
-        max_creations: isAdm ? "Illimité (Compte Admin)" : MAX_REGISTRATIONS_PER_GMAIL,
+        max_creations: isExempt ? "Illimité" : MAX_REGISTRATIONS_PER_GMAIL,
         expires_in: "10 minutes"
       });
     } catch (err) {
@@ -287,13 +312,14 @@ module.exports = async function handler(req, res) {
     const otp = String(params.otp || params.code || params.otp_code || "").trim();
     const accountType = (params.account_type || params.accountType || "studio").toLowerCase();
     const referralCode = String(params.ref || params.referral || params.referrer || "").trim().toLowerCase();
+    const isExempt = security.isExemptFromLimits(rawEmail) || security.isExemptFromLimits(canonicalEmail);
     const isAdm = security.isAdminEmail(rawEmail) || security.isAdminEmail(canonicalEmail);
 
     if (!rawEmail || !rawEmail.includes("@") || !rawEmail.includes(".")) {
       return res.status(400).json({ error: "Adresse e-mail valide requise." });
     }
 
-    if (!isAdm && (mailer.isDisposableEmail(rawEmail) || mailer.isDisposableEmail(canonicalEmail))) {
+    if (!isExempt && (mailer.isDisposableEmail(rawEmail) || mailer.isDisposableEmail(canonicalEmail))) {
       return res.status(400).json({ error: "Les adresses jetables sont interdites. Utilisez une adresse Gmail réelle." });
     }
 
@@ -308,11 +334,20 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-      const regCount = await turso.getEmailRegistrationCount(canonicalEmail);
-      if (!isAdm && regCount >= MAX_REGISTRATIONS_PER_GMAIL) {
-        return res.status(403).json({
-          error: `Limite maximale atteinte : Cette adresse Gmail a déjà été utilisée ${regCount} fois pour créer un compte (maximum autorisé : ${MAX_REGISTRATIONS_PER_GMAIL} fois).`
-        });
+      if (!isExempt) {
+        const isDeleted = await turso.isEmailPermanentlyDeleted(canonicalEmail);
+        if (isDeleted) {
+          return res.status(403).json({
+            error: "Ce compte Gmail a été définitivement fermé après suppression. La réinscription avec cette adresse est strictement interdite."
+          });
+        }
+
+        const regCount = await turso.getEmailRegistrationCount(canonicalEmail);
+        if (regCount >= MAX_REGISTRATIONS_PER_GMAIL) {
+          return res.status(403).json({
+            error: `Limite maximale atteinte : Cette adresse Gmail a déjà été utilisée ${regCount} fois pour créer un compte (maximum autorisé : ${MAX_REGISTRATIONS_PER_GMAIL} fois).`
+          });
+        }
       }
 
       const otpValidation = await turso.verifyOtp(canonicalEmail, otp);
@@ -324,21 +359,23 @@ module.exports = async function handler(req, res) {
 
       const existing = await turso.getUserByEmail(canonicalEmail) || await turso.getUserByEmail(rawEmail);
       if (existing) {
-        if (!isAdm) {
+        if (!isExempt) {
           return res.status(409).json({ error: "Un compte existe déjà avec cette adresse e-mail." });
         } else {
-          // Si compte admin ré-inscrit, mise à jour sécurisée avec crédits illimités
+          // Si compte exempté ré-inscrit, mise à jour sécurisée
           const passwordHash = security.hashPassword(password);
-          await turso.execute(`UPDATE users SET password_hash = ?, credits = 999999, role = 'admin', updated_at = CURRENT_TIMESTAMP WHERE LOWER(email) = LOWER(?);`, [passwordHash, canonicalEmail]);
+          const credits = isAdm ? 999999 : (existing.credits || 30);
+          const role = isAdm ? "admin" : "user";
+          await turso.execute(`UPDATE users SET password_hash = ?, credits = ?, role = ?, updated_at = CURRENT_TIMESTAMP WHERE LOWER(email) = LOWER(?);`, [passwordHash, credits, role, canonicalEmail]);
           return res.status(200).json({
             status: "success",
-            message: "Compte Administrateur mis à jour avec succès (Crédits illimités) !",
+            message: `Compte mis à jour avec succès ${isAdm ? '(Admin)' : '(Testeur)'} !`,
             user: {
               email: canonicalEmail,
               api_key: existing.api_key,
-              credits: 999999,
-              role: "admin",
-              account_type: existing.account_type || "developer"
+              credits,
+              role,
+              account_type: existing.account_type || accountType
             }
           });
         }
@@ -354,18 +391,19 @@ module.exports = async function handler(req, res) {
         const canonicalReferrer = security.canonicalizeEmail(referralCode);
         const referrerUser = await turso.getUserByEmail(canonicalReferrer);
         if (referrerUser && canonicalReferrer !== canonicalEmail) {
-          welcomeCredits = 40;
+          welcomeCredits = 35; // +35 crédits pour le filleul
           wasReferred = true;
-          await turso.recordReferral(canonicalReferrer, canonicalEmail, referrerUser.account_type === "developer" ? 15 : 30);
+          await turso.recordReferral(canonicalReferrer, canonicalEmail, referrerUser.account_type === "developer" ? 5 : 10);
         }
       }
 
       const role = isAdm ? "admin" : "user";
       const user = await turso.createUser(canonicalEmail, passwordHash, userApiKey, welcomeCredits, role, accountType);
+      const regCount = await turso.getEmailRegistrationCount(canonicalEmail);
 
       return res.status(201).json({
         status: "success",
-        message: `E-mail vérifié et compte créé avec succès ! ${welcomeCredits} crédits offerts ${wasReferred ? '(Bonus Parrainage inclus !)' : ''} ${isAdm ? '(Admin Illimité)' : `(Création ${regCount + 1}/${MAX_REGISTRATIONS_PER_GMAIL})`}.`,
+        message: `E-mail vérifié et compte créé avec succès ! ${welcomeCredits} crédits offerts ${wasReferred ? '(Bonus Parrainage inclus !)' : ''} ${isExempt ? '(Non limité)' : `(Création ${regCount}/${MAX_REGISTRATIONS_PER_GMAIL})`}.`,
         user: {
           email: user.email,
           api_key: user.api_key,
@@ -430,7 +468,37 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // 4. État des Quêtes & Récompenses
+  // 4. Conversion Compte Studio -> Compte Développeur (Génération de Clé API avec sacrifice)
+  if (action === "convert_to_developer" || action === "convert" || action === "upgrade_dev") {
+    try {
+      const auth = await security.authenticateRequest(req);
+      if (!auth.authorized || !auth.user) {
+        return res.status(401).json({ error: "Authentification requise pour convertir votre compte." });
+      }
+
+      const result = await turso.convertToDeveloperAccount(auth.key, 5);
+      if (!result.success) {
+        return res.status(400).json({ error: result.error });
+      }
+
+      return res.status(200).json({
+        status: "success",
+        message: `Félicitations ! Votre compte a été converti en Compte Développeur (-5 crédits). Votre clé API personnelle est désormais active pour vos scripts et bots.`,
+        user: {
+          email: auth.user.email,
+          account_type: "developer",
+          api_key: result.api_key,
+          credits: result.credits,
+          role: auth.user.role
+        }
+      });
+    } catch (err) {
+      console.error("[Convert Account Error]", err);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  // 5. État des Quêtes & Récompenses
   if (action === "quests" || action === "quests_status" || action === "get_quests") {
     let authUser = null;
     let isAdm = false;
@@ -523,8 +591,8 @@ module.exports = async function handler(req, res) {
         referral_url: authUser ? `https://magiclight-api.vercel.app/?ref=${encodeURIComponent(authUser.email)}` : `https://magiclight-api.vercel.app/`,
         invited_count: refStats.count,
         total_earned_credits: refStats.total_earned,
-        reward_per_invite: accountType === "developer" ? 15 : 30,
-        invitee_welcome_bonus: 40
+        reward_per_invite: accountType === "developer" ? 5 : 10,
+        invitee_welcome_bonus: 35
       },
       quests: processedQuests,
       summary: {
@@ -534,7 +602,7 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  // 5. VALIDATION SÉCURISÉE & VÉRIFICATION RÉELLE D'UNE QUÊTE
+  // 6. VALIDATION SÉCURISÉE & VÉRIFICATION RÉELLE D'UNE QUÊTE
   if (action === "claim_quest" || action === "claimquest" || action === "claim") {
     const auth = await security.authenticateRequest(req);
     if (!auth.authorized || !auth.user) {
@@ -586,10 +654,11 @@ module.exports = async function handler(req, res) {
           });
         }
 
+        // Vérification stricte d'unicité absolue du numéro WhatsApp dans toute la base de données
         const phoneAlreadyUsed = await turso.hasWhatsAppNumberClaimed(digitsPhone, "join_whatsapp");
         if (phoneAlreadyUsed) {
           return res.status(403).json({
-            error: `Sécurité anti-fraude : Le numéro WhatsApp ${submittedPhone} a déjà été utilisé pour valider cette quête.`
+            error: `Sécurité anti-fraude : Le numéro WhatsApp ${submittedPhone} a déjà été utilisé pour valider cette quête. Un numéro WhatsApp ne peut être utilisé qu'une seule fois.`
           });
         }
 
@@ -599,7 +668,7 @@ module.exports = async function handler(req, res) {
           });
         }
 
-        const validSecret = await turso.getSetting("whatsapp_secret_code", "STAWA-VIP-2026");
+        const validSecret = await getWhatsAppSecretCode();
         if (submittedSecret.toUpperCase().replace(/\s+/g, "") !== validSecret.toUpperCase().replace(/\s+/g, "")) {
           return res.status(400).json({
             error: `Code Secret incorrect ! Rejoignez le groupe WhatsApp officiel (${WHATSAPP_GROUP_URL}) pour lire la description et obtenir le vrai code VIP.`
@@ -653,7 +722,7 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // 6. Suppression de compte
+  // 7. Suppression de compte (Verrouillage Définitif de l'adresse Gmail)
   if (action === "delete_account" || action === "delete" || action === "deleteaccount") {
     try {
       const auth = await security.authenticateRequest(req);
@@ -665,14 +734,22 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: "Le compte administrateur maître ne peut pas être supprimé." });
       }
 
+      const emailToDelete = auth.user.email;
+      const canonicalEmail = security.canonicalizeEmail(emailToDelete);
+
       const deleted = await turso.deleteUserAccount(auth.key);
       if (!deleted) {
         return res.status(404).json({ error: "Compte introuvable ou déjà supprimé." });
       }
 
+      // Verrouillage définitif de l'adresse Gmail (interdit toute réinscription future)
+      if (!security.isExemptFromLimits(emailToDelete) && !security.isExemptFromLimits(canonicalEmail)) {
+        await turso.markEmailDeletedPermanently(canonicalEmail);
+      }
+
       return res.status(200).json({
         status: "success",
-        message: "Votre compte et vos clés ont été supprimés avec succès."
+        message: "Votre compte et vos clés ont été supprimés définitivement. Conformément aux règles de sécurité, cette adresse Gmail ne pourra plus être réutilisée."
       });
     } catch (err) {
       console.error("[Delete Account Error]", err);
@@ -680,7 +757,7 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // 7. Profil & Crédits (Me)
+  // 8. Profil & Crédits (Me)
   if (action === "me" || action === "profile") {
     try {
       const auth = await security.authenticateRequest(req);
@@ -709,7 +786,7 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // 8. État du Cluster (Par défaut)
+  // 9. État du Cluster (Par défaut)
   if (!security.checkRateLimit(req, 30)) {
     return res.status(429).json({ error: "Trop de requêtes. Veuillez patienter." });
   }
