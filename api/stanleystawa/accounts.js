@@ -2,6 +2,7 @@
  * api/stanleystawa/accounts.js — Gestion Complète Authentification, Inscription & Cluster Turso
  */
 
+const url = require("url");
 const turso = require("../../lib/turso");
 const security = require("../../lib/security");
 
@@ -30,10 +31,11 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const query = req.query || {};
+  const parsedUrlQuery = url.parse(req.url || "", true).query || {};
+  const query = { ...parsedUrlQuery, ...(req.query || {}) };
   const body = req.method === "POST" ? await readBody(req) : {};
   const params = { ...query, ...body };
-  const action = String(params.action || query.action || "").toLowerCase();
+  const action = String(params.action || query.action || body.action || "").toLowerCase();
 
   // ----------------------------------------------------
   // ACTION 1 : INSCRIPTION (REGISTER + 100 CRÉDITS)
