@@ -1,36 +1,4 @@
 {
-  "functions": {
-    "api/index.js": {
-      "maxDuration": 10
-    },
-    "api/stanleystawa/video.js": {
-      "maxDuration": 60
-    },
-    "api/stanleystawa/image.js": {
-      "maxDuration": 60
-    },
-    "api/stanleystawa/status.js": {
-      "maxDuration": 10
-    },
-    "api/stanleystawa/download.js": {
-      "maxDuration": 30
-    },
-    "api/stanleystawa/accounts.js": {
-      "maxDuration": 20
-    },
-    "api/stanleystawa/edit.js": {
-      "maxDuration": 60
-    },
-    "api/stanleystawa/story.js": {
-      "maxDuration": 30
-    },
-    "api/stanleystawa/voice.js": {
-      "maxDuration": 30
-    },
-    "api/stanleystawa/refill.js": {
-      "maxDuration": 60
-    }
-  },
   "rewrites": [
     { "source": "/", "destination": "/api/index" },
     { "source": "/stanleystawa/video", "destination": "/api/stanleystawa/video" },
