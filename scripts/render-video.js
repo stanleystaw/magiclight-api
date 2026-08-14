@@ -86,10 +86,11 @@ async function updateTursoTask(taskId, updates) {
   const duration = updates.duration || 0;
   const scenesCount = updates.scenes_count || 0;
   const error = updates.error || "";
+  const taskPrompt = updates.prompt || process.env.PROMPT || "Film IA Stanley Stawa";
 
   const sql = `
-    INSERT INTO video_tasks (task_id, status, progress, step, message, video_url, cover_url, duration, scenes_count, error)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO video_tasks (task_id, prompt, status, progress, step, message, video_url, cover_url, duration, scenes_count, error)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(task_id) DO UPDATE SET
       status=excluded.status,
       progress=excluded.progress,
@@ -103,7 +104,7 @@ async function updateTursoTask(taskId, updates) {
       updated_at=CURRENT_TIMESTAMP;
   `;
 
-  await executeTurso(sql, [taskId, status, progress, step, message, videoUrl, coverUrl, duration, scenesCount, error]);
+  await executeTurso(sql, [taskId, taskPrompt, status, progress, step, message, videoUrl, coverUrl, duration, scenesCount, error]);
 }
 
 async function downloadFile(url, destPath) {
