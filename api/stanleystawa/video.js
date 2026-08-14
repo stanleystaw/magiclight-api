@@ -70,12 +70,12 @@ module.exports = async function handler(req, res) {
 
     const taskId = `vid_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
-    // 4. Enregistrement dans Turso DB
+    // 4. Enregistrement dans Turso DB avec clé utilisateur et crédits pour remboursement automatique garanti
     const sql = `
-      INSERT INTO video_tasks (task_id, prompt, initial_image, status, progress, step, message)
-      VALUES (?, ?, ?, 'queued', 10, 'queued', 'Initialisation du film IA (${numSections} sections, ${numSections * parseInt(duration, 10)}s)...');
+      INSERT INTO video_tasks (task_id, prompt, initial_image, status, progress, step, message, user_key, credits_deducted, refunded)
+      VALUES (?, ?, ?, 'queued', 10, 'queued', 'Initialisation du film IA (${numSections} sections, ${numSections * parseInt(duration, 10)}s)...', ?, ?, 0);
     `;
-    await turso.execute(sql, [taskId, prompt, initialImage]);
+    await turso.execute(sql, [taskId, prompt, initialImage, auth.key || "", creditCost]);
 
     // 5. Déclenchement du worker GitHub Actions
     const ghHeaders = {

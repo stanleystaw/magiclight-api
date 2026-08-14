@@ -55,11 +55,24 @@ module.exports = async function handler(req, res) {
       const createdAtMs = new Date(task.created_at || Date.now()).getTime();
       const ageMs = Date.now() - createdAtMs;
       if (ageMs > 480000) { // 8 minutes
-        await turso.execute(`UPDATE video_tasks SET status='failed', progress=0, step='timeout', message="Le rendu a échoué (délai dépassé sur GitHub Actions).", error="Délai dépassé", updated_at=CURRENT_TIMESTAMP WHERE task_id = ?;`, [taskId]);
+        await turso.execute(`UPDATE video_tasks SET status='failed', progress=0, step='timeout', message="Le rendu a échoué (délai dépassé). Vos crédits ont été remboursés.", error="Délai dépassé", updated_at=CURRENT_TIMESTAMP WHERE task_id = ?;`, [taskId]);
         task.status = "failed";
         task.progress = 0;
-        task.message = "Le rendu a échoué sur le serveur de calcul.";
-        task.error = "Délai de traitement dépassé sur GitHub Actions.";
+        task.message = "Le rendu a échoué. Vos crédits ont été automatiquement remboursés.";
+        task.error = "Délai de traitement dépassé.";
+      }
+    }
+
+    // Remboursement automatique garanti des crédits en cas d'échec
+    if (task.status === "failed" && parseInt(task.refunded || 0, 10) !== 1 && task.user_key && parseInt(task.credits_deducted || 0, 10) > 0) {
+      const refundAmount = parseInt(task.credits_deducted, 10);
+      try {
+        await turso.addUserCredits(task.user_key, refundAmount);
+        await turso.execute(`UPDATE video_tasks SET refunded = 1, updated_at = CURRENT_TIMESTAMP WHERE task_id = ?;`, [taskId]);
+        task.refunded = 1;
+        task.message = (task.message || "Échec du rendu") + ` (+${refundAmount} crédits remboursés automatiquement)`;
+      } catch (refundErr) {
+        console.warn("Status auto refund error:", refundErr.message);
       }
     }
 

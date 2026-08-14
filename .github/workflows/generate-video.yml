@@ -79,7 +79,7 @@ jobs:
         run: |
           node scripts/render-video.js
 
-      - name: Notify Turso DB on Failure
+      - name: Auto Refund and Notify Turso DB on Failure
         if: failure()
         env:
           TASK_ID: ${{ github.event.client_payload.task_id || github.event.inputs.task_id }}
@@ -90,8 +90,16 @@ jobs:
             const turso = require('./lib/turso');
             const taskId = process.env.TASK_ID;
             if (taskId) {
-              turso.execute('UPDATE video_tasks SET status=\"failed\", progress=0, step=\"error\", message=\"Échec lors de la compilation sur GitHub Actions\", error=\"Le workflow GitHub Actions a échoué.\", updated_at=CURRENT_TIMESTAMP WHERE task_id=?;', [taskId])
-                .then(() => console.log('Successfully notified Turso DB of task failure:', taskId))
+              turso.execute('SELECT user_key, credits_deducted, refunded FROM video_tasks WHERE task_id = ?;', [taskId])
+                .then(async (rows) => {
+                  if (rows && rows.length && rows[0].user_key && parseInt(rows[0].credits_deducted || 0, 10) > 0 && parseInt(rows[0].refunded || 0, 10) !== 1) {
+                    const refundAmt = parseInt(rows[0].credits_deducted, 10);
+                    await turso.execute('UPDATE users SET credits = credits + ?, updated_at = CURRENT_TIMESTAMP WHERE api_key = ?;', [refundAmt, rows[0].user_key]);
+                    console.log('Successfully refunded', refundAmt, 'credits to user key:', rows[0].user_key);
+                  }
+                  await turso.execute('UPDATE video_tasks SET status=\"failed\", progress=0, step=\"error\", refunded=1, message=\"Échec du rendu vidéo (Crédits remboursés automatiquement)\", error=\"Le workflow de rendu a échoué.\", updated_at=CURRENT_TIMESTAMP WHERE task_id=?;', [taskId]);
+                  console.log('Successfully updated task status to failed:', taskId);
+                })
                 .catch((e) => console.warn('Could not notify Turso DB:', e.message));
             }
           "

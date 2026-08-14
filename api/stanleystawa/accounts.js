@@ -608,7 +608,36 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    const processedQuests = QUESTS_LIST.map(q => {
+    let allQuests = [...QUESTS_LIST];
+    try {
+      const dbQuests = await turso.getCustomQuests(true);
+      if (dbQuests && dbQuests.length) {
+        dbQuests.forEach(dq => {
+          const idx = allQuests.findIndex(q => q.id === dq.quest_key);
+          const mapped = {
+            id: dq.quest_key,
+            title: dq.title,
+            description: dq.description,
+            reward_studio: parseInt(dq.reward_studio, 10) || 15,
+            reward_dev: parseInt(dq.reward_dev, 10) || 10,
+            type: dq.quest_type || "one_time",
+            verification_type: dq.verification_type || "instant",
+            action_url: dq.action_url || "",
+            button_text: dq.button_text || "Valider",
+            badge: dq.badge || "Bonus"
+          };
+          if (idx !== -1) {
+            allQuests[idx] = mapped;
+          } else {
+            allQuests.push(mapped);
+          }
+        });
+      }
+    } catch (e) {
+      console.warn("DB quests fetch error:", e);
+    }
+
+    const processedQuests = allQuests.map(q => {
       const reward = accountType === "developer" ? q.reward_dev : q.reward_studio;
       let claimed = false;
       let canClaim = true;
@@ -690,11 +719,31 @@ module.exports = async function handler(req, res) {
     }
 
     const questId = String(params.quest_id || params.quest || "").trim().toLowerCase();
-    const quest = QUESTS_LIST.find(q => q.id === questId);
+    let quest = QUESTS_LIST.find(q => q.id === questId);
+    if (!quest) {
+      try {
+        const dbQuests = await turso.getCustomQuests(false);
+        const match = dbQuests.find(dq => dq.quest_key === questId);
+        if (match) {
+          quest = {
+            id: match.quest_key,
+            title: match.title,
+            description: match.description,
+            reward_studio: parseInt(match.reward_studio, 10) || 15,
+            reward_dev: parseInt(match.reward_dev, 10) || 10,
+            type: match.quest_type || "one_time",
+            verification_type: match.verification_type || "instant",
+            action_url: match.action_url || "",
+            button_text: match.button_text || "Valider",
+            badge: match.badge || "Bonus"
+          };
+        }
+      } catch (e) {}
+    }
 
     if (!quest) {
       return res.status(404).json({
-        error: `Quête inconnue (${questId}). Quêtes disponibles : ${QUESTS_LIST.map(q => q.id).join(", ")}`
+        error: `Quête inconnue (${questId}).`
       });
     }
 
