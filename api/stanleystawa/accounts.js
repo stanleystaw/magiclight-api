@@ -1,5 +1,5 @@
 /**
- * api/stanleystawa/accounts.js — Authentification, Inscription Sécurisée par OTP Réel, Quotas & Panel Administrateur
+ * api/stanleystawa/accounts.js — Authentification, Inscription Sécurisée, Quêtes Communauté WhatsApp & Panel Admin
  */
 
 const url = require("url");
@@ -8,6 +8,55 @@ const security = require("../../lib/security");
 const mailer = require("../../lib/mailer");
 
 const MAX_REGISTRATIONS_PER_GMAIL = 2;
+const WHATSAPP_GROUP_URL = "https://chat.whatsapp.com/C21rwzKmQlA3nA1MppQ4oO";
+
+const QUESTS_LIST = [
+  {
+    id: "join_whatsapp",
+    title: "Rejoindre le Groupe WhatsApp VIP",
+    description: "Rejoignez la communauté officielle WhatsApp pour recevoir des prompts d'or, mises à jour et échanger avec les créateurs.",
+    reward_studio: 50,
+    reward_dev: 20,
+    type: "one_time",
+    action_type: "link",
+    action_url: WHATSAPP_GROUP_URL,
+    button_text: "Rejoindre le Groupe (+50 Crédits)",
+    badge: "Indispensable"
+  },
+  {
+    id: "share_whatsapp",
+    title: "Partage Statut & Groupes WhatsApp",
+    description: "Partagez la plateforme et le groupe WhatsApp sur votre statut ou vos groupes pour faire découvrir Stanley Stawa AI.",
+    reward_studio: 25,
+    reward_dev: 10,
+    type: "daily",
+    action_type: "share_whatsapp",
+    button_text: "Partager sur WhatsApp (+25 Crédits)",
+    badge: "Quotidien (+25/j)"
+  },
+  {
+    id: "daily_checkin",
+    title: "Bonus de Présence Quotidienne",
+    description: "Connectez-vous chaque jour sur le studio pour récupérer vos crédits gratuits et maintenir votre streak.",
+    reward_studio: 10,
+    reward_dev: 5,
+    type: "daily",
+    action_type: "claim_instant",
+    button_text: "Récupérer mon bonus (+10 Crédits)",
+    badge: "Tous les jours"
+  },
+  {
+    id: "share_video",
+    title: "Défi Créateur ★ Stanley stawa",
+    description: "Générez et partagez une vidéo portant le filigrane officiel avec vos amis ou sur vos réseaux.",
+    reward_studio: 20,
+    reward_dev: 10,
+    type: "daily",
+    action_type: "claim_instant",
+    button_text: "Valider ma création (+20 Crédits)",
+    badge: "Créateur"
+  }
+];
 
 function readBody(req) {
   return new Promise((resolve) => {
@@ -140,7 +189,7 @@ module.exports = async function handler(req, res) {
   }
 
   // ====================================================
-  // ACTIONS UTILISATEUR (AUTHENTIFICATION & PROFIL)
+  // ACTIONS UTILISATEUR (AUTHENTIFICATION & QUÊTES)
   // ====================================================
 
   // 1. Envoi OTP
@@ -210,6 +259,8 @@ module.exports = async function handler(req, res) {
     const canonicalEmail = security.canonicalizeEmail(rawEmail);
     const password = String(params.password || "").trim();
     const otp = String(params.otp || params.code || params.otp_code || "").trim();
+    const accountType = (params.account_type || params.accountType || "studio").toLowerCase();
+    const referralCode = String(params.ref || params.referral || params.referrer || "").trim().toLowerCase();
 
     if (!rawEmail || !rawEmail.includes("@") || !rawEmail.includes(".")) {
       return res.status(400).json({ error: "Adresse e-mail valide requise." });
@@ -252,19 +303,32 @@ module.exports = async function handler(req, res) {
       const passwordHash = security.hashPassword(password);
       const userApiKey = security.generateUserApiKey();
       const isAdm = security.isAdminEmail(rawEmail) || security.isAdminEmail(canonicalEmail);
-      const welcomeCredits = isAdm ? 999999 : 100;
-      const role = isAdm ? "admin" : "user";
+      
+      let welcomeCredits = isAdm ? 999999 : 30;
+      let wasReferred = false;
 
-      const user = await turso.createUser(canonicalEmail, passwordHash, userApiKey, welcomeCredits, role);
+      if (!isAdm && referralCode && referralCode.includes("@")) {
+        const canonicalReferrer = security.canonicalizeEmail(referralCode);
+        const referrerUser = await turso.getUserByEmail(canonicalReferrer);
+        if (referrerUser && canonicalReferrer !== canonicalEmail) {
+          welcomeCredits = 40; // Bonus +10 de bienvenue pour le nouveau filleul
+          wasReferred = true;
+          await turso.recordReferral(canonicalReferrer, canonicalEmail, referrerUser.account_type === "developer" ? 15 : 30);
+        }
+      }
+
+      const role = isAdm ? "admin" : "user";
+      const user = await turso.createUser(canonicalEmail, passwordHash, userApiKey, welcomeCredits, role, accountType);
 
       return res.status(201).json({
         status: "success",
-        message: `E-mail vérifié et compte créé avec succès ! 100 crédits de bienvenue offerts (Création ${regCount + 1}/${MAX_REGISTRATIONS_PER_GMAIL} pour cet e-mail).`,
+        message: `E-mail vérifié et compte créé avec succès ! ${welcomeCredits} crédits offerts ${wasReferred ? '(Bonus Parrainage inclus !)' : ''} (Création ${regCount + 1}/${MAX_REGISTRATIONS_PER_GMAIL} pour cet e-mail).`,
         user: {
           email: user.email,
           api_key: user.api_key,
           credits: user.credits,
-          role: user.role
+          role: user.role,
+          account_type: user.account_type
         }
       });
     } catch (err) {
@@ -313,7 +377,8 @@ module.exports = async function handler(req, res) {
           email: user.email,
           api_key: user.api_key,
           credits: isAdm ? 999999 : parseInt(user.credits || 0, 10),
-          role: isAdm ? "admin" : "user"
+          role: isAdm ? "admin" : "user",
+          account_type: user.account_type || "studio"
         }
       });
     } catch (err) {
@@ -322,7 +387,164 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // 4. Suppression de compte
+  // 4. Quêtes & Récompenses WhatsApp
+  if (action === "quests" || action === "quests_status" || action === "get_quests") {
+    let authUser = null;
+    let isAdm = false;
+    let accountType = "studio";
+    let claims = [];
+    let refStats = { count: 0, total_earned: 0 };
+    const today = new Date().toISOString().split("T")[0];
+
+    const auth = await security.authenticateRequest(req);
+    if (auth.authorized && auth.user) {
+      authUser = auth.user;
+      isAdm = auth.is_admin;
+      accountType = auth.user.account_type || "studio";
+      try {
+        claims = await turso.getUserQuests(authUser.email);
+        refStats = await turso.getReferralStats(authUser.email);
+      } catch (err) {
+        console.warn("[Quests fetch error]", err);
+      }
+    } else {
+      const email = params.email ? security.canonicalizeEmail(params.email) : null;
+      if (email) {
+        const u = await turso.getUserByEmail(email);
+        if (u) {
+          authUser = u;
+          accountType = u.account_type || "studio";
+          claims = await turso.getUserQuests(u.email);
+          refStats = await turso.getReferralStats(u.email);
+        }
+      }
+    }
+
+    const processedQuests = QUESTS_LIST.map(q => {
+      const reward = accountType === "developer" ? q.reward_dev : q.reward_studio;
+      let claimed = false;
+      let canClaim = true;
+      let lastClaimedDate = null;
+
+      if (authUser) {
+        if (q.type === "one_time") {
+          claimed = claims.some(c => c.quest_id === q.id);
+          canClaim = !claimed;
+        } else if (q.type === "daily") {
+          const todayClaim = claims.find(c => c.quest_id === q.id && c.claimed_date === today);
+          claimed = Boolean(todayClaim);
+          canClaim = !claimed;
+          const anyClaim = claims.find(c => c.quest_id === q.id);
+          if (anyClaim) lastClaimedDate = anyClaim.claimed_date;
+        }
+      }
+
+      return {
+        id: q.id,
+        title: q.title,
+        description: q.description,
+        reward,
+        reward_studio: q.reward_studio,
+        reward_dev: q.reward_dev,
+        type: q.type,
+        action_type: q.action_type,
+        action_url: q.action_url,
+        button_text: q.button_text,
+        badge: q.badge,
+        claimed,
+        can_claim: canClaim,
+        last_claimed_date: lastClaimedDate
+      };
+    });
+
+    const totalClaimedCount = claims.length;
+    const totalBonusEarned = claims.reduce((acc, c) => acc + parseInt(c.reward_credits || 0, 10), 0) + refStats.total_earned;
+
+    return res.status(200).json({
+      status: "success",
+      authenticated: Boolean(authUser),
+      user: authUser ? {
+        email: authUser.email,
+        account_type: accountType,
+        credits: authUser.credits,
+        is_admin: isAdm
+      } : null,
+      account_type: accountType,
+      whatsapp_group_url: WHATSAPP_GROUP_URL,
+      referral: {
+        referral_code: authUser?.email || "",
+        referral_url: authUser ? `https://magiclight-api.vercel.app/?ref=${encodeURIComponent(authUser.email)}` : `https://magiclight-api.vercel.app/`,
+        invited_count: refStats.count,
+        total_earned_credits: refStats.total_earned,
+        reward_per_invite: accountType === "developer" ? 15 : 30,
+        invitee_welcome_bonus: 40
+      },
+      quests: processedQuests,
+      summary: {
+        total_quests_completed: totalClaimedCount,
+        total_bonus_earned: totalBonusEarned
+      }
+    });
+  }
+
+  // 5. Validation / Réclamation d'une Quête
+  if (action === "claim_quest" || action === "claimquest" || action === "claim") {
+    const auth = await security.authenticateRequest(req);
+    if (!auth.authorized || !auth.user) {
+      return res.status(401).json({
+        error: "Authentification requise : Veuillez vous connecter pour réclamer vos crédits de quête."
+      });
+    }
+
+    const questId = String(params.quest_id || params.quest || "").trim().toLowerCase();
+    const quest = QUESTS_LIST.find(q => q.id === questId);
+
+    if (!quest) {
+      return res.status(404).json({
+        error: `Quête inconnue (${questId}). Quêtes disponibles : ${QUESTS_LIST.map(q => q.id).join(", ")}`
+      });
+    }
+
+    const user = auth.user;
+    const accountType = user.account_type || "studio";
+    const reward = accountType === "developer" ? quest.reward_dev : quest.reward_studio;
+    const today = new Date().toISOString().split("T")[0];
+
+    try {
+      if (quest.type === "one_time") {
+        const already = await turso.hasClaimedQuest(user.email, quest.id);
+        if (already) {
+          return res.status(400).json({
+            error: `Vous avez déjà validé la quête "${quest.title}". Merci pour votre participation !`
+          });
+        }
+      } else if (quest.type === "daily") {
+        const alreadyToday = await turso.hasClaimedQuest(user.email, quest.id, today);
+        if (alreadyToday) {
+          return res.status(400).json({
+            error: `Vous avez déjà récupéré vos crédits pour la quête "${quest.title}" aujourd'hui. Revenez demain !`
+          });
+        }
+      }
+
+      const newCredits = await turso.claimQuest(user.email, quest.id, reward, today);
+
+      return res.status(200).json({
+        status: "success",
+        message: `Félicitations ! Quête "${quest.title}" validée avec succès. +${reward} crédits ajoutés à votre solde !`,
+        reward_credited: reward,
+        new_credits: newCredits,
+        quest_id: quest.id,
+        user_email: user.email,
+        account_type: accountType
+      });
+    } catch (err) {
+      console.error("[Claim Quest Error]", err);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  // 6. Suppression de compte
   if (action === "delete_account" || action === "delete" || action === "deleteaccount") {
     try {
       const auth = await security.authenticateRequest(req);
@@ -349,7 +571,7 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // 5. Profil & Crédits (Me)
+  // 7. Profil & Crédits (Me)
   if (action === "me" || action === "profile") {
     try {
       const auth = await security.authenticateRequest(req);
@@ -359,9 +581,16 @@ module.exports = async function handler(req, res) {
         });
       }
 
+      const refStats = await turso.getReferralStats(auth.user.email);
+      const userQuests = await turso.getUserQuests(auth.user.email);
+
       return res.status(200).json({
         status: "authenticated",
-        user: auth.user,
+        user: {
+          ...auth.user,
+          referrals_count: refStats.count,
+          quests_completed_count: userQuests.length
+        },
         is_admin: auth.is_admin,
         api_key: auth.key
       });
@@ -371,7 +600,7 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // 6. État du Cluster (Par défaut)
+  // 8. État du Cluster (Par défaut)
   if (!security.checkRateLimit(req, 30)) {
     return res.status(429).json({ error: "Trop de requêtes. Veuillez patienter." });
   }

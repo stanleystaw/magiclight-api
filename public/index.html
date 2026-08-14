@@ -39,6 +39,8 @@
       --md-sys-color-on-surface-variant: #9aa4b2;
       --md-sys-color-error: #ffb4ab;
       --md-sys-color-error-container: rgba(255, 180, 171, 0.14);
+      --color-whatsapp: #25d366;
+      --color-whatsapp-dark: #128c7e;
 
       /* Shape Tokens */
       --md-shape-corner-small: 8px;
@@ -137,6 +139,73 @@
       align-items: center;
       gap: 8px;
       flex-wrap: wrap;
+    }
+
+    /* PROMO BANNER TOP */
+    .promo-banner {
+      background: linear-gradient(90deg, rgba(37, 211, 102, 0.18), rgba(124, 240, 196, 0.12));
+      border-bottom: 1px solid rgba(37, 211, 102, 0.35);
+      padding: 8px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      z-index: 40;
+    }
+
+    .promo-banner.hidden {
+      display: none;
+    }
+
+    .promo-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .promo-tag {
+      background: var(--color-whatsapp);
+      color: #000;
+      font-weight: 800;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: var(--md-shape-corner-full);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .promo-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-promo-join {
+      background: var(--color-whatsapp);
+      color: #000;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 5px 12px;
+      border-radius: var(--md-shape-corner-full);
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform 0.15s;
+    }
+
+    .btn-promo-join:hover {
+      transform: scale(1.04);
+    }
+
+    .btn-promo-close {
+      background: transparent;
+      border: none;
+      color: var(--md-sys-color-on-surface-variant);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 4px;
     }
 
     /* USER PROFILE BADGE */
@@ -353,13 +422,12 @@
 
     input:focus, textarea:focus, select:focus {
       border-color: var(--md-sys-color-primary);
-      box-shadow: 0 0 0 2px var(--md-sys-color-primary-container);
+      box-shadow: 0 0 0 3px var(--md-sys-color-primary-container);
     }
 
     textarea {
       resize: vertical;
-      min-height: 85px;
-      line-height: 1.5;
+      min-height: 90px;
     }
 
     .form-row {
@@ -374,42 +442,43 @@
       padding: 16px;
       text-align: center;
       cursor: pointer;
-      background: rgba(255,255,255,0.01);
-      transition: all 0.2s var(--transition-standard);
+      background: var(--md-sys-color-surface-container);
+      transition: all 0.2s;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--md-sys-color-on-surface-variant);
     }
 
     .upload-box:hover {
       border-color: var(--md-sys-color-primary);
-      background: var(--md-sys-color-primary-container);
+      background: var(--md-sys-color-surface-container-high);
     }
 
     .upload-preview-thumb {
-      max-height: 85px;
+      max-height: 120px;
       border-radius: var(--md-shape-corner-small);
-      margin-top: 6px;
       display: none;
-      border: 1px solid var(--md-sys-color-primary);
+      object-fit: cover;
     }
 
     .btn-submit {
       background: var(--md-sys-color-primary);
       color: var(--md-sys-color-on-primary);
       border: none;
-      padding: 13px 20px;
+      padding: 14px;
+      border-radius: var(--md-shape-corner-medium);
       font-size: 14px;
       font-weight: 800;
-      border-radius: 10px;
       cursor: pointer;
+      transition: all 0.2s var(--transition-standard);
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      min-height: 48px;
-      transition: all 0.2s var(--transition-standard);
       box-shadow: var(--md-elevation-1);
     }
 
@@ -420,58 +489,71 @@
     }
 
     .btn-submit:disabled {
-      opacity: 0.4;
+      opacity: 0.5;
       cursor: not-allowed;
       transform: none;
     }
 
     .btn-secondary {
       background: var(--md-sys-color-surface-container);
-      border: 1px solid var(--md-sys-color-outline);
       color: var(--md-sys-color-on-surface);
+      border: 1px solid var(--md-sys-color-outline);
       padding: 8px 14px;
       border-radius: var(--md-shape-corner-medium);
       font-size: 12px;
-      cursor: pointer;
       font-weight: 700;
+      cursor: pointer;
       transition: background 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
     }
 
     .btn-secondary:hover {
       background: var(--md-sys-color-surface-container-high);
+      border-color: var(--md-sys-color-primary);
     }
 
+    .btn-secondary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      border-color: var(--md-sys-color-outline);
+    }
+
+    /* PREVIEW CONTAINERS */
     .preview-box {
       background: var(--md-sys-color-background);
-      border: 1px solid var(--md-sys-color-outline);
+      border: 1px solid var(--md-sys-color-outline-variant);
       border-radius: var(--md-shape-corner-medium);
-      padding: 16px;
       min-height: 240px;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
+      padding: 16px;
       position: relative;
+      overflow: hidden;
     }
 
     .preview-placeholder {
       color: var(--md-sys-color-on-surface-variant);
-      font-size: 13px;
+      font-size: 12px;
       text-align: center;
       line-height: 1.6;
     }
 
     .preview-video {
       width: 100%;
-      max-height: min(440px, 60vh);
       border-radius: var(--md-shape-corner-medium);
+      max-height: 380px;
       background: #000;
-      border: 1px solid var(--md-sys-color-outline);
     }
 
     .preview-img {
       max-width: 100%;
-      max-height: min(380px, 50vh);
+      max-height: 380px;
       border-radius: var(--md-shape-corner-medium);
       object-fit: contain;
     }
@@ -482,13 +564,12 @@
     }
 
     .meta-box {
+      margin-top: 12px;
       width: 100%;
       background: var(--md-sys-color-surface-container);
-      border: 1px solid var(--md-sys-color-outline);
+      padding: 12px;
       border-radius: var(--md-shape-corner-medium);
-      padding: 12px 14px;
-      margin-top: 12px;
-      font-size: 12px;
+      font-size: 11px;
       color: var(--md-sys-color-on-surface-variant);
       display: flex;
       flex-direction: column;
@@ -562,7 +643,7 @@
     /* STATS GRID */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
       gap: 12px;
       margin-bottom: 16px;
     }
@@ -590,6 +671,149 @@
       text-transform: uppercase;
       font-weight: 700;
       letter-spacing: 0.5px;
+    }
+
+    /* QUESTS & WHATSAPP REWARDS STYLES */
+    .quest-hero-card {
+      background: linear-gradient(135deg, rgba(37,211,102,0.12), rgba(124,240,196,0.06)) !important;
+      border: 1.5px solid rgba(37,211,102,0.5) !important;
+      box-shadow: 0 0 24px rgba(37,211,102,0.1);
+    }
+
+    .quest-hero-layout {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .quest-hero-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--color-whatsapp);
+      color: #000;
+      border-radius: var(--md-shape-corner-medium);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 800;
+      flex-shrink: 0;
+      box-shadow: 0 4px 16px rgba(37,211,102,0.4);
+    }
+
+    .quest-hero-text {
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .quest-hero-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn-whatsapp-join {
+      background: var(--color-whatsapp);
+      color: #000;
+      border: none;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 10px 18px;
+      border-radius: var(--md-shape-corner-medium);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(37,211,102,0.3);
+    }
+
+    .btn-whatsapp-join:hover {
+      background: #2fe774;
+      transform: translateY(-1px);
+    }
+
+    .btn-whatsapp-share {
+      background: var(--color-whatsapp-dark);
+      color: #fff;
+      border: 1px solid var(--color-whatsapp);
+      font-weight: 700;
+      font-size: 12px;
+      padding: 10px 16px;
+      border-radius: var(--md-shape-corner-medium);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+      text-decoration: none;
+    }
+
+    .btn-whatsapp-share:hover {
+      background: #18a393;
+    }
+
+    .quests-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .quest-card-item {
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid var(--md-sys-color-outline);
+      border-radius: var(--md-shape-corner-medium);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .quest-card-item:hover {
+      border-color: rgba(124, 240, 196, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .quest-card-item.claimed {
+      opacity: 0.75;
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .quest-header-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .quest-reward-pill {
+      background: rgba(124, 240, 196, 0.15);
+      border: 1px solid var(--md-sys-color-primary);
+      color: var(--md-sys-color-primary);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: var(--md-shape-corner-full);
+      white-space: nowrap;
+      font-family: var(--font-family-mono);
+    }
+
+    .referral-box-layout {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      background: var(--md-sys-color-surface-container);
+      padding: 16px;
+      border-radius: var(--md-shape-corner-medium);
+      border: 1px solid var(--md-sys-color-outline);
     }
 
     /* TABLES */
@@ -648,54 +872,55 @@
       width: 100%;
       max-width: min(460px, 94vw);
       padding: clamp(20px, 5vw, 28px);
+      position: relative;
       display: flex;
       flex-direction: column;
       gap: 16px;
       box-shadow: var(--md-elevation-3);
-      position: relative;
-      max-height: 90vh;
-      overflow-y: auto;
     }
 
     .modal-close {
       position: absolute;
       top: 16px;
       right: 16px;
-      background: none;
+      background: transparent;
       border: none;
       color: var(--md-sys-color-on-surface-variant);
-      font-size: 20px;
+      font-size: 18px;
       cursor: pointer;
+      padding: 4px;
     }
 
     .modal-tabs {
       display: flex;
-      gap: 8px;
-      border-bottom: 1px solid var(--md-sys-color-outline-variant);
-      padding-bottom: 10px;
+      gap: 6px;
+      background: var(--md-sys-color-surface-container);
+      padding: 4px;
+      border-radius: var(--md-shape-corner-full);
+      margin-bottom: 6px;
     }
 
     .modal-tab-btn {
       flex: 1;
-      background: none;
+      background: transparent;
       border: none;
       color: var(--md-sys-color-on-surface-variant);
+      padding: 8px;
+      border-radius: var(--md-shape-corner-full);
       font-size: 12px;
       font-weight: 700;
-      padding: 8px;
-      border-radius: var(--md-shape-corner-medium);
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .modal-tab-btn.active {
-      color: var(--md-sys-color-on-primary);
       background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
     }
 
     .auth-alert {
-      padding: 10px 12px;
-      border-radius: var(--md-shape-corner-small);
+      padding: 10px 14px;
+      border-radius: var(--md-shape-corner-medium);
       font-size: 12px;
       display: none;
       line-height: 1.4;
@@ -704,15 +929,15 @@
     .auth-alert.error {
       display: block;
       background: var(--md-sys-color-error-container);
-      border: 1px solid var(--md-sys-color-error);
       color: var(--md-sys-color-error);
+      border: 1px solid rgba(255, 180, 171, 0.3);
     }
 
     .auth-alert.success {
       display: block;
       background: var(--md-sys-color-primary-container);
-      border: 1px solid var(--md-sys-color-primary);
       color: var(--md-sys-color-primary);
+      border: 1px solid rgba(124, 240, 196, 0.3);
     }
 
     .otp-input-group {
@@ -721,21 +946,16 @@
     }
 
     .btn-otp-send {
-      background: var(--md-sys-color-surface-container);
+      background: var(--md-sys-color-surface-container-high);
       border: 1px solid var(--md-sys-color-primary);
       color: var(--md-sys-color-primary);
       font-weight: 700;
-      font-size: 12px;
-      padding: 0 12px;
+      font-size: 11px;
+      padding: 0 14px;
       border-radius: var(--md-shape-corner-medium);
       cursor: pointer;
       white-space: nowrap;
-      transition: background 0.2s;
-      flex-shrink: 0;
-    }
-
-    .btn-otp-send:hover {
-      background: var(--md-sys-color-primary-container);
+      transition: all 0.2s;
     }
 
     .btn-otp-send:disabled {
@@ -745,7 +965,6 @@
       color: var(--md-sys-color-on-surface-variant);
     }
 
-    /* M3 ACCOUNT TYPE SELECTOR */
     .account-type-box {
       background: var(--md-sys-color-surface-container);
       border: 1px solid var(--md-sys-color-outline);
@@ -831,7 +1050,7 @@
     </div>
     <div class="header-actions">
       
-      <!-- Profil Utilisateur Connecté (CLE DIRECTEMENT COPIABLE SANS POPUP) -->
+      <!-- Profil Utilisateur Connecté -->
       <div id="userProfileBadge" class="user-profile-badge">
         <div class="user-avatar-circle" id="userAvatarChar">S</div>
         <span id="userEmailLabel" style="font-weight:700;color:#fff;">Mon Compte</span>
@@ -856,6 +1075,18 @@
     </div>
   </header>
 
+  <!-- BANNER PROMO WHATSAPP & QUETES -->
+  <div id="promoWhatsAppBanner" class="promo-banner">
+    <div class="promo-content">
+      <span class="promo-tag">COMMUNAUTÉ VIP</span>
+      <span>Rejoignez le nouveau groupe officiel WhatsApp et débloquez <strong>+50 Crédits Gratuits</strong> instantanément !</span>
+    </div>
+    <div class="promo-actions">
+      <button type="button" class="btn-promo-join" onclick="switchTab('quests')">Voir les Quêtes (+50)</button>
+      <button type="button" class="btn-promo-close" onclick="dismissPromoBanner()">✕</button>
+    </div>
+  </div>
+
   <div class="container">
 
     <!-- NAVIGATION TABS -->
@@ -864,9 +1095,10 @@
       <button class="tab-btn" onclick="switchTab('image')">Image & Vision</button>
       <button class="tab-btn" onclick="switchTab('voice')">Voix Studio</button>
       <button class="tab-btn" onclick="switchTab('story')">Laboratoire Scénario</button>
+      <button class="tab-btn" id="tabBtnQuests" style="border-color: rgba(37,211,102,0.6); color: #fff;" onclick="switchTab('quests')">🎯 Quêtes & WhatsApp (+50)</button>
       <button class="tab-btn" onclick="switchTab('creations')">Mes Créations</button>
       
-      <!-- ONGLET ADMIN : MASQUE PAR DEFAUT, VISIBLE UNIQUEMENT POUR L'ADMINISTRATEUR OFFICIEL -->
+      <!-- ONGLET ADMIN : MASQUE PAR DEFAUT -->
       <button class="tab-btn" id="tabBtnAdmin" style="display:none;border-color:var(--md-sys-color-primary);" onclick="switchTab('admin')">Panel Administrateur</button>
     </div>
 
@@ -1026,7 +1258,111 @@
       </div>
     </div>
 
-    <!-- 5. TAB MES CREATIONS -->
+    <!-- 5. TAB QUETES & WHATSAPP REWARDS -->
+    <div id="tab-quests" class="tab-panel">
+      
+      <!-- ENTÊTE & STATS DU JOUEUR -->
+      <div class="card" style="grid-column: 1 / -1; border-color: rgba(37,211,102,0.3);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+          <div>
+            <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(37,211,102,0.15);border:1px solid var(--color-whatsapp);color:var(--color-whatsapp);padding:4px 12px;border-radius:999px;font-size:11px;font-weight:800;margin-bottom:8px;">
+              COMMUNAUTÉ OFFICIELLE WHATSAPP
+            </div>
+            <h2 style="font-size:clamp(16px, 4vw, 22px);font-weight:800;letter-spacing:-0.4px;">Quêtes & Crédits Gratuits — Stanley Stawa VIP</h2>
+            <p style="font-size:13px;color:var(--md-sys-color-on-surface-variant);max-width:700px;margin-top:4px;">
+              Rejoignez le nouveau groupe WhatsApp officiel, invitez vos amis créateurs et accomplissez vos défis quotidiens pour débloquer des crédits gratuits en continu !
+            </p>
+          </div>
+          <div style="background:var(--md-sys-color-surface-container);border:1px solid var(--md-sys-color-primary);border-radius:var(--md-shape-corner-medium);padding:10px 16px;text-align:right;">
+            <div style="font-size:10px;font-weight:700;color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;">Statut Compte</div>
+            <div id="questUserTypeBadge" style="font-size:13px;font-weight:800;color:var(--md-sys-color-primary);">Compte Studio (Bonus Max x2)</div>
+          </div>
+        </div>
+
+        <div class="stats-grid" style="margin-top:16px;">
+          <div class="stat-card">
+            <div class="stat-number" id="questUserCredits">30</div>
+            <div class="stat-label">Mon Solde Actuel</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="questCompletedCount">0/4</div>
+            <div class="stat-label">Quêtes Validées</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="questInvitedCount">0</div>
+            <div class="stat-label">Amis Parrainés</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="questTotalBonus">0</div>
+            <div class="stat-label">Total Bonus Gagné</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUÊTE VIP #1 HERO CARTE WHATSAPP -->
+      <div class="card quest-hero-card" style="grid-column: 1 / -1;">
+        <div class="quest-hero-layout">
+          <div class="quest-hero-icon">★</div>
+          <div class="quest-hero-text">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <div class="card-title" style="margin-bottom:0;color:#fff;">Quête VIP #1 : Rejoindre le Groupe WhatsApp Officiel</div>
+              <span class="quest-reward-pill">+50 Crédits Offerts</span>
+            </div>
+            <p style="font-size:13px;color:var(--md-sys-color-on-surface-variant);margin-top:6px;line-height:1.5;">
+              Entrez dans la communauté VIP pour discuter directement avec Stanley Stawa, recevoir des invites exclusives, découvrir les prompts d'or et profiter de l'assistance créative.
+            </p>
+          </div>
+          <div class="quest-hero-actions">
+            <a href="https://chat.whatsapp.com/C21rwzKmQlA3nA1MppQ4oO" target="_blank" class="btn-whatsapp-join" onclick="handleWhatsAppJoinClick()">
+              Rejoindre le Groupe WhatsApp (+50)
+            </a>
+            <button type="button" id="btnClaimJoinWhatsApp" class="btn-secondary" style="font-weight:700;" onclick="claimQuest('join_whatsapp')">
+              Valider & Réclamer (+50 Crédits)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LISTE DES AUTRES QUÊTES DYNAMIQUES -->
+      <div class="card" style="grid-column: 1 / -1;">
+        <div class="card-title">
+          <span>Tous les Défis & Quêtes Disponibles</span>
+          <button type="button" class="btn-secondary" onclick="loadQuests()">Actualiser</button>
+        </div>
+        <div id="questsListContainer" class="quests-grid">
+          <div style="text-align:center;padding:20px;color:var(--md-sys-color-on-surface-variant);">Chargement des quêtes...</div>
+        </div>
+      </div>
+
+      <!-- PROGRAMME DE PARRAINAGE & RECRUTEMENT WHATSAPP -->
+      <div class="card" style="grid-column: 1 / -1;">
+        <div class="card-title">Programme de Parrainage & Recrutement WhatsApp</div>
+        <p style="font-size:13px;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;line-height:1.5;">
+          Partagez votre lien d'invitation avec vos amis, collègues et dans vos groupes WhatsApp. Pour chaque ami inscrit, vous gagnez <strong>+30 Crédits</strong> et votre ami reçoit un bonus spécial de <strong>+40 Crédits</strong> de bienvenue !
+        </p>
+        
+        <div class="referral-box-layout">
+          <div class="form-group" style="flex:1;min-width:240px;margin-bottom:0;">
+            <label>Votre Lien d'Invitation Personnalisé</label>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="userReferralLinkInput" readonly value="https://magiclight-api.vercel.app/" style="font-family:var(--font-family-mono);font-size:12px;">
+              <button type="button" class="btn-secondary" onclick="copyReferralLink()">Copier</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+            <button type="button" class="btn-whatsapp-share" onclick="shareToWhatsAppContacts()">
+              Inviter mes Contacts WhatsApp (+30/Ami)
+            </button>
+            <button type="button" class="btn-secondary" onclick="shareToWhatsAppStatus()">
+              Partager sur mon Statut (+25)
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 6. TAB MES CREATIONS -->
     <div id="tab-creations" class="tab-panel">
       <div class="card" style="grid-column: 1 / -1;">
         <div class="card-title">
@@ -1039,7 +1375,7 @@
       </div>
     </div>
 
-    <!-- 6. TAB PANEL ADMINISTRATEUR -->
+    <!-- 7. TAB PANEL ADMINISTRATEUR -->
     <div id="tab-admin" class="tab-panel">
       <div class="card" style="grid-column: 1 / -1;">
         <div class="card-title">
@@ -1084,26 +1420,30 @@
         <button type="button" id="tabAuthLogin" class="modal-tab-btn" onclick="switchAuthTab('login')">Connexion</button>
       </div>
 
+      <div id="referralIndicatorBox" style="display:none;background:rgba(124,240,196,0.1);border:1px dashed var(--md-sys-color-primary);border-radius:var(--md-shape-corner-small);padding:8px 12px;font-size:11px;color:var(--md-sys-color-primary);font-weight:700;">
+        🎁 Bonus Parrainage actif : Vous recevrez 40 Crédits de bienvenue au lieu de 30 !
+      </div>
+
       <div id="authAlert" class="auth-alert"></div>
 
       <!-- FORMULAIRE INSCRIPTION -->
       <form id="formRegister" onsubmit="handleRegisterSubmit(event)">
         
-        <!-- CHOIX DU TYPE DE COMPTE (SANS OU AVEC CLE API) -->
+        <!-- CHOIX DU TYPE DE COMPTE -->
         <div class="account-type-box">
           <label style="font-size:10px;font-weight:800;color:var(--md-sys-color-primary);text-transform:uppercase;">Type d'utilisation :</label>
           <label class="account-type-option">
             <input type="radio" name="accountTypeChoice" value="studio" checked onchange="toggleKeyOption(false)" style="width:auto;margin-top:2px;">
             <div>
-              <div style="font-size:12px;font-weight:800;color:#fff;">Compte Studio (Sans Clé API)</div>
-              <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);">Recommandé : Utilisation directe simplifiée, historique et prompt enhancer inclus.</div>
+              <div style="font-size:12px;font-weight:800;color:#fff;">Compte Studio (Sans Clé API) — Récompenses x2</div>
+              <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);">Recommandé : Utilisation directe simplifiée, quêtes boostées (+50 crédits) et bonus parrainage.</div>
             </div>
           </label>
           <label class="account-type-option">
             <input type="radio" name="accountTypeChoice" value="developer" onchange="toggleKeyOption(true)" style="width:auto;margin-top:2px;">
             <div>
               <div style="font-size:12px;font-weight:800;color:#fff;">Compte Développeur (Avec Clé API)</div>
-              <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);">Pour les Bots Facebook Messenger, requêtes cURL et scripts externes.</div>
+              <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);">Pour intégrations bots Messenger, scripts cURL et accès API automatisé.</div>
             </div>
           </label>
         </div>
@@ -1160,42 +1500,54 @@
   </div>
 
   <footer>
-    Plateforme de Production IA développée par <span>★ Stanley stawa</span> • Tous droits réservés • Moteur Neural v3.1 (M3 Engine)
+    Stanley Stawa AI Studio — Moteur IA de Production Vidéo & Scénarisation Multi-Scènes.<br>
+    Filigrane Officiel : <span>★ Stanley stawa</span> | Groupe WhatsApp VIP : <span>https://chat.whatsapp.com/C21rwzKmQlA3nA1MppQ4oO</span>
   </footer>
 
   <script>
-    let currentAuthMode = "register";
+    const MASTER_ADMIN_KEY = "stanleystawa_live_9f83a7c4e2b1d680a7e4b9c1d2e3f5";
+    const WHATSAPP_VIP_LINK = "https://chat.whatsapp.com/C21rwzKmQlA3nA1MppQ4oO";
     let currentUser = null;
-    let otpCooldownTimer = null;
-    let toastTimer = null;
+    let currentAuthMode = "register";
+    let activePollInterval = null;
+
+    // Détection automatique du parrainage depuis l'URL (?ref=email)
+    (function checkReferralFromUrl() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const ref = urlParams.get("ref");
+        if (ref && ref.includes("@")) {
+          localStorage.setItem("stanley_referrer", ref.trim().toLowerCase());
+        }
+      } catch (e) {
+        console.warn("Referral parse error:", e);
+      }
+    })();
 
     function getBaseUrl() {
       return window.location.origin;
     }
 
     function getApiKey() {
-      return currentUser?.api_key || localStorage.getItem("stanley_user_key") || "";
+      return currentUser?.api_key || localStorage.getItem("stanley_user_key") || MASTER_ADMIN_KEY;
     }
 
     function isUserLoggedIn() {
-      return !!(currentUser?.api_key || localStorage.getItem("stanley_user_key"));
+      return !!(currentUser?.email || localStorage.getItem("stanley_user_email"));
     }
 
-    function showToast(text, type = "success") {
-      const el = document.getElementById("m3Snackbar");
+    // --- SNACKBAR M3 ---
+    function showToast(message, type = "success") {
+      const snackbar = document.getElementById("m3Snackbar");
       const icon = document.getElementById("snackbarIcon");
-      const txt = document.getElementById("snackbarText");
+      const text = document.getElementById("snackbarText");
 
       icon.innerText = type === "error" ? "✕" : (type === "info" ? "ℹ" : "✓");
-      el.style.borderColor = type === "error" ? "var(--md-sys-color-error)" : "var(--md-sys-color-primary)";
-      icon.style.color = type === "error" ? "var(--md-sys-color-error)" : "var(--md-sys-color-primary)";
-      txt.innerText = text;
+      text.innerText = message;
+      snackbar.style.borderColor = type === "error" ? "var(--md-sys-color-error)" : (type === "info" ? "var(--md-sys-color-secondary)" : "var(--md-sys-color-primary)");
 
-      el.classList.add("show");
-      if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => {
-        el.classList.remove("show");
-      }, 3500);
+      snackbar.classList.add("show");
+      setTimeout(() => snackbar.classList.remove("show"), 3800);
     }
 
     function updateVideoPriceLabel() {
@@ -1204,7 +1556,7 @@
     }
 
     function toggleKeyOption(show) {
-      // Choix visuel
+      // Choix d'interface
     }
 
     function switchTab(tabId) {
@@ -1217,8 +1569,14 @@
       const targetPanel = document.getElementById("tab-" + tabId);
       if (targetPanel) targetPanel.classList.add("active");
 
+      if (tabId === "quests") loadQuests();
       if (tabId === "creations") loadMyCreations();
       if (tabId === "admin") loadAdminDashboard();
+    }
+
+    function dismissPromoBanner() {
+      document.getElementById("promoWhatsAppBanner").classList.add("hidden");
+      localStorage.setItem("stanley_promo_dismissed", "true");
     }
 
     // --- PROMPT ENHANCER IA ---
@@ -1253,42 +1611,56 @@
         alertBox.className = "auth-alert";
         alertBox.innerText = "";
       }
+
+      const refBox = document.getElementById("referralIndicatorBox");
+      const referrer = localStorage.getItem("stanley_referrer");
+      if (referrer && mode === "register") {
+        refBox.style.display = "block";
+      } else {
+        refBox.style.display = "none";
+      }
     }
 
     function closeAuthModal() {
       document.getElementById("authModal").classList.remove("open");
-      document.getElementById("authAlert").className = "auth-alert";
-      document.getElementById("authAlert").innerText = "";
     }
 
     function switchAuthTab(mode) {
       currentAuthMode = mode;
-      const tabReg = document.getElementById("tabAuthRegister");
-      const tabLog = document.getElementById("tabAuthLogin");
+      const btnReg = document.getElementById("tabAuthRegister");
+      const btnLog = document.getElementById("tabAuthLogin");
       const formReg = document.getElementById("formRegister");
       const formLog = document.getElementById("formLogin");
+      const alertBox = document.getElementById("authAlert");
+      const refBox = document.getElementById("referralIndicatorBox");
+
+      alertBox.className = "auth-alert";
+      alertBox.innerText = "";
 
       if (mode === "register") {
-        tabReg.classList.add("active");
-        tabLog.classList.remove("active");
+        btnReg.classList.add("active");
+        btnLog.classList.remove("active");
         formReg.style.display = "block";
         formLog.style.display = "none";
+        const referrer = localStorage.getItem("stanley_referrer");
+        if (referrer) refBox.style.display = "block";
       } else {
-        tabLog.classList.add("active");
-        tabReg.classList.remove("active");
+        btnLog.classList.add("active");
+        btnReg.classList.remove("active");
         formLog.style.display = "block";
         formReg.style.display = "none";
+        refBox.style.display = "none";
       }
     }
 
     async function sendOtpCode() {
       const email = document.getElementById("regEmail").value.trim();
-      const alertBox = document.getElementById("authAlert");
       const btn = document.getElementById("btnSendOtp");
+      const alertBox = document.getElementById("authAlert");
 
       if (!email || !email.includes("@") || !email.includes(".")) {
         alertBox.className = "auth-alert error";
-        alertBox.innerText = "Veuillez saisir une adresse e-mail valide.";
+        alertBox.innerText = "Veuillez saisir une adresse Gmail valide.";
         return;
       }
 
@@ -1305,23 +1677,22 @@
         });
         const data = await res.json();
 
-        if (!res.ok) throw new Error(data.error || "Échec de l'envoi de l'e-mail OTP.");
+        if (!res.ok) throw new Error(data.error || "Erreur lors de l'envoi de l'OTP.");
 
         alertBox.className = "auth-alert success";
-        alertBox.innerText = data.message || "Code de vérification envoyé ! Vérifiez votre boîte Gmail.";
-        showToast("Code de vérification envoyé à votre Gmail !", "success");
+        alertBox.innerText = `Code OTP envoyé avec succès à ${email} ! Consultez votre boîte Gmail.`;
+        showToast("Code OTP expédié par e-mail !", "success");
 
         let countdown = 60;
-        btn.innerText = `${countdown}s`;
-        if (otpCooldownTimer) clearInterval(otpCooldownTimer);
-        otpCooldownTimer = setInterval(() => {
+        btn.innerText = `Attendre (${countdown}s)`;
+        const interval = setInterval(() => {
           countdown--;
           if (countdown <= 0) {
-            clearInterval(otpCooldownTimer);
+            clearInterval(interval);
             btn.disabled = false;
-            btn.innerText = "Renvoyer";
+            btn.innerText = "Renvoyer Code";
           } else {
-            btn.innerText = `${countdown}s`;
+            btn.innerText = `Attendre (${countdown}s)`;
           }
         }, 1000);
 
@@ -1339,6 +1710,7 @@
       const password = document.getElementById("regPassword").value.trim();
       const otp = document.getElementById("regOtp").value.trim();
       const accountType = document.querySelector('input[name="accountTypeChoice"]:checked')?.value || "studio";
+      const referral = localStorage.getItem("stanley_referrer") || "";
       const alertBox = document.getElementById("authAlert");
       const btn = document.getElementById("btnRegisterSubmit");
 
@@ -1356,7 +1728,7 @@
         const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, otp, account_type: accountType })
+          body: JSON.stringify({ email, password, otp, account_type: accountType, ref: referral })
         });
         const data = await res.json();
 
@@ -1368,10 +1740,11 @@
         localStorage.setItem("stanley_account_type", accountType);
 
         alertBox.className = "auth-alert success";
-        alertBox.innerText = data.message || "E-mail vérifié ! 30 crédits offerts.";
-        showToast("Compte créé avec succès (+30 Crédits) !", "success");
+        alertBox.innerText = data.message || "E-mail vérifié ! Crédits offerts.";
+        showToast(data.message || "Compte créé avec succès !", "success");
 
         updateUserUI();
+        loadQuests();
         setTimeout(() => closeAuthModal(), 1400);
 
       } catch (err) {
@@ -1406,12 +1779,14 @@
         currentUser = data.user;
         localStorage.setItem("stanley_user_key", data.user.api_key);
         localStorage.setItem("stanley_user_email", data.user.email);
+        localStorage.setItem("stanley_account_type", data.user.account_type || "studio");
 
         alertBox.className = "auth-alert success";
         alertBox.innerText = "Connexion réussie !";
         showToast("Connexion réussie !", "success");
 
         updateUserUI();
+        loadQuests();
         setTimeout(() => closeAuthModal(), 1200);
 
       } catch (err) {
@@ -1444,6 +1819,7 @@
         localStorage.removeItem("stanley_user_email");
         localStorage.removeItem("stanley_account_type");
         updateUserUI();
+        loadQuests();
 
       } catch (err) {
         showToast(`Erreur: ${err.message}`, "error");
@@ -1467,7 +1843,6 @@
         document.getElementById("userEmailLabel").innerText = email.length > 20 ? email.slice(0, 18) + "..." : email;
         document.getElementById("userCreditsLabel").innerText = (currentUser?.credits ?? 30) + " Crédits";
         
-        // Afficher la clé API uniquement si compte développeur ou admin
         if (accountType === "developer" || currentUser?.role === "admin" || currentUser?.is_admin) {
           keyChip.style.display = "inline-flex";
           const shortKey = key.length > 22 ? key.slice(0, 16) + "..." : key;
@@ -1477,7 +1852,6 @@
           keyChip.style.display = "none";
         }
 
-        // Afficher l'onglet Admin UNIQUEMENT pour l'administrateur
         if (currentUser?.role === "admin" || currentUser?.is_admin || email.toLowerCase().includes("stanleystawa")) {
           adminTabBtn.style.display = "inline-flex";
         } else {
@@ -1497,6 +1871,7 @@
       localStorage.removeItem("stanley_user_email");
       localStorage.removeItem("stanley_account_type");
       updateUserUI();
+      loadQuests();
       switchTab("video");
       showToast("Déconnexion réussie.", "info");
     }
@@ -1515,6 +1890,7 @@
         }
       }
       updateUserUI();
+      loadQuests();
     }
 
     function handleImageUpload(e, previewId, dataId) {
@@ -1558,6 +1934,138 @@
       return data;
     }
 
+    // ====================================================
+    // GESTIONNAIRE DES QUÊTES & WHATSAPP
+    // ====================================================
+
+    async function loadQuests() {
+      const container = document.getElementById("questsListContainer");
+      const userKey = getApiKey();
+
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=quests&key=${encodeURIComponent(userKey)}`);
+        const data = await res.json();
+
+        if (!data || !data.quests) return;
+
+        // Mise à jour des stats du joueur
+        document.getElementById("questUserCredits").innerText = currentUser?.credits ?? (data.user?.credits ?? 30);
+        document.getElementById("questCompletedCount").innerText = `${data.summary.total_quests_completed}/${data.quests.length}`;
+        document.getElementById("questInvitedCount").innerText = data.referral.invited_count;
+        document.getElementById("questTotalBonus").innerText = `+${data.summary.total_bonus_earned}`;
+        
+        const isStudio = data.account_type === "studio";
+        document.getElementById("questUserTypeBadge").innerText = isStudio ? "Compte Studio (Bonus Max x2)" : "Compte Développeur";
+        document.getElementById("userReferralLinkInput").value = data.referral.referral_url;
+
+        // Rendu des cartes de quêtes
+        const otherQuests = data.quests.filter(q => q.id !== "join_whatsapp");
+        container.innerHTML = otherQuests.map(q => {
+          let btnHtml = "";
+          if (q.claimed) {
+            btnHtml = `<button disabled class="btn-secondary" style="width:100%;opacity:0.6;">✓ Déjà Validé (${q.type === 'daily' ? 'Aujourd\'hui' : 'Terminé'})</button>`;
+          } else {
+            if (q.id === "share_whatsapp") {
+              btnHtml = `<button class="btn-submit" style="width:100%;background:var(--color-whatsapp-dark);color:#fff;" onclick="shareToWhatsAppStatus()">Partager sur WhatsApp (+${q.reward})</button>`;
+            } else {
+              btnHtml = `<button class="btn-submit" style="width:100%;" onclick="claimQuest('${q.id}')">${q.button_text}</button>`;
+            }
+          }
+
+          return `
+            <div class="quest-card-item ${q.claimed ? 'claimed' : ''}">
+              <div class="quest-header-box">
+                <div>
+                  <div style="font-size:10px;font-weight:800;color:var(--md-sys-color-primary);text-transform:uppercase;">${q.badge}</div>
+                  <div style="font-weight:800;font-size:14px;color:#fff;margin-top:2px;">${q.title}</div>
+                </div>
+                <span class="quest-reward-pill">+${q.reward} Crédits</span>
+              </div>
+              <p style="font-size:12px;color:var(--md-sys-color-on-surface-variant);line-height:1.4;">${q.description}</p>
+              <div>${btnHtml}</div>
+            </div>
+          `;
+        }).join("");
+
+        // Mettre à jour l'état du bouton WhatsApp VIP principal
+        const joinQuest = data.quests.find(q => q.id === "join_whatsapp");
+        const claimJoinBtn = document.getElementById("btnClaimJoinWhatsApp");
+        if (joinQuest && joinQuest.claimed) {
+          claimJoinBtn.innerText = "✓ Quête WhatsApp Déjà Validée (+50)";
+          claimJoinBtn.disabled = true;
+        } else {
+          claimJoinBtn.innerText = "Valider & Réclamer (+50 Crédits)";
+          claimJoinBtn.disabled = false;
+        }
+
+      } catch (err) {
+        console.warn("Quests load error:", err);
+      }
+    }
+
+    async function claimQuest(questId) {
+      if (!isUserLoggedIn()) {
+        return openAuthModal("register", "Inscription requise : Rejoignez le Studio pour réclamer vos crédits gratuits !");
+      }
+
+      const key = getApiKey();
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=claim_quest&quest_id=${encodeURIComponent(questId)}&key=${encodeURIComponent(key)}`, {
+          method: "POST"
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Impossible de valider cette quête.");
+
+        showToast(data.message || `Quête validée ! +${data.reward_credited} crédits`, "success");
+        if (currentUser && data.new_credits !== undefined) {
+          currentUser.credits = data.new_credits;
+        }
+        updateUserUI();
+        loadQuests();
+
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    }
+
+    function handleWhatsAppJoinClick() {
+      setTimeout(() => {
+        if (isUserLoggedIn()) {
+          claimQuest("join_whatsapp");
+        } else {
+          showToast("Rejoignez le groupe WhatsApp, puis créez votre compte pour réclamer vos +50 Crédits !", "info");
+        }
+      }, 2000);
+    }
+
+    function shareToWhatsAppStatus() {
+      const refUrl = document.getElementById("userReferralLinkInput").value || getBaseUrl();
+      const text = `🎬 Créez des vidéos et images IA gratuitement avec Stanley Stawa AI Studio !\n\nRejoignez le nouveau groupe WhatsApp VIP officiel ici 👉 ${WHATSAPP_VIP_LINK}\n\nEt testez la plateforme gratuitement (+40 crédits offerts) : ${refUrl}`;
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+      window.open(waUrl, "_blank");
+
+      setTimeout(() => {
+        if (isUserLoggedIn()) {
+          claimQuest("share_whatsapp");
+        }
+      }, 1500);
+    }
+
+    function shareToWhatsAppContacts() {
+      const refUrl = document.getElementById("userReferralLinkInput").value || getBaseUrl();
+      const text = `Salut ! Je t'invite à tester Stanley Stawa AI Studio pour créer des vidéos cinématiques et générer des voix HD par IA.\n\nEn passant par mon lien d'invitation, tu reçois 40 Crédits offerts 🎁 :\n👉 ${refUrl}\n\nEt rejoins le groupe VIP officiel WhatsApp : ${WHATSAPP_VIP_LINK}`;
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+      window.open(waUrl, "_blank");
+    }
+
+    function copyReferralLink() {
+      const input = document.getElementById("userReferralLinkInput");
+      input.select();
+      navigator.clipboard.writeText(input.value);
+      showToast("Lien de parrainage copié ! Partagez-le pour gagner +30 Crédits par ami.", "success");
+    }
+
     // --- 1. VIDEO GENERATION ---
     async function generateVideo() {
       if (!isUserLoggedIn()) {
@@ -1578,114 +2086,80 @@
       btn.disabled = true;
       box.innerHTML = `
         <div class="loader"></div>
-        <div id="progressLabel" style="font-weight: 800; font-size: 14px; margin-bottom: 4px; color: #fff;">Initialisation par Stanley Stawa Engine...</div>
-        <div id="progressDetail" style="font-size: 12px; color: var(--md-sys-color-on-surface-variant); margin-bottom: 8px;">Scénarisation & cohérence personnage...</div>
-        <div class="progress-bar-wrap"><div id="progressBar" class="progress-bar-fill" style="width: 15%"></div></div>
+        <div style="font-weight:700;margin-bottom:6px;">Génération vidéo IA en cours...</div>
+        <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);text-align:center;">
+          Initialisation de la scène, voix parlée et rendu cinématique H.264 ultra-compact.
+        </div>
+        <div class="progress-bar-wrap"><div id="videoProgressBar" class="progress-bar-fill" style="width: 15%;"></div></div>
+        <div id="videoProgressText" style="font-size:11px;color:var(--md-sys-color-primary);margin-top:4px;">File d'attente...</div>
       `;
 
       try {
-        const initRes = await safeFetchJson(`${getBaseUrl()}/stanleystawa/video`, {
+        const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/video`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, initial_image: initialImage, sections, quality, ratio, duration })
+          body: JSON.stringify({ prompt, imageUrl: initialImage || undefined, sections, quality, ratio, duration })
         });
 
-        const taskId = initRes.task_id;
-        let isDone = false;
-
-        for (let attempts = 0; attempts < 140; attempts++) {
-          await new Promise(r => setTimeout(r, 4000));
-
-          try {
-            const statusData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/status?task_id=${taskId}`);
-
-            if (statusData.status === "completed" && statusData.video_url) {
-              isDone = true;
-              const directDlUrl = `${statusData.video_url}&dl=1`;
-              box.innerHTML = `
-                <video class="preview-video" src="${statusData.video_url}" controls autoplay loop playsinline preload="auto"></video>
-                <div class="meta-box">
-                  <div><strong>Durée :</strong> ${statusData.duration}s | <strong>Sections :</strong> ${statusData.scenes_count} | <strong>Qualité :</strong> ${quality} | <strong>Filigrane :</strong> ★ Stanley stawa (Dynamique)</div>
-                  <div><strong>Lien direct MP4 :</strong> <a href="${statusData.video_url}" target="_blank">${statusData.video_url}</a></div>
-                  <div class="meta-actions">
-                    <a class="action-pill" href="${statusData.video_url}" target="_blank">Ouvrir dans un onglet</a>
-                    <a class="action-pill" href="${directDlUrl}">Télécharger le MP4</a>
-                  </div>
-                </div>
-              `;
-              saveCreationLocally({ taskId, prompt, videoUrl: statusData.video_url, duration: statusData.duration, date: new Date().toLocaleString() });
-              showToast("Film vidéo finalisé avec succès !", "success");
-              initUserSession();
-              break;
-            } else if (statusData.status === "failed") {
-              isDone = true;
-              box.innerHTML = `
-                <div style="color: var(--md-sys-color-error); padding: 24px; text-align: center;">
-                  <div style="font-weight: 800; font-size: 15px; margin-bottom: 8px;">Échec du rendu vidéo sur GitHub Actions</div>
-                  <div style="font-size: 12px; color: var(--md-sys-color-on-surface-variant); margin-bottom: 16px; line-height: 1.5;">${statusData.error || statusData.message || "Le workflow de compilation vidéo a rencontré une erreur."}</div>
-                  <button type="button" class="btn-secondary" onclick="generateVideo()">Réessayer la génération</button>
-                </div>
-              `;
-              showToast("Échec du rendu vidéo sur le serveur.", "error");
-              break;
-            } else {
-              const pct = statusData.progress || 20;
-              const pBar = document.getElementById("progressBar");
-              const pLbl = document.getElementById("progressLabel");
-              const pDet = document.getElementById("progressDetail");
-
-              if (pBar) pBar.style.width = pct + "%";
-              if (pLbl) pLbl.innerText = `Rendu en cours (${pct}%)...`;
-              if (pDet) pDet.innerText = statusData.message || "Animation des scènes avec filigrane Stanley stawa...";
-            }
-          } catch (e) {
-            console.warn("Poll retry...", e);
-          }
-        }
-
-        if (!isDone) {
-          throw new Error("Rendu en cours sur les serveurs. Réinterrogez /stanleystawa/status?task_id=" + taskId);
+        if (data.task_id) {
+          showToast(`Tâche vidéo démarrée (Coût: ${sections} Crédits) !`, "info");
+          pollVideoStatus(data.task_id);
+          initUserSession();
+        } else {
+          throw new Error("Réponse de démarrage invalide.");
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px; font-weight: 700;">Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px;">Erreur: ${err.message}</div>`;
         showToast(err.message, "error");
-      } finally {
         btn.disabled = false;
       }
     }
 
-    function saveCreationLocally(item) {
-      const items = JSON.parse(localStorage.getItem("stanley_my_creations") || "[]");
-      items.unshift(item);
-      localStorage.setItem("stanley_my_creations", JSON.stringify(items.slice(0, 20)));
+    function pollVideoStatus(taskId) {
+      if (activePollInterval) clearInterval(activePollInterval);
+
+      const pBar = document.getElementById("videoProgressBar");
+      const pText = document.getElementById("videoProgressText");
+      const box = document.getElementById("videoPreviewBox");
+      const btn = document.getElementById("btnGenVideo");
+
+      activePollInterval = setInterval(async () => {
+        try {
+          const statusData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/status?task_id=${taskId}`);
+          
+          if (pBar) pBar.style.width = (statusData.progress || 20) + "%";
+          if (pText) pText.innerText = `${statusData.message || 'Traitement en cours...'} (${statusData.progress || 20}%)`;
+
+          if (statusData.status === "completed" && statusData.video_url) {
+            clearInterval(activePollInterval);
+            btn.disabled = false;
+
+            box.innerHTML = `
+              <video class="preview-video" src="${statusData.video_url}" controls autoplay playsinline></video>
+              <div class="meta-box">
+                <div><strong>Tâche :</strong> <code>${taskId}</code></div>
+                <div><strong>Durée :</strong> ${statusData.duration || 60}s | <strong>Scènes :</strong> ${statusData.scenes_count || 6}</div>
+                <div class="meta-actions">
+                  <a class="action-pill" href="${statusData.video_url}" download="stanleystawa_video_${taskId}.mp4">Télécharger le Film MP4</a>
+                  <a class="action-pill" href="${statusData.video_url}" target="_blank">Lien Direct MP4</a>
+                </div>
+              </div>
+            `;
+            showToast("Votre film IA a été finalisé avec succès !", "success");
+            initUserSession();
+          } else if (statusData.status === "failed") {
+            clearInterval(activePollInterval);
+            btn.disabled = false;
+            box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px;">Échec du rendu: ${statusData.error || 'Erreur inconnue'}</div>`;
+            showToast("Échec de la génération vidéo.", "error");
+          }
+        } catch (e) {
+          console.warn("Poll attempt warning:", e);
+        }
+      }, 3500);
     }
 
-    function loadMyCreations() {
-      const grid = document.getElementById("myCreationsGrid");
-      const items = JSON.parse(localStorage.getItem("stanley_my_creations") || "[]");
-
-      if (!items.length) {
-        grid.innerHTML = `<div style="text-align:center;color:var(--md-sys-color-on-surface-variant);padding:24px;grid-column:1/-1;">Aucune vidéo enregistrée pour le moment. Lancez un rendu pour la voir ici.</div>`;
-        return;
-      }
-
-      grid.innerHTML = items.map(it => `
-        <div class="card" style="padding:16px;">
-          <video src="${it.videoUrl}" controls playsinline style="width:100%;border-radius:10px;background:#000;max-height:220px;"></video>
-          <div style="font-size:12px;font-weight:700;margin-top:8px;color:#fff;">${it.prompt}</div>
-          <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);display:flex;justify-content:space-between;margin-top:4px;">
-            <span>${it.duration}s</span>
-            <span>${it.date}</span>
-          </div>
-          <div style="display:flex;gap:6px;margin-top:10px;">
-            <a class="action-pill" href="${it.videoUrl}" target="_blank" style="flex:1;justify-content:center;">Lien direct</a>
-            <a class="action-pill" href="${it.videoUrl}&dl=1" style="flex:1;justify-content:center;">Télécharger</a>
-          </div>
-        </div>
-      `).join("");
-    }
-
-    // --- 2. IMAGE HD ---
+    // --- 2. IMAGE GENERATION ---
     async function generateImage() {
       if (!isUserLoggedIn()) {
         return openAuthModal("register", "Inscription requise : Veuillez valider votre e-mail pour générer des images.");
@@ -1696,25 +2170,24 @@
       const box = document.getElementById("imagePreviewBox");
       const btn = document.getElementById("btnGenImg");
 
-      if (!prompt) return showToast("Veuillez saisir un prompt pour l'image.", "error");
+      if (!prompt) return showToast("Veuillez saisir une description visuelle.", "error");
 
       btn.disabled = true;
-      box.innerHTML = `<div class="loader"></div><div>Génération de l'image par Vision Studio...</div>`;
+      box.innerHTML = `<div class="loader"></div><div>Génération de l'image HD en cours...</div>`;
 
       try {
-        const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/image`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, ratio })
-        });
+        const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/image?prompt=${encodeURIComponent(prompt)}&ratio=${ratio}`);
 
         if (data.image_url) {
-          const fullImgUrl = data.image_url.startsWith("http") ? data.image_url : `${getBaseUrl()}${data.image_url}`;
           box.innerHTML = `
-            <img class="preview-img" src="${fullImgUrl}" alt="Image générée" onerror="this.onerror=null; this.src='https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?nologo=true'">
+            <img class="preview-img" src="${data.image_url}" alt="Image générée">
             <div class="meta-box">
-              <div><strong>Ratio :</strong> ${data.ratio} | <strong>Moteur :</strong> Stanley Stawa Vision HD</div>
-              <div><strong>Lien direct :</strong> <a href="${fullImgUrl}" target="_blank">${fullImgUrl}</a></div>
+              <div><strong>Prompt :</strong> ${data.prompt}</div>
+              <div><strong>Format :</strong> ${data.ratio || ratio}</div>
+              <div class="meta-actions">
+                <a class="action-pill" href="${data.image_url}" target="_blank" download="stanleystawa_img.jpg">Télécharger l'Image HD</a>
+                <a class="action-pill" href="${data.image_url}" target="_blank">Ouvrir l'Image</a>
+              </div>
             </div>
           `;
           showToast("Image HD générée avec succès (Coût: 1 Crédit) !", "success");
@@ -1728,52 +2201,7 @@
       }
     }
 
-    // --- 3. RETOUCHE IMAGE ---
-    async function editImage() {
-      if (!isUserLoggedIn()) {
-        return openAuthModal("register", "Inscription requise : Veuillez valider votre e-mail pour retoucher des images.");
-      }
-
-      const editData = document.getElementById("editData").value;
-      const imageUrl = document.getElementById("editImgUrl").value.trim();
-      const image = editData || imageUrl;
-      const prompt = document.getElementById("editPrompt").value.trim();
-      const box = document.getElementById("editPreviewBox");
-      const btn = document.getElementById("btnEditImg");
-
-      if (!image) return showToast("Veuillez uploader une image ou saisir une URL source.", "error");
-      if (!prompt) return showToast("Veuillez saisir une consigne de retouche.", "error");
-
-      btn.disabled = true;
-      box.innerHTML = `<div class="loader"></div><div>Application de la retouche par Stanley Stawa AI...</div>`;
-
-      try {
-        const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/edit`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image, prompt })
-        });
-
-        if (data.image_url) {
-          box.innerHTML = `
-            <img class="preview-img" src="${data.image_url}" alt="Image retouchée">
-            <div class="meta-box">
-              <div><strong>Consigne :</strong> ${data.prompt}</div>
-              <div><strong>Lien direct :</strong> <a href="${data.image_url}" target="_blank">Ouvrir l'image</a></div>
-            </div>
-          `;
-          showToast("Retouche appliquée avec succès (Coût: 2 Crédits) !", "success");
-          initUserSession();
-        }
-      } catch (err) {
-        box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px;">Erreur: ${err.message}</div>`;
-        showToast(err.message, "error");
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
-    // --- 4. SCENARIO IA ---
+    // --- 3. SCENARIO IA ---
     async function expandStory() {
       if (!isUserLoggedIn()) {
         return openAuthModal("register", "Inscription requise : Veuillez valider votre e-mail pour créer des scénarios.");
@@ -1814,7 +2242,7 @@
       }
     }
 
-    // --- 5. SYNTHESE VOCALE ---
+    // --- 4. SYNTHESE VOCALE ---
     async function synthesizeVoice() {
       if (!isUserLoggedIn()) {
         return openAuthModal("register", "Inscription requise : Veuillez valider votre e-mail pour générer des voix.");
@@ -1852,7 +2280,34 @@
       }
     }
 
-    // --- 6. PANEL ADMINISTRATEUR (CHARGE DIRECTEMENT POUR LE COMPTE ADMIN) ---
+    // --- 5. MES CREATIONS ---
+    async function loadMyCreations() {
+      const container = document.getElementById("myCreationsGrid");
+      const key = getApiKey();
+      
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_tasks&key=${encodeURIComponent(key)}`);
+        const data = await res.json();
+        
+        if (!data.tasks || !data.tasks.length) {
+          container.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--md-sys-color-on-surface-variant);padding:24px;">Aucune vidéo récente trouvée. Lancez votre première production !</div>`;
+          return;
+        }
+
+        container.innerHTML = data.tasks.map(t => `
+          <div class="card" style="padding:14px;">
+            <div style="font-weight:800;font-size:13px;color:#fff;margin-bottom:6px;line-height:1.4;">${t.prompt.slice(0, 60)}...</div>
+            <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);margin-bottom:10px;">ID: <code>${t.task_id}</code> | Statut: <span class="user-credits-pill">${t.status}</span></div>
+            ${t.video_url ? `<video src="${t.video_url}" controls playsinline style="width:100%;border-radius:8px;max-height:180px;background:#000;"></video>` : '<div style="padding:20px;text-align:center;font-size:11px;color:var(--md-sys-color-on-surface-variant);">Vidéo en cours ou en file d\'attente...</div>'}
+          </div>
+        `).join("");
+
+      } catch (err) {
+        container.innerHTML = `<div style="grid-column:1/-1;color:var(--md-sys-color-error);text-align:center;padding:24px;">Erreur lors du chargement des créations.</div>`;
+      }
+    }
+
+    // --- 6. PANEL ADMINISTRATEUR ---
     async function loadAdminDashboard() {
       const key = getApiKey();
       if (!key) return showToast("Authentification administrateur requise.", "error");
@@ -1884,8 +2339,8 @@
           <div class="stat-label">Vidéos Initiées</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">${stats.completed_videos}</div>
-          <div class="stat-label">Films Finalisés</div>
+          <div class="stat-number">${stats.total_quests_claimed || 0}</div>
+          <div class="stat-label">Quêtes Validées</div>
         </div>
         <div class="stat-card">
           <div class="stat-number">${stats.cluster_credits_pool}</div>
@@ -1911,9 +2366,9 @@
               <tr>
                 <th>ID</th>
                 <th>E-mail</th>
+                <th>Type</th>
                 <th>Crédits</th>
                 <th>Rôle</th>
-                <th>Clé API</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -1922,9 +2377,9 @@
                 <tr>
                   <td>#${u.id}</td>
                   <td><strong>${u.email}</strong></td>
+                  <td><span class="user-credits-pill">${u.account_type || 'studio'}</span></td>
                   <td><span style="color:var(--md-sys-color-primary);font-weight:700;">${u.credits}</span></td>
                   <td>${u.role}</td>
-                  <td><code style="font-size:10px;color:var(--md-sys-color-on-surface-variant);">${u.api_key.slice(0, 24)}...</code></td>
                   <td>
                     <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;" onclick="adminEditCredits('${u.email}', ${u.credits})">+ Crédits</button>
                     <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteUser('${u.id}')">Supprimer</button>
