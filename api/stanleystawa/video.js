@@ -46,7 +46,14 @@ module.exports = async function handler(req, res) {
     if (!prompt) {
       return res.status(400).json({
         error: "Le paramètre 'prompt' ou 'text' est requis.",
-        example: `https://${req.headers.host || 'magiclight-api.vercel.app'}/stanleystawa/video?prompt=Un+jeune+magicien+explore+la+lune&key=${auth.key || security.MASTER_API_KEY}`
+        example: `https://${req.headers.host || 'magiclight-api.vercel.app'}/stanleystawa/video?prompt=Un+jeune+magicien+explore+la+lune&imageUrl=https://...&key=${auth.key || security.MASTER_API_KEY}`
+      });
+    }
+
+    if (!initialImage) {
+      return res.status(400).json({
+        error: "Une image de personnage de référence ('imageUrl' ou image uploadée) est OBLIGATOIRE pour garantir 100% de cohérence sur toutes les scènes de la vidéo.",
+        required_field: "imageUrl"
       });
     }
 

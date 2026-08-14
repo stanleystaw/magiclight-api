@@ -1282,10 +1282,10 @@
         </div>
 
         <div class="form-group">
-          <label>Personnage de Référence (Optionnel — Cohérence 100%)</label>
+          <label>Personnage de Référence (* OBLIGATOIRE — Cohérence 100% sur toutes les scènes)</label>
           <div class="upload-box" onclick="document.getElementById('videoCharFile').click()">
             <input type="file" id="videoCharFile" accept="image/*" style="display:none" onchange="handleImageUpload(event, 'videoCharPreview', 'videoCharData')">
-            <span id="videoCharPlaceholder">Sélectionner l'image du personnage de référence</span>
+            <span id="videoCharPlaceholder">Sélectionner l'image du personnage de référence (* OBLIGATOIRE)</span>
             <img id="videoCharPreview" class="upload-preview-thumb" alt="Aperçu">
           </div>
           <input type="hidden" id="videoCharData">
@@ -1568,14 +1568,18 @@
           </div>
         </div>
 
-        <!-- Touch Carousel Sub-Navigation pour Mobile & Desktop -->
+        <!-- Touch Carousel Sub-Navigation pour Mobile & Desktop (7 Nouvelles Fonctionnalités) -->
         <div class="admin-sub-nav">
           <button type="button" class="admin-nav-btn active" id="btnAdminNavOverview" onclick="switchAdminSection('overview')">📊 Statistiques</button>
           <button type="button" class="admin-nav-btn" id="btnAdminNavQuests" onclick="switchAdminSection('quests')">🎯 Créateur Quêtes</button>
+          <button type="button" class="admin-nav-btn" id="btnAdminNavAirdrop" onclick="switchAdminSection('airdrop')">🎁 Airdrop Crédits</button>
           <button type="button" class="admin-nav-btn" id="btnAdminNavSecret" onclick="switchAdminSection('secret')">🔑 Code WhatsApp</button>
           <button type="button" class="admin-nav-btn" id="btnAdminNavUsers" onclick="switchAdminSection('users')">👥 Utilisateurs</button>
           <button type="button" class="admin-nav-btn" id="btnAdminNavClaims" onclick="switchAdminSection('claims')">🛡️ Audit Preuves</button>
           <button type="button" class="admin-nav-btn" id="btnAdminNavTasks" onclick="switchAdminSection('tasks')">🎬 Tâches Vidéo</button>
+          <button type="button" class="admin-nav-btn" id="btnAdminNavBroadcast" onclick="switchAdminSection('broadcast')">📢 Annonce Globale</button>
+          <button type="button" class="admin-nav-btn" id="btnAdminNavExport" onclick="switchAdminSection('export')">📁 Export Données</button>
+          <button type="button" class="admin-nav-btn" id="btnAdminNavMaintenance" onclick="switchAdminSection('maintenance')">⚡ Maintenance</button>
         </div>
 
         <div id="adminContent" style="display:flex;flex-direction:column;gap:16px;">
@@ -1686,6 +1690,77 @@
           <div id="adminSec-tasks" class="admin-section">
             <div style="font-weight:800;font-size:14px;color:#fff;">Tâches Vidéo Récentes du Cluster</div>
             <div id="adminTasksTable"></div>
+          </div>
+
+          <!-- 7. SECTION AIRDROP MASSE -->
+          <div id="adminSec-airdrop" class="admin-section">
+            <div class="card" style="background:var(--md-sys-color-surface-container);padding:16px;">
+              <div style="font-weight:800;font-size:15px;color:#fff;margin-bottom:4px;">🎁 Distribution Globale de Crédits (Airdrop en Masse)</div>
+              <p style="font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-bottom:12px;">
+                Offrez des crédits simultanément à tous les utilisateurs inscrits ou à une catégorie spécifique (ex: promo weekend).
+              </p>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px;align-items:flex-end;">
+                <div class="form-group">
+                  <label>Montant de Crédits à Offrir</label>
+                  <input type="number" id="adminBulkAmount" min="1" max="500" value="20" placeholder="20">
+                </div>
+                <div class="form-group">
+                  <label>Bénéficiaires</label>
+                  <select id="adminBulkTarget">
+                    <option value="all" selected>Tous les Utilisateurs Inscrits</option>
+                    <option value="studio">Comptes Studio Uniquement</option>
+                    <option value="developer">Comptes Développeur Uniquement</option>
+                  </select>
+                </div>
+                <button type="button" class="btn-submit" onclick="adminExecuteBulkCredits()">Lancer l'Airdrop</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 8. SECTION ANNONCE GLOBALE -->
+          <div id="adminSec-broadcast" class="admin-section">
+            <div class="card" style="background:var(--md-sys-color-surface-container);padding:16px;">
+              <div style="font-weight:800;font-size:15px;color:#fff;margin-bottom:4px;">📢 Annonce & Bannière Supérieure en Direct</div>
+              <p style="font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-bottom:12px;">
+                Diffusez un message d'information ou promotionnel en haut du site pour tous les visiteurs.
+              </p>
+              <div class="form-group" style="margin-bottom:10px;">
+                <label>Message de la Bannière (Laissez vide pour désactiver)</label>
+                <input type="text" id="adminBroadcastInput" placeholder="Ex: 🔥 Nouveau modèle HD disponible ce week-end !">
+              </div>
+              <button type="button" class="btn-submit" onclick="adminUpdateBroadcast()">Mettre à jour l'Annonce</button>
+            </div>
+          </div>
+
+          <!-- 9. SECTION EXPORTATION DE DONNEES -->
+          <div id="adminSec-export" class="admin-section">
+            <div class="card" style="background:var(--md-sys-color-surface-container);padding:16px;">
+              <div style="font-weight:800;font-size:15px;color:#fff;margin-bottom:4px;">📁 Exportation des Données Plateforme (JSON)</div>
+              <p style="font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;">
+                Téléchargez les sauvegardes intégrales de vos utilisateurs, tâches et parrainages.
+              </p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button type="button" class="btn-secondary" onclick="adminExportData('users')">📥 Exporter Utilisateurs</button>
+                <button type="button" class="btn-secondary" onclick="adminExportData('claims')">📥 Exporter Preuves Quêtes</button>
+                <button type="button" class="btn-secondary" onclick="adminExportData('referrals')">📥 Exporter Parrainages</button>
+                <button type="button" class="btn-secondary" onclick="adminExportData('tasks')">📥 Exporter Tâches Vidéo</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 10. SECTION MAINTENANCE & PURGE -->
+          <div id="adminSec-maintenance" class="admin-section">
+            <div class="card" style="background:var(--md-sys-color-surface-container);padding:16px;">
+              <div style="font-weight:800;font-size:15px;color:#fff;margin-bottom:4px;">⚡ Maintenance & Nettoyage Base de Données</div>
+              <p style="font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;">
+                Optimisez les performances de la base Turso libSQL en purgeant les anciennes tâches terminées ou échouées.
+              </p>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <button type="button" class="btn-secondary" onclick="adminPurgeTasks(7)">Purger Tâches > 7 Jours</button>
+                <button type="button" class="btn-secondary" onclick="adminPurgeTasks(30)">Purger Tâches > 30 Jours</button>
+                <button type="button" class="btn-secondary" onclick="adminCleanDeadNodes()">Nettoyer Nœuds 0 Crédit</button>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -2524,6 +2599,7 @@
       const btn = document.getElementById("btnGenVideo");
 
       if (!prompt) return showToast("Veuillez saisir un scénario / prompt.", "error");
+      if (!initialImage) return showToast("L'image du personnage de référence est OBLIGATOIRE pour assurer la cohérence visuelle.", "error");
 
       btn.disabled = true;
       box.innerHTML = `
@@ -3272,6 +3348,96 @@
         loadAdminDashboard();
       } catch (err) {
         showToast("Erreur: " + err.message, "error");
+      }
+    }
+
+
+    async function adminExecuteBulkCredits() {
+      const key = getApiKey();
+      const amount = parseInt(document.getElementById("adminBulkAmount")?.value, 10) || 20;
+      const target = document.getElementById("adminBulkTarget")?.value || "all";
+      if (!confirm(`Distribuer +${amount} crédits à [${target}] ?`)) return;
+
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_bulk_credits&key=${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount, role_filter: target })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Échec de l'airdrop.");
+        showToast(data.message || "Airdrop distribué avec succès !", "success");
+        loadAdminUsers(key);
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    }
+
+    async function adminUpdateBroadcast() {
+      const key = getApiKey();
+      const message = document.getElementById("adminBroadcastInput")?.value.trim();
+
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_set_broadcast&key=${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Échec.");
+        showToast(data.message || "Bannière d'annonce mise à jour !", "success");
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    }
+
+    async function adminExportData(type) {
+      const key = getApiKey();
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_export_data&type=${type}&key=${encodeURIComponent(key)}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Échec de l'export.");
+
+        const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: "application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `export_${type}_${Date.now()}.json`;
+        a.click();
+        showToast(`Export ${type} (${data.count} éléments) téléchargé !`, "success");
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    }
+
+    async function adminPurgeTasks(days) {
+      if (!confirm(`Purger toutes les tâches antérieures à ${days} jours ?`)) return;
+      const key = getApiKey();
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_purge_stale_tasks&days=${days}&key=${encodeURIComponent(key)}`, {
+          method: "POST"
+        });
+        const data = await res.json();
+        showToast(data.message || "Tâches purgées !", "success");
+        loadAdminTasks(key);
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    }
+
+    async function adminRevokeQuestClaim(claimId) {
+      if (!confirm(`Révoquer la réclamation #${claimId} et déduire les crédits indus ?`)) return;
+      const key = getApiKey();
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_revoke_claim&claim_id=${claimId}&key=${encodeURIComponent(key)}`, {
+          method: "POST"
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Échec de la révocation.");
+        showToast(data.message || "Réclamation révoquée !", "success");
+        loadAdminQuestClaims(key);
+        loadAdminUsers(key);
+      } catch (err) {
+        showToast(err.message, "error");
       }
     }
 

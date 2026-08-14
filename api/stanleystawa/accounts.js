@@ -283,6 +283,77 @@ module.exports = async function handler(req, res) {
         return res.status(500).json({ error: err.message });
       }
     }
+
+    // 15. Distribution de crédits en masse (Airdrop promotionnel)
+    if (action === "admin_bulk_credits") {
+      const amount = parseInt(params.amount || params.credits, 10);
+      const roleFilter = String(params.role_filter || "all").toLowerCase();
+      if (isNaN(amount) || amount <= 0) {
+        return res.status(400).json({ error: "Montant de crédits positif requis." });
+      }
+      try {
+        const result = await turso.bulkAddCredits(amount, roleFilter);
+        return res.status(200).json({ status: "success", message: `Airdrop de +${amount} crédits distribué avec succès !`, result });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    // 16. Révoquer une réclamation de quête frauduleuse
+    if (action === "admin_revoke_claim") {
+      const claimId = params.claim_id || params.id;
+      if (!claimId) return res.status(400).json({ error: "Paramètre 'claim_id' requis." });
+      try {
+        const result = await turso.revokeQuestClaim(claimId);
+        if (!result.success) return res.status(404).json({ error: result.error });
+        return res.status(200).json({ status: "success", message: `Réclamation #${claimId} révoquée. -${result.revoked_credits} crédits déduits de ${result.user_email}.` });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    // 17. Purger les anciennes tâches vidéo
+    if (action === "admin_purge_stale_tasks") {
+      const days = parseInt(params.days || "7", 10);
+      try {
+        await turso.purgeStaleTasks(days);
+        return res.status(200).json({ status: "success", message: `Tâches de plus de ${days} jours purgées avec succès.` });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    // 18. Journal d'activité système
+    if (action === "admin_activity_log") {
+      try {
+        const logs = await turso.getRecentActivity(50);
+        return res.status(200).json({ status: "success", logs });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    // 19. Exportation de données
+    if (action === "admin_export_data") {
+      const type = String(params.type || "users").toLowerCase();
+      try {
+        const data = await turso.exportData(type);
+        return res.status(200).json({ status: "success", type, count: data.length, data });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    // 20. Bannière d'annonce / Message d'alerte en direct
+    if (action === "admin_set_broadcast") {
+      const message = String(params.message || params.text || "").trim();
+      try {
+        await turso.setSetting("broadcast_banner", message);
+        return res.status(200).json({ status: "success", message: "Bannière d'annonce mise à jour avec succès !" });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
   }
 
   // ====================================================
