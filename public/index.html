@@ -1095,8 +1095,8 @@
       <button class="tab-btn" id="tabBtnQuests" style="border-color: rgba(37,211,102,0.6); color: #fff;" onclick="switchTab('quests')">🎯 Quêtes & WhatsApp (+15)</button>
       <button class="tab-btn" onclick="switchTab('creations')">Mes Créations</button>
       
-      <!-- ONGLET ADMIN : MASQUE PAR DEFAUT -->
-      <button class="tab-btn" id="tabBtnAdmin" style="display:none;border-color:var(--md-sys-color-primary);" onclick="switchTab('admin')">Panel Administrateur</button>
+      <!-- ONGLET ADMIN : MASQUE PAR DEFAUT, VISIBLE EXCLUSIVEMENT POUR LE SUPER ADMIN -->
+      <button class="tab-btn" id="tabBtnAdmin" style="display:none;border-color:var(--md-sys-color-primary);color:var(--md-sys-color-primary);" onclick="switchTab('admin')">🛰️ Supervision & Contrôle (Admin)</button>
     </div>
 
     <!-- 1. TAB VIDEO -->
@@ -1809,6 +1809,9 @@
 
         updateUserUI();
         loadQuests();
+        if (currentUser.role === "admin" || currentUser.is_admin) {
+          switchTab("admin");
+        }
         setTimeout(() => closeAuthModal(), 1200);
 
       } catch (err) {
