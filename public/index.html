@@ -817,13 +817,14 @@
       -webkit-overflow-scrolling: touch;
       border: 1px solid var(--md-sys-color-outline-variant);
       border-radius: var(--md-shape-corner-medium);
+      background: var(--md-sys-color-background);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 12px;
-      min-width: 500px;
+      min-width: 540px;
     }
 
     th, td {
@@ -839,6 +840,170 @@
       text-transform: uppercase;
       font-size: 10px;
       letter-spacing: 0.6px;
+      white-space: nowrap;
+    }
+
+    /* ADMIN SUB NAVIGATION & SECTIONS */
+    .admin-sub-nav {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 6px;
+      margin-bottom: 16px;
+      scrollbar-width: none;
+    }
+
+    .admin-sub-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .admin-nav-btn {
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid var(--md-sys-color-outline);
+      color: var(--md-sys-color-on-surface-variant);
+      padding: 8px 14px;
+      border-radius: var(--md-shape-corner-full);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .admin-nav-btn:hover {
+      background: var(--md-sys-color-surface-container-high);
+      color: #fff;
+    }
+
+    .admin-nav-btn.active {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      border-color: var(--md-sys-color-primary);
+      box-shadow: 0 0 12px var(--md-sys-color-primary-container);
+    }
+
+    .admin-section {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .admin-section.active {
+      display: flex;
+    }
+
+    /* RESPONSIVE DATA CARDS ON MOBILE */
+    .admin-mobile-cards {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .admin-data-card {
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid var(--md-sys-color-outline);
+      border-radius: var(--md-shape-corner-medium);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .admin-data-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .admin-data-label {
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .admin-data-value {
+      font-weight: 700;
+      color: #fff;
+      word-break: break-all;
+    }
+
+    .admin-card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+      .table-desktop-view {
+        display: none !important;
+      }
+      .admin-mobile-cards {
+        display: flex !important;
+      }
+      .card-title {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 10px;
+      }
+      .card-title > div {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .card-title .btn-secondary {
+        flex: 1;
+        text-align: center;
+        font-size: 11px;
+        padding: 8px 10px;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px;
+      }
+      .stat-card {
+        padding: 10px;
+      }
+      .stat-number {
+        font-size: 18px !important;
+      }
+      .stat-label {
+        font-size: 9px !important;
+      }
+      .admin-data-card {
+        padding: 10px;
+      }
+      .btn-submit, .btn-secondary {
+        font-size: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr 1fr !important;
+      }
+      .admin-sub-nav {
+        gap: 6px;
+      }
+      .admin-nav-btn {
+        padding: 6px 12px;
+        font-size: 11px;
+      }
+      .container {
+        padding: 10px 8px;
+      }
+      .card {
+        padding: 14px;
+        border-radius: var(--md-shape-corner-medium);
+      }
     }
 
     /* M3 MODAL RESPONSIVE */
@@ -1395,7 +1560,7 @@
     <div id="tab-admin" class="tab-panel">
       <div class="card" style="grid-column: 1 / -1;">
         <div class="card-title">
-          <span>Console d'Administration — Stanley Stawa Core</span>
+          <span>🛰️ Console de Supervision & Contrôle Global</span>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button type="button" class="btn-secondary" onclick="adminRefillCluster()">+ Ajouter Nœud Cluster</button>
             <button type="button" class="btn-secondary" onclick="adminCleanDeadNodes()">Nettoyer Nœuds 0 Crédit</button>
@@ -1403,108 +1568,129 @@
           </div>
         </div>
 
-        <div id="adminContent" style="display:flex;flex-direction:column;gap:20px;">
-          
-          <!-- STATS GLOBALES -->
-          <div class="stats-grid" id="adminStatsGrid"></div>
+        <!-- Touch Carousel Sub-Navigation pour Mobile & Desktop -->
+        <div class="admin-sub-nav">
+          <button type="button" class="admin-nav-btn active" id="btnAdminNavOverview" onclick="switchAdminSection('overview')">📊 Statistiques</button>
+          <button type="button" class="admin-nav-btn" id="btnAdminNavQuests" onclick="switchAdminSection('quests')">🎯 Créateur Quêtes</button>
+          <button type="button" class="admin-nav-btn" id="btnAdminNavSecret" onclick="switchAdminSection('secret')">🔑 Code WhatsApp</button>
+          <button type="button" class="admin-nav-btn" id="btnAdminNavUsers" onclick="switchAdminSection('users')">👥 Utilisateurs</button>
+          <button type="button" class="admin-nav-btn" id="btnAdminNavClaims" onclick="switchAdminSection('claims')">🛡️ Audit Preuves</button>
+          <button type="button" class="admin-nav-btn" id="btnAdminNavTasks" onclick="switchAdminSection('tasks')">🎬 Tâches Vidéo</button>
+        </div>
 
-          <!-- GESTION DU CODE SECRET DU GROUPE WHATSAPP -->
-          <div class="card" style="background:var(--md-sys-color-surface-container);padding:16px;">
-            <div style="font-weight:800;font-size:14px;color:#fff;margin-bottom:4px;">Code Secret du Groupe WhatsApp (Vérification Anti-Fraude)</div>
-            <p style="font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-bottom:10px;">
-              Ce code doit figurer dans la description de votre groupe WhatsApp. Les utilisateurs doivent obligatoirement le saisir pour valider les +15 crédits.
-            </p>
-            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-              <input type="text" id="adminSecretCodeInput" style="font-family:var(--font-family-mono);font-weight:800;font-size:13px;max-width:240px;" placeholder="STAWA-VIP-2026">
-              <button type="button" class="btn-submit" style="padding:10px 16px;" onclick="adminUpdateSecretCode()">Enregistrer le Nouveau Code</button>
+        <div id="adminContent" style="display:flex;flex-direction:column;gap:16px;">
+          
+          <!-- 1. SECTION OVERVIEW STATS -->
+          <div id="adminSec-overview" class="admin-section active">
+            <div class="stats-grid" id="adminStatsGrid"></div>
+          </div>
+
+          <!-- 2. SECTION GESTIONNAIRE & CRÉATEUR DE QUÊTES -->
+          <div id="adminSec-quests" class="admin-section">
+            <div class="card" style="background:var(--md-sys-color-surface-container);padding:14px;">
+              <div style="font-weight:800;font-size:15px;color:#fff;margin-bottom:4px;">🎯 Créer & Publier une Nouvelle Quête</div>
+              <p style="font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;">
+                Ajoutez des quêtes en direct avec conditions réelles de validation sans toucher au code.
+              </p>
+
+              <form id="formAdminCreateQuest" onsubmit="adminSubmitCreateQuest(event)" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:10px;margin-bottom:14px;">
+                <div class="form-group">
+                  <label>Clé Unique (ex: avis_google, join_telegram)</label>
+                  <input type="text" id="adminQKey" required placeholder="cle_sans_espace">
+                </div>
+                <div class="form-group">
+                  <label>Titre de la Quête</label>
+                  <input type="text" id="adminQTitle" required placeholder="Rejoindre notre canal VIP">
+                </div>
+                <div class="form-group">
+                  <label>Badge (ex: VIP, Bonus, Spécial)</label>
+                  <input type="text" id="adminQBadge" placeholder="VIP" value="Bonus">
+                </div>
+                <div class="form-group">
+                  <label>Type de Quête</label>
+                  <select id="adminQType">
+                    <option value="one_time" selected>Unique (1 seule fois)</option>
+                    <option value="daily">Quotidienne (Toutes les 24h)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Mode de Vérification Réelle</label>
+                  <select id="adminQVerif">
+                    <option value="instant" selected>Instantané (Check-in / Visite)</option>
+                    <option value="secret_code_and_phone">Code Secret + N° WhatsApp</option>
+                    <option value="phone_proof">Preuve par Numéro WhatsApp</option>
+                    <option value="video_generation_check">Vérification Création Vidéo IA</option>
+                    <option value="url_link">Lien externe obligatoire</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Récompense Studio</label>
+                  <input type="number" id="adminQRewardStudio" min="1" max="100" value="15">
+                </div>
+                <div class="form-group">
+                  <label>Récompense Développeur</label>
+                  <input type="number" id="adminQRewardDev" min="1" max="100" value="10">
+                </div>
+                <div class="form-group">
+                  <label>Texte Bouton</label>
+                  <input type="text" id="adminQButtonText" value="Participer & Valider">
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                  <label>Lien d'action (Optionnel)</label>
+                  <input type="url" id="adminQUrl" placeholder="https://...">
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                  <label>Description détaillée</label>
+                  <textarea id="adminQDesc" placeholder="Expliquez l'action à accomplir..." style="min-height:50px;"></textarea>
+                </div>
+                <div style="grid-column: 1 / -1;">
+                  <button type="submit" class="btn-submit" style="width:100%;">+ Créer & Publier la Quête</button>
+                </div>
+              </form>
+
+              <div style="font-weight:800;font-size:13px;color:#fff;margin:10px 0 6px;">Quêtes en Ligne sur la Plateforme :</div>
+              <div id="adminCustomQuestsTable"></div>
             </div>
           </div>
 
-          <!-- GESTIONNAIRE DYNAMIQUE DE QUÊTES (ADMINISTRATION AVANCÉE) -->
-          <div class="card" style="background:var(--md-sys-color-surface-container);padding:16px;">
-            <div style="font-weight:800;font-size:15px;color:#fff;margin-bottom:4px;">🎯 Gestionnaire & Créateur de Quêtes Personnalisées</div>
-            <p style="font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;">
-              Ajoutez de nouvelles quêtes en direct avec leurs conditions de validation, récompenses et liens d'action sans toucher au code.
-            </p>
-
-            <form id="formAdminCreateQuest" onsubmit="adminSubmitCreateQuest(event)" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px;margin-bottom:14px;">
-              <div class="form-group">
-                <label>Clé Unique (ex: join_telegram, avis_google)</label>
-                <input type="text" id="adminQKey" required placeholder="cle_sans_espace">
+          <!-- 3. SECTION CODE SECRET WHATSAPP -->
+          <div id="adminSec-secret" class="admin-section">
+            <div class="card" style="background:var(--md-sys-color-surface-container);padding:14px;">
+              <div style="font-weight:800;font-size:14px;color:#fff;margin-bottom:4px;">Code Secret du Groupe WhatsApp (Vérification Anti-Fraude)</div>
+              <p style="font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-bottom:10px;">
+                Ce code doit figurer dans la description de votre groupe WhatsApp. Les utilisateurs doivent obligatoirement le saisir pour valider les +15 crédits.
+              </p>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <input type="text" id="adminSecretCodeInput" style="font-family:var(--font-family-mono);font-weight:800;font-size:13px;max-width:240px;" placeholder="Sk_live-stawa">
+                <button type="button" class="btn-submit" style="padding:10px 16px;" onclick="adminUpdateSecretCode()">Enregistrer le Nouveau Code</button>
               </div>
-              <div class="form-group">
-                <label>Titre de la Quête</label>
-                <input type="text" id="adminQTitle" required placeholder="Rejoindre notre canal VIP">
-              </div>
-              <div class="form-group">
-                <label>Badge Visuel (ex: Spécial, Bonus, Nouveau)</label>
-                <input type="text" id="adminQBadge" placeholder="VIP" value="Bonus">
-              </div>
-              <div class="form-group">
-                <label>Type de Quête</label>
-                <select id="adminQType">
-                  <option value="one_time" selected>Unique (1 seule fois)</option>
-                  <option value="daily">Quotidienne (Toutes les 24h)</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Mode de Vérification Réelle</label>
-                <select id="adminQVerif">
-                  <option value="instant" selected>Instantané (Check-in / Visite)</option>
-                  <option value="secret_code_and_phone">Code Secret + N° WhatsApp</option>
-                  <option value="phone_proof">Preuve par Numéro WhatsApp</option>
-                  <option value="video_generation_check">Vérification de Création Vidéo IA</option>
-                  <option value="url_link">Lien externe obligatoire</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Récompense Compte Studio</label>
-                <input type="number" id="adminQRewardStudio" min="1" max="100" value="15">
-              </div>
-              <div class="form-group">
-                <label>Récompense Compte Développeur</label>
-                <input type="number" id="adminQRewardDev" min="1" max="100" value="10">
-              </div>
-              <div class="form-group">
-                <label>Texte du Bouton d'Action</label>
-                <input type="text" id="adminQButtonText" value="Participer & Valider">
-              </div>
-              <div class="form-group" style="grid-column: 1 / -1;">
-                <label>Lien d'action ou d'invitation (Optionnel)</label>
-                <input type="url" id="adminQUrl" placeholder="https://...">
-              </div>
-              <div class="form-group" style="grid-column: 1 / -1;">
-                <label>Description détaillée de la quête</label>
-                <textarea id="adminQDesc" placeholder="Expliquez l'action à accomplir..." style="min-height:60px;"></textarea>
-              </div>
-              <div style="grid-column: 1 / -1;">
-                <button type="submit" class="btn-submit" style="width:100%;">+ Créer & Publier cette Quête</button>
-              </div>
-            </form>
-
-            <div style="font-weight:800;font-size:13px;color:#fff;margin:12px 0 6px;">Quêtes Actuellement en Ligne sur la Plateforme :</div>
-            <div class="table-container" id="adminCustomQuestsTable"></div>
+            </div>
           </div>
 
-          <!-- GESTION DES UTILISATEURS -->
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="font-weight:800;font-size:14px;color:#fff;">Utilisateurs Inscrits & Clés Personnelles</div>
-            <div class="table-container" id="adminUsersTable"></div>
+          <!-- 4. SECTION UTILISATEURS -->
+          <div id="adminSec-users" class="admin-section">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+              <div style="font-weight:800;font-size:14px;color:#fff;">Utilisateurs Inscrits & Clés Personnelles</div>
+              <input type="text" id="adminUserSearchInput" placeholder="Rechercher par e-mail..." oninput="filterAdminUsers(this.value)" style="max-width:220px;padding:6px 12px;font-size:11px;">
+            </div>
+            <div id="adminUsersTable"></div>
           </div>
 
-          <!-- AUDIT DES QUETES VALIDEES & NUMEROS WHATSAPP -->
-          <div style="display:flex;flex-direction:column;gap:8px;">
+          <!-- 5. SECTION AUDIT DES QUÊTES -->
+          <div id="adminSec-claims" class="admin-section">
             <div style="font-weight:800;font-size:14px;color:#fff;">Journal des Quêtes Validées (Preuves & Numéros WhatsApp)</div>
-            <div class="table-container" id="adminQuestClaimsTable"></div>
+            <div id="adminQuestClaimsTable"></div>
           </div>
 
-          <!-- TACHES VIDEO RECENTES -->
-          <div style="display:flex;flex-direction:column;gap:8px;">
+          <!-- 6. SECTION TÂCHES VIDÉO -->
+          <div id="adminSec-tasks" class="admin-section">
             <div style="font-weight:800;font-size:14px;color:#fff;">Tâches Vidéo Récentes du Cluster</div>
-            <div class="table-container" id="adminTasksTable"></div>
+            <div id="adminTasksTable"></div>
           </div>
 
         </div>
+      </div>
+    </div>
       </div>
     </div>
 
@@ -2563,7 +2749,21 @@
       }
     }
 
-    // --- 6. PANEL ADMINISTRATEUR ---
+    // --- 6. PANEL ADMINISTRATEUR ULTRA-RESPONSIVE ---
+
+    let allAdminUsersCache = [];
+
+    function switchAdminSection(secId) {
+      document.querySelectorAll(".admin-nav-btn").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".admin-section").forEach(sec => sec.classList.remove("active"));
+
+      const targetBtn = document.getElementById("btnAdminNav" + secId.charAt(0).toUpperCase() + secId.slice(1));
+      if (targetBtn) targetBtn.classList.add("active");
+
+      const targetSec = document.getElementById("adminSec-" + secId);
+      if (targetSec) targetSec.classList.add("active");
+    }
+
     async function loadAdminDashboard() {
       const key = getApiKey();
       if (!key) return showToast("Authentification administrateur requise.", "error");
@@ -2576,7 +2776,8 @@
 
         renderAdminStats(data.stats);
         if (data.whatsapp_secret_code) {
-          document.getElementById("adminSecretCodeInput").value = data.whatsapp_secret_code;
+          const secretInput = document.getElementById("adminSecretCodeInput");
+          if (secretInput) secretInput.value = data.whatsapp_secret_code;
         }
         loadAdminCustomQuests(key);
         loadAdminUsers(key);
@@ -2588,8 +2789,52 @@
       }
     }
 
+    function renderAdminStats(stats) {
+      const grid = document.getElementById("adminStatsGrid");
+      if (!grid) return;
+      grid.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-number">${stats.total_registered_users}</div>
+          <div class="stat-label">Utilisateurs Inscrits</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">${stats.total_video_tasks}</div>
+          <div class="stat-label">Vidéos Initiées</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">${stats.total_quests_claimed || 0}</div>
+          <div class="stat-label">Quêtes Validées</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">${stats.cluster_credits_pool}</div>
+          <div class="stat-label">Crédits Cluster Restants</div>
+        </div>
+      `;
+    }
+
+    async function adminUpdateSecretCode() {
+      const key = getApiKey();
+      const code = document.getElementById("adminSecretCodeInput").value.trim();
+      if (!code) return showToast("Veuillez saisir un code secret.", "error");
+
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_set_quest_code&key=${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code })
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Échec de mise à jour.");
+        showToast(data.message || "Code secret WhatsApp mis à jour !", "success");
+      } catch (err) {
+        showToast("Erreur: " + err.message, "error");
+      }
+    }
+
     async function loadAdminCustomQuests(key) {
       const container = document.getElementById("adminCustomQuestsTable");
+      if (!container) return;
       try {
         const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_get_quests&key=${encodeURIComponent(key)}`);
         const data = await res.json();
@@ -2599,35 +2844,62 @@
           return;
         }
 
-        container.innerHTML = `
-          <table>
-            <thead>
-              <tr>
-                <th>Clé / Badge</th>
-                <th>Titre</th>
-                <th>Type / Vérification</th>
-                <th>Récompense</th>
-                <th>Statut</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.quests.map(q => `
+        const tableHtml = `
+          <div class="table-desktop-view table-container">
+            <table>
+              <thead>
                 <tr>
-                  <td><code>${q.quest_key}</code> <span style="font-size:10px;color:var(--md-sys-color-primary);">[${q.badge || 'VIP'}]</span></td>
-                  <td><strong>${q.title}</strong></td>
-                  <td><small>${q.quest_type} / ${q.verification_type}</small></td>
-                  <td><span style="color:var(--md-sys-color-primary);font-weight:800;">+${q.reward_studio} / +${q.reward_dev}</span></td>
-                  <td><span class="user-credits-pill" style="${q.is_active ? 'background:rgba(37,211,102,0.15);color:var(--color-whatsapp);' : 'background:rgba(255,180,171,0.15);color:var(--md-sys-color-error);'}">${q.is_active ? 'Actif' : 'Inactif'}</span></td>
-                  <td>
-                    <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;" onclick="adminToggleCustomQuest('${q.quest_key}')">${q.is_active ? 'Désactiver' : 'Activer'}</button>
-                    <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteCustomQuest('${q.quest_key}')">Suppr</button>
-                  </td>
+                  <th>Clé / Badge</th>
+                  <th>Titre</th>
+                  <th>Type / Vérification</th>
+                  <th>Récompense</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
                 </tr>
-              `).join("")}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                ${data.quests.map(q => `
+                  <tr>
+                    <td><code>${q.quest_key}</code> <span style="font-size:10px;color:var(--md-sys-color-primary);">[${q.badge || 'VIP'}]</span></td>
+                    <td><strong>${q.title}</strong></td>
+                    <td><small>${q.quest_type} / ${q.verification_type}</small></td>
+                    <td><span style="color:var(--md-sys-color-primary);font-weight:800;">+${q.reward_studio} / +${q.reward_dev}</span></td>
+                    <td><span class="user-credits-pill" style="${q.is_active ? 'background:rgba(37,211,102,0.15);color:var(--color-whatsapp);' : 'background:rgba(255,180,171,0.15);color:var(--md-sys-color-error);'}">${q.is_active ? 'Actif' : 'Inactif'}</span></td>
+                    <td>
+                      <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;" onclick="adminToggleCustomQuest('${q.quest_key}')">${q.is_active ? 'Désactiver' : 'Activer'}</button>
+                      <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteCustomQuest('${q.quest_key}')">Suppr</button>
+                    </td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
         `;
+
+        const cardsHtml = `
+          <div class="admin-mobile-cards">
+            ${data.quests.map(q => `
+              <div class="admin-data-card">
+                <div class="admin-data-row">
+                  <span class="admin-data-label">Clé : <code>${q.quest_key}</code></span>
+                  <span class="user-credits-pill" style="${q.is_active ? 'background:rgba(37,211,102,0.15);color:var(--color-whatsapp);' : 'background:rgba(255,180,171,0.15);color:var(--md-sys-color-error);'}">${q.is_active ? 'Actif' : 'Inactif'}</span>
+                </div>
+                <div style="font-weight:800;font-size:14px;color:#fff;">${q.title}</div>
+                <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);">${q.description || ''}</div>
+                <div class="admin-data-row">
+                  <span class="admin-data-label">Récompense :</span>
+                  <span style="color:var(--md-sys-color-primary);font-weight:800;">+${q.reward_studio} / +${q.reward_dev} cr</span>
+                </div>
+                <div class="admin-card-actions">
+                  <button type="button" class="btn-secondary" style="flex:1;font-size:11px;" onclick="adminToggleCustomQuest('${q.quest_key}')">${q.is_active ? 'Désactiver' : 'Activer'}</button>
+                  <button type="button" class="btn-secondary" style="font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteCustomQuest('${q.quest_key}')">Supprimer</button>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+
+        container.innerHTML = tableHtml + cardsHtml;
       } catch (e) {
         container.innerHTML = `<div style="color:var(--md-sys-color-error);padding:14px;">Erreur: ${e.message}</div>`;
       }
@@ -2700,104 +2972,42 @@
       }
     }
 
-    function renderAdminStats(stats) {
-      const grid = document.getElementById("adminStatsGrid");
-      grid.innerHTML = `
-        <div class="stat-card">
-          <div class="stat-number">${stats.total_registered_users}</div>
-          <div class="stat-label">Utilisateurs Inscrits</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">${stats.total_video_tasks}</div>
-          <div class="stat-label">Vidéos Initiées</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">${stats.total_quests_claimed || 0}</div>
-          <div class="stat-label">Quêtes Validées</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">${stats.cluster_credits_pool}</div>
-          <div class="stat-label">Crédits Cluster Restants</div>
-        </div>
-      `;
-    }
-
-    async function adminUpdateSecretCode() {
-      const key = getApiKey();
-      const code = document.getElementById("adminSecretCodeInput").value.trim();
-      if (!code) return showToast("Veuillez saisir un code secret.", "error");
-
+    async function loadAdminUsers(key) {
+      const container = document.getElementById("adminUsersTable");
+      if (!container) return;
       try {
-        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_set_quest_code&key=${encodeURIComponent(key)}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code })
-        });
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_users&key=${encodeURIComponent(key)}`);
         const data = await res.json();
 
-        if (!res.ok) throw new Error(data.error || "Échec de mise à jour.");
-        showToast(data.message || "Code secret WhatsApp mis à jour !", "success");
-      } catch (err) {
-        showToast("Erreur: " + err.message, "error");
-      }
-    }
+        allAdminUsersCache = data.users || [];
+        renderAdminUsersList(allAdminUsersCache);
 
-    async function loadAdminQuestClaims(key) {
-      const container = document.getElementById("adminQuestClaimsTable");
-      try {
-        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_quest_claims&key=${encodeURIComponent(key)}`);
-        const data = await res.json();
-
-        if (!data.claims || !data.claims.length) {
-          container.innerHTML = `<div style="padding:14px;color:var(--md-sys-color-on-surface-variant);">Aucune réclamation de quête enregistrée.</div>`;
-          return;
-        }
-
-        container.innerHTML = `
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>E-mail</th>
-                <th>Quête</th>
-                <th>N° WhatsApp</th>
-                <th>Preuve / Code</th>
-                <th>Bonus</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.claims.map(c => `
-                <tr>
-                  <td>#${c.id}</td>
-                  <td><strong>${c.user_email}</strong></td>
-                  <td><span class="user-credits-pill">${c.quest_id}</span></td>
-                  <td><code>${c.whatsapp_number || '—'}</code></td>
-                  <td><small style="color:var(--md-sys-color-on-surface-variant);">${c.proof_data || '—'}</small></td>
-                  <td><span style="color:var(--md-sys-color-primary);font-weight:800;">+${c.reward_credits}</span></td>
-                  <td><small>${c.created_at || c.claimed_date}</small></td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
-        `;
       } catch (e) {
         container.innerHTML = `<div style="color:var(--md-sys-color-error);padding:14px;">Erreur: ${e.message}</div>`;
       }
     }
 
-    async function loadAdminUsers(key) {
+    function filterAdminUsers(query) {
+      const cleanQ = query.trim().toLowerCase();
+      if (!cleanQ) {
+        renderAdminUsersList(allAdminUsersCache);
+        return;
+      }
+      const filtered = allAdminUsersCache.filter(u => u.email.toLowerCase().includes(cleanQ) || (u.id && String(u.id).includes(cleanQ)));
+      renderAdminUsersList(filtered);
+    }
+
+    function renderAdminUsersList(users) {
       const container = document.getElementById("adminUsersTable");
-      try {
-        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_users&key=${encodeURIComponent(key)}`);
-        const data = await res.json();
+      if (!container) return;
 
-        if (!data.users || !data.users.length) {
-          container.innerHTML = `<div style="padding:14px;color:var(--md-sys-color-on-surface-variant);">Aucun utilisateur.</div>`;
-          return;
-        }
+      if (!users || !users.length) {
+        container.innerHTML = `<div style="padding:14px;color:var(--md-sys-color-on-surface-variant);">Aucun utilisateur trouvé.</div>`;
+        return;
+      }
 
-        container.innerHTML = `
+      const tableHtml = `
+        <div class="table-desktop-view table-container">
           <table>
             <thead>
               <tr>
@@ -2810,7 +3020,7 @@
               </tr>
             </thead>
             <tbody>
-              ${data.users.map(u => `
+              ${users.map(u => `
                 <tr>
                   <td>#${u.id}</td>
                   <td><strong>${u.email}</strong></td>
@@ -2819,13 +3029,111 @@
                   <td>${u.role}</td>
                   <td>
                     <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;" onclick="adminEditCredits('${u.email}', ${u.credits})">+ Crédits</button>
-                    <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteUser('${u.id}')">Supprimer</button>
+                    <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteUser('${u.id}')">Suppr</button>
                   </td>
                 </tr>
               `).join("")}
             </tbody>
           </table>
+        </div>
+      `;
+
+      const cardsHtml = `
+        <div class="admin-mobile-cards">
+          ${users.map(u => `
+            <div class="admin-data-card">
+              <div class="admin-data-row">
+                <span class="admin-data-label">ID #${u.id}</span>
+                <span class="user-credits-pill">${u.account_type || 'studio'}</span>
+              </div>
+              <div style="font-weight:800;font-size:13px;color:#fff;word-break:break-all;">${u.email}</div>
+              <div class="admin-data-row">
+                <span class="admin-data-label">Solde crédits :</span>
+                <span style="color:var(--md-sys-color-primary);font-weight:800;">${u.credits} Crédits</span>
+              </div>
+              <div class="admin-card-actions">
+                <button type="button" class="btn-secondary" style="flex:1;font-size:11px;" onclick="adminEditCredits('${u.email}', ${u.credits})">+ Crédits</button>
+                <button type="button" class="btn-secondary" style="font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteUser('${u.id}')">Supprimer</button>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+
+      container.innerHTML = tableHtml + cardsHtml;
+    }
+
+    async function loadAdminQuestClaims(key) {
+      const container = document.getElementById("adminQuestClaimsTable");
+      if (!container) return;
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_quest_claims&key=${encodeURIComponent(key)}`);
+        const data = await res.json();
+
+        if (!data.claims || !data.claims.length) {
+          container.innerHTML = `<div style="padding:14px;color:var(--md-sys-color-on-surface-variant);">Aucune réclamation de quête enregistrée.</div>`;
+          return;
+        }
+
+        const tableHtml = `
+          <div class="table-desktop-view table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>E-mail</th>
+                  <th>Quête</th>
+                  <th>N° WhatsApp</th>
+                  <th>Preuve / Code</th>
+                  <th>Bonus</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.claims.map(c => `
+                  <tr>
+                    <td>#${c.id}</td>
+                    <td><strong>${c.user_email}</strong></td>
+                    <td><span class="user-credits-pill">${c.quest_id}</span></td>
+                    <td><code>${c.whatsapp_number || '—'}</code></td>
+                    <td><small style="color:var(--md-sys-color-on-surface-variant);">${c.proof_data || '—'}</small></td>
+                    <td><span style="color:var(--md-sys-color-primary);font-weight:800;">+${c.reward_credits}</span></td>
+                    <td><small>${c.created_at || c.claimed_date}</small></td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
         `;
+
+        const cardsHtml = `
+          <div class="admin-mobile-cards">
+            ${data.claims.map(c => `
+              <div class="admin-data-card">
+                <div class="admin-data-row">
+                  <span class="admin-data-label">Claim #${c.id}</span>
+                  <span style="color:var(--md-sys-color-primary);font-weight:800;">+${c.reward_credits} Crédits</span>
+                </div>
+                <div style="font-weight:700;font-size:13px;color:#fff;word-break:break-all;">${c.user_email}</div>
+                <div class="admin-data-row">
+                  <span class="admin-data-label">Quête :</span>
+                  <span class="user-credits-pill">${c.quest_id}</span>
+                </div>
+                <div class="admin-data-row">
+                  <span class="admin-data-label">N° WhatsApp :</span>
+                  <span style="color:#fff;font-family:var(--font-family-mono);">${c.whatsapp_number || '—'}</span>
+                </div>
+                <div class="admin-data-row">
+                  <span class="admin-data-label">Preuve :</span>
+                  <small style="color:var(--md-sys-color-on-surface-variant);">${c.proof_data || '—'}</small>
+                </div>
+                <div style="font-size:10px;color:var(--md-sys-color-on-surface-variant);text-align:right;">${c.created_at || c.claimed_date}</div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+
+        container.innerHTML = tableHtml + cardsHtml;
       } catch (e) {
         container.innerHTML = `<div style="color:var(--md-sys-color-error);padding:14px;">Erreur: ${e.message}</div>`;
       }
@@ -2833,6 +3141,7 @@
 
     async function loadAdminTasks(key) {
       const container = document.getElementById("adminTasksTable");
+      if (!container) return;
       try {
         const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_tasks&key=${encodeURIComponent(key)}`);
         const data = await res.json();
@@ -2842,34 +3151,59 @@
           return;
         }
 
-        container.innerHTML = `
-          <table>
-            <thead>
-              <tr>
-                <th>Task ID</th>
-                <th>Scénario</th>
-                <th>Statut</th>
-                <th>Durée</th>
-                <th>Lien MP4</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.tasks.map(t => `
+        const tableHtml = `
+          <div class="table-desktop-view table-container">
+            <table>
+              <thead>
                 <tr>
-                  <td><code>${t.task_id}</code></td>
-                  <td>${t.prompt.slice(0, 40)}...</td>
-                  <td><span class="user-credits-pill">${t.status}</span></td>
-                  <td>${t.duration || 0}s</td>
-                  <td>${t.video_url ? `<a href="${t.video_url}" target="_blank" style="color:var(--md-sys-color-primary);">Regarder</a>` : '—'}</td>
-                  <td>
-                    <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteTask('${t.task_id}')">Suppr</button>
-                  </td>
+                  <th>Task ID</th>
+                  <th>Scénario</th>
+                  <th>Statut</th>
+                  <th>Durée</th>
+                  <th>Lien MP4</th>
+                  <th>Actions</th>
                 </tr>
-              `).join("")}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                ${data.tasks.map(t => `
+                  <tr>
+                    <td><code>${t.task_id}</code></td>
+                    <td>${t.prompt.slice(0, 40)}...</td>
+                    <td><span class="user-credits-pill">${t.status}</span></td>
+                    <td>${t.duration || 0}s</td>
+                    <td>${t.video_url ? `<a href="${t.video_url}" target="_blank" style="color:var(--md-sys-color-primary);">Regarder</a>` : '—'}</td>
+                    <td>
+                      <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteTask('${t.task_id}')">Suppr</button>
+                    </td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
         `;
+
+        const cardsHtml = `
+          <div class="admin-mobile-cards">
+            ${data.tasks.map(t => `
+              <div class="admin-data-card">
+                <div class="admin-data-row">
+                  <span class="admin-data-label">Task <code>${t.task_id}</code></span>
+                  <span class="user-credits-pill">${t.status}</span>
+                </div>
+                <div style="font-size:12px;color:#fff;line-height:1.4;">${t.prompt.slice(0, 80)}...</div>
+                <div class="admin-data-row">
+                  <span class="admin-data-label">Durée : ${t.duration || 0}s</span>
+                  ${t.video_url ? `<a href="${t.video_url}" target="_blank" class="btn-secondary" style="padding:4px 10px;font-size:11px;">▶ Regarder le Film</a>` : '<span style="color:var(--md-sys-color-on-surface-variant);font-size:11px;">Rendu en cours</span>'}
+                </div>
+                <div class="admin-card-actions">
+                  <button type="button" class="btn-secondary" style="width:100%;font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteTask('${t.task_id}')">Supprimer cette tâche</button>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+
+        container.innerHTML = tableHtml + cardsHtml;
       } catch (e) {
         container.innerHTML = `<div style="color:var(--md-sys-color-error);padding:14px;">Erreur: ${e.message}</div>`;
       }
