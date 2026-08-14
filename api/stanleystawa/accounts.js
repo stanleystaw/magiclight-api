@@ -75,7 +75,16 @@ const QUESTS_LIST = [
 
 function readBody(req) {
   return new Promise((resolve) => {
-    if (req.body && typeof req.body === "object") return resolve(req.body);
+    if (req.body) {
+      if (typeof req.body === "object") return resolve(req.body);
+      if (typeof req.body === "string") {
+        try {
+          return resolve(JSON.parse(req.body));
+        } catch {
+          return resolve({});
+        }
+      }
+    }
     let data = "";
     req.on("data", (c) => (data += c));
     req.on("end", () => {
@@ -86,6 +95,7 @@ function readBody(req) {
       }
     });
     req.on("error", () => resolve({}));
+    setTimeout(() => resolve({}), 800);
   });
 }
 
@@ -438,13 +448,13 @@ module.exports = async function handler(req, res) {
       const user = await turso.getUserByEmail(canonicalEmail) || await turso.getUserByEmail(rawEmail);
       if (!user) {
         security.recordLoginAttempt(clientIp, false);
-        return res.status(401).json({ error: "Identifiants incorrects." });
+        return res.status(401).json({ error: "Aucun compte actif trouvé avec cette adresse e-mail. Veuillez d'abord cliquer sur 'Inscription' pour créer votre compte." });
       }
 
       const passwordHash = security.hashPassword(password);
       if (user.password_hash !== passwordHash) {
         security.recordLoginAttempt(clientIp, false);
-        return res.status(401).json({ error: "Mot de passe incorrect." });
+        return res.status(401).json({ error: "Mot de passe incorrect. Veuillez vérifier votre saisie." });
       }
 
       security.recordLoginAttempt(clientIp, true);

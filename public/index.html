@@ -1761,13 +1761,20 @@
       const alertBox = document.getElementById("authAlert");
       const btn = document.getElementById("btnRegisterSubmit");
 
+      if (!email) {
+        alertBox.className = "auth-alert error";
+        alertBox.innerText = "Veuillez entrer une adresse Gmail valide.";
+        return;
+      }
+
       if (!otp || otp.length !== 6) {
         alertBox.className = "auth-alert error";
-        alertBox.innerText = "Veuillez entrer le code à 6 chiffres reçu dans votre boîte Gmail.";
+        alertBox.innerText = "Veuillez d'abord cliquer sur 'Envoyer Code' et entrer le code à 6 chiffres reçu dans votre boîte Gmail.";
         return;
       }
 
       btn.disabled = true;
+      btn.innerText = "Création en cours...";
       alertBox.className = "auth-alert";
       alertBox.innerText = "";
 
@@ -1775,7 +1782,7 @@
         const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, otp, account_type: accountType, ref: referral })
+          body: JSON.stringify({ action: "register", email, password, otp, account_type: accountType, ref: referral })
         });
         const data = await res.json();
 
@@ -1792,13 +1799,18 @@
 
         updateUserUI();
         loadQuests();
-        setTimeout(() => closeAuthModal(), 1400);
+        setTimeout(() => {
+          closeAuthModal();
+          btn.disabled = false;
+          btn.innerText = "Valider & Créer mon Compte (+30 Crédits)";
+        }, 800);
 
       } catch (err) {
         alertBox.className = "auth-alert error";
         alertBox.innerText = err.message;
-      } finally {
+        showToast(err.message, "error");
         btn.disabled = false;
+        btn.innerText = "Valider & Créer mon Compte (+30 Crédits)";
       }
     }
 
@@ -1809,7 +1821,14 @@
       const alertBox = document.getElementById("authAlert");
       const btn = document.getElementById("btnLoginSubmit");
 
+      if (!email || !password) {
+        alertBox.className = "auth-alert error";
+        alertBox.innerText = "Veuillez renseigner votre e-mail et votre mot de passe.";
+        return;
+      }
+
       btn.disabled = true;
+      btn.innerText = "Connexion en cours...";
       alertBox.className = "auth-alert";
       alertBox.innerText = "";
 
@@ -1817,7 +1836,7 @@
         const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ action: "login", email, password })
         });
         const data = await res.json();
 
@@ -1837,13 +1856,18 @@
         if (currentUser.role === "admin" || currentUser.is_admin) {
           switchTab("admin");
         }
-        setTimeout(() => closeAuthModal(), 1200);
+        setTimeout(() => {
+          closeAuthModal();
+          btn.disabled = false;
+          btn.innerText = "Se connecter";
+        }, 800);
 
       } catch (err) {
         alertBox.className = "auth-alert error";
         alertBox.innerText = err.message;
-      } finally {
+        showToast(err.message, "error");
         btn.disabled = false;
+        btn.innerText = "Se connecter";
       }
     }
 
