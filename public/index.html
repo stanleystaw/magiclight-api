@@ -130,7 +130,6 @@
       font-size: 11px;
       color: var(--md-sys-color-on-surface-variant);
       font-weight: 500;
-      display: block;
     }
 
     .header-actions {
@@ -140,17 +139,30 @@
       flex-wrap: wrap;
     }
 
-    /* USER BADGE */
+    /* USER PROFILE BADGE */
     .user-profile-badge {
       display: none;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       background: var(--md-sys-color-surface-container);
       border: 1px solid var(--md-sys-color-outline);
       padding: 4px 10px;
       border-radius: var(--md-shape-corner-full);
       font-size: 12px;
       flex-wrap: wrap;
+    }
+
+    .user-avatar-circle {
+      width: 24px;
+      height: 24px;
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      font-weight: 800;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
     }
 
     .user-credits-pill {
@@ -263,10 +275,6 @@
       .form-row {
         grid-template-columns: 1fr !important;
       }
-      .user-profile-badge {
-        font-size: 11px;
-        padding: 4px 8px;
-      }
     }
 
     /* CARDS */
@@ -314,7 +322,7 @@
       color: var(--md-sys-color-on-surface);
       padding: 12px 14px;
       border-radius: var(--md-shape-corner-medium);
-      font-size: 16px; /* Empêche l'auto-zoom d'iOS */
+      font-size: 16px;
       outline: none;
       width: 100%;
       transition: border 0.2s, box-shadow 0.2s;
@@ -377,7 +385,7 @@
       padding: 13px 20px;
       font-size: 14px;
       font-weight: 800;
-      border-radius: var(--md-shape-corner-medium);
+      border-radius: 10px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -720,6 +728,37 @@
       color: var(--md-sys-color-on-surface-variant);
     }
 
+    /* M3 SNACKBAR / TOAST NOTIFICATION */
+    .m3-snackbar {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1e263a;
+      color: #fff;
+      border: 1px solid var(--md-sys-color-primary);
+      padding: 12px 22px;
+      border-radius: var(--md-shape-corner-full);
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s var(--transition-standard);
+      white-space: nowrap;
+      max-width: 90vw;
+    }
+
+    .m3-snackbar.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
     footer {
       background: var(--md-sys-color-surface);
       border-top: 1px solid var(--md-sys-color-outline-variant);
@@ -749,11 +788,12 @@
     </div>
     <div class="header-actions">
       
-      <!-- Profil Utilisateur Connecté (VISIBLE SUR DESKTOP ET MOBILE) -->
+      <!-- Profil Utilisateur Connecté -->
       <div id="userProfileBadge" class="user-profile-badge">
+        <div class="user-avatar-circle" id="userAvatarChar">S</div>
         <span id="userEmailLabel" style="font-weight:700;color:#fff;">Mon Compte</span>
         <span id="userCreditsLabel" class="user-credits-pill">100 Crédits</span>
-        <button type="button" class="action-pill" onclick="copyMyApiKey()" title="Copier ma clé API">Clé API</button>
+        <button type="button" class="action-pill" onclick="openKeyModal()">Clé API</button>
         <button type="button" class="action-pill" style="background:var(--md-sys-color-error-container);border-color:var(--md-sys-color-error);color:var(--md-sys-color-error);" onclick="deleteMyAccount()">Supprimer</button>
         <button type="button" class="action-pill" style="background:#262f44;border-color:rgba(255,255,255,0.2);color:#fff;" onclick="logoutUser()">Déconnexion</button>
       </div>
@@ -985,6 +1025,29 @@
 
   </div>
 
+  <!-- MODAL DETAILS CLE API & PARAMETRES BOT -->
+  <div id="keyModal" class="modal-backdrop">
+    <div class="modal-card">
+      <button type="button" class="modal-close" onclick="closeKeyModal()">✕</button>
+      <div style="font-size:16px;font-weight:800;color:#fff;border-bottom:1px solid var(--md-sys-color-outline-variant);padding-bottom:10px;">
+        Ma Clé API Personnelle
+      </div>
+      <div class="form-group">
+        <label>Clé d'Accès Sécurisée</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="modalKeyDisplay" readonly style="font-family:var(--font-family-mono);font-size:12px;color:var(--md-sys-color-primary);">
+          <button type="button" class="btn-m3-primary" onclick="copyKeyFromModal()">Copier</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Paramètre pour votre Bot Facebook / API</label>
+        <div style="background:var(--md-sys-color-surface-container);padding:10px 14px;border-radius:var(--md-shape-corner-medium);border:1px solid var(--md-sys-color-outline);font-size:11px;font-family:var(--font-family-mono);word-break:break-all;color:var(--md-sys-color-on-surface-variant);" id="botParamSnippet">
+        </div>
+      </div>
+      <button type="button" class="btn-secondary" style="width:100%;" onclick="closeKeyModal()">Fermer</button>
+    </div>
+  </div>
+
   <!-- MODAL AUTHENTIFICATION AVEC OTP GMAIL -->
   <div id="authModal" class="modal-backdrop">
     <div class="modal-card">
@@ -1044,6 +1107,12 @@
     </div>
   </div>
 
+  <!-- TOAST NOTIFICATION M3 (REMPLACE LES ALERTS NAVIGATEUR) -->
+  <div id="m3Snackbar" class="m3-snackbar">
+    <span id="snackbarIcon">✓</span>
+    <span id="snackbarText">Opération réussie</span>
+  </div>
+
   <footer>
     Plateforme de Production IA développée par <span>★ Stanley stawa</span> • Tous droits réservés • Moteur Neural v3.0 (M3 Engine)
   </footer>
@@ -1052,6 +1121,7 @@
     let currentAuthMode = "register";
     let currentUser = null;
     let otpCooldownTimer = null;
+    let toastTimer = null;
 
     function getBaseUrl() {
       return window.location.origin;
@@ -1063,6 +1133,24 @@
 
     function isUserLoggedIn() {
       return !!(currentUser?.api_key || localStorage.getItem("stanley_user_key"));
+    }
+
+    // Toast Notification Material 3 (Remplace alert)
+    function showToast(text, type = "success") {
+      const el = document.getElementById("m3Snackbar");
+      const icon = document.getElementById("snackbarIcon");
+      const txt = document.getElementById("snackbarText");
+
+      icon.innerText = type === "error" ? "✕" : (type === "info" ? "ℹ" : "✓");
+      el.style.borderColor = type === "error" ? "var(--md-sys-color-error)" : "var(--md-sys-color-primary)";
+      icon.style.color = type === "error" ? "var(--md-sys-color-error)" : "var(--md-sys-color-primary)";
+      txt.innerText = text;
+
+      el.classList.add("show");
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        el.classList.remove("show");
+      }, 3500);
     }
 
     function switchTab(tabId) {
@@ -1079,8 +1167,27 @@
     function enhancePrompt() {
       const p = document.getElementById("videoPrompt");
       const current = p.value.trim();
-      if (!current) return alert("Veuillez d'abord écrire une courte idée.");
+      if (!current) return showToast("Veuillez d'abord écrire une courte idée.", "info");
       p.value = current + ", cinematic 8k masterpiece, dramatic volumetric lighting, highly detailed environment, ultra-realistic texture, studio grade cinematography";
+      showToast("Prompt enrichi par l'IA !", "success");
+    }
+
+    // --- MODAL CLE API ---
+    function openKeyModal() {
+      const key = getApiKey();
+      document.getElementById("modalKeyDisplay").value = key;
+      document.getElementById("botParamSnippet").innerText = `https://magiclight-api.vercel.app/stanleystawa/video?prompt=VOTRE_HISTOIRE&key=${key}`;
+      document.getElementById("keyModal").classList.add("open");
+    }
+
+    function closeKeyModal() {
+      document.getElementById("keyModal").classList.remove("open");
+    }
+
+    function copyKeyFromModal() {
+      const key = getApiKey();
+      navigator.clipboard.writeText(key);
+      showToast("Clé API copiée dans le presse-papier !", "success");
     }
 
     // --- MODAL AUTHENTIFICATION ---
@@ -1154,6 +1261,7 @@
 
         alertBox.className = "auth-alert success";
         alertBox.innerText = data.message || "Code de vérification envoyé ! Vérifiez votre boîte Gmail.";
+        showToast("Code OTP expédié à votre Gmail !", "success");
 
         let countdown = 60;
         btn.innerText = `${countdown}s`;
@@ -1211,6 +1319,7 @@
 
         alertBox.className = "auth-alert success";
         alertBox.innerText = data.message || "E-mail vérifié ! 100 crédits offerts.";
+        showToast("Compte créé avec succès (+100 Crédits) !", "success");
 
         updateUserUI();
         setTimeout(() => closeAuthModal(), 1400);
@@ -1250,6 +1359,7 @@
 
         alertBox.className = "auth-alert success";
         alertBox.innerText = "Connexion réussie !";
+        showToast("Connexion réussie !", "success");
 
         updateUserUI();
         setTimeout(() => closeAuthModal(), 1200);
@@ -1278,14 +1388,14 @@
 
         if (!res.ok) throw new Error(data.error || "Échec de la suppression.");
 
-        alert("Votre compte a été supprimé avec succès.");
+        showToast("Votre compte a été supprimé avec succès.", "info");
         currentUser = null;
         localStorage.removeItem("stanley_user_key");
         localStorage.removeItem("stanley_user_email");
         updateUserUI();
 
       } catch (err) {
-        alert(`Erreur: ${err.message}`);
+        showToast(`Erreur: ${err.message}`, "error");
       }
     }
 
@@ -1299,6 +1409,7 @@
       if (email && key && (key.startsWith("stanleystawa_") || key.startsWith("stawa_"))) {
         authBtn.style.display = "none";
         profileBadge.style.display = "inline-flex";
+        document.getElementById("userAvatarChar").innerText = email.charAt(0).toUpperCase();
         document.getElementById("userEmailLabel").innerText = email.length > 20 ? email.slice(0, 18) + "..." : email;
         document.getElementById("userCreditsLabel").innerText = (currentUser?.credits ?? 100) + " Crédits";
       } else {
@@ -1307,19 +1418,13 @@
       }
     }
 
-    function copyMyApiKey() {
-      const key = getApiKey();
-      navigator.clipboard.writeText(key);
-      alert(`Clé API personnelle copiée :\n${key}\n\nUtilisez-la dans votre bot Facebook avec le paramètre : &key=${key}`);
-    }
-
     function logoutUser() {
       if (!confirm("Voulez-vous vous déconnecter ?")) return;
       currentUser = null;
       localStorage.removeItem("stanley_user_key");
       localStorage.removeItem("stanley_user_email");
       updateUserUI();
-      alert("Déconnexion réussie.");
+      showToast("Déconnexion réussie.", "info");
     }
 
     async function initUserSession() {
@@ -1394,7 +1499,7 @@
       const box = document.getElementById("videoPreviewBox");
       const btn = document.getElementById("btnGenVideo");
 
-      if (!prompt) return alert("Veuillez saisir un scénario / prompt.");
+      if (!prompt) return showToast("Veuillez saisir un scénario / prompt.", "error");
 
       btn.disabled = true;
       box.innerHTML = `
@@ -1435,6 +1540,7 @@
                 </div>
               `;
               saveCreationLocally({ taskId, prompt, videoUrl: statusData.video_url, duration: statusData.duration, date: new Date().toLocaleString() });
+              showToast("Film vidéo finalisé avec succès !", "success");
               initUserSession();
               break;
             } else if (statusData.status === "failed") {
@@ -1446,6 +1552,7 @@
                   <button type="button" class="btn-secondary" onclick="generateVideo()">Réessayer la génération</button>
                 </div>
               `;
+              showToast("Échec du rendu vidéo sur le serveur.", "error");
               break;
             } else {
               const pct = statusData.progress || 20;
@@ -1467,6 +1574,7 @@
         }
       } catch (err) {
         box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px; font-weight: 700;">Erreur: ${err.message}</div>`;
+        showToast(err.message, "error");
       } finally {
         btn.disabled = false;
       }
@@ -1514,7 +1622,7 @@
       const box = document.getElementById("imagePreviewBox");
       const btn = document.getElementById("btnGenImg");
 
-      if (!prompt) return alert("Veuillez saisir un prompt pour l'image.");
+      if (!prompt) return showToast("Veuillez saisir un prompt pour l'image.", "error");
 
       btn.disabled = true;
       box.innerHTML = `<div class="loader"></div><div>Génération de l'image par Vision Studio...</div>`;
@@ -1535,10 +1643,12 @@
               <div><strong>Lien direct :</strong> <a href="${fullImgUrl}" target="_blank">${fullImgUrl}</a></div>
             </div>
           `;
+          showToast("Image HD générée avec succès !", "success");
           initUserSession();
         }
       } catch (err) {
         box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px;">Erreur: ${err.message}</div>`;
+        showToast(err.message, "error");
       } finally {
         btn.disabled = false;
       }
@@ -1557,8 +1667,8 @@
       const box = document.getElementById("editPreviewBox");
       const btn = document.getElementById("btnEditImg");
 
-      if (!image) return alert("Veuillez uploader une image ou saisir une URL d'image source.");
-      if (!prompt) return alert("Veuillez saisir une consigne de retouche.");
+      if (!image) return showToast("Veuillez uploader une image ou saisir une URL source.", "error");
+      if (!prompt) return showToast("Veuillez saisir une consigne de retouche.", "error");
 
       btn.disabled = true;
       box.innerHTML = `<div class="loader"></div><div>Application de la retouche par Stanley Stawa AI...</div>`;
@@ -1578,10 +1688,12 @@
               <div><strong>Lien direct :</strong> <a href="${data.image_url}" target="_blank">Ouvrir l'image</a></div>
             </div>
           `;
+          showToast("Retouche appliquée avec succès !", "success");
           initUserSession();
         }
       } catch (err) {
         box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px;">Erreur: ${err.message}</div>`;
+        showToast(err.message, "error");
       } finally {
         btn.disabled = false;
       }
@@ -1598,7 +1710,7 @@
       const box = document.getElementById("storyPreviewBox");
       const btn = document.getElementById("btnStory");
 
-      if (!idea) return alert("Veuillez saisir une idée.");
+      if (!idea) return showToast("Veuillez saisir une idée.", "error");
 
       btn.disabled = true;
       box.innerHTML = `<div class="loader"></div><div>Scénarisation en cours...</div>`;
@@ -1619,8 +1731,10 @@
           <div style="font-weight:700;font-size:12px;margin-bottom:8px;text-transform:uppercase;">Sections découpées (${data.scenes.length}) :</div>
           <div>${scenesHtml}</div>
         `;
+        showToast("Scénario découpé avec succès !", "success");
       } catch (err) {
         box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px;">Erreur: ${err.message}</div>`;
+        showToast(err.message, "error");
       } finally {
         btn.disabled = false;
       }
@@ -1637,7 +1751,7 @@
       const box = document.getElementById("voicePreviewBox");
       const btn = document.getElementById("btnVoice");
 
-      if (!text) return alert("Veuillez saisir un texte.");
+      if (!text) return showToast("Veuillez saisir un texte.", "error");
 
       btn.disabled = true;
       box.innerHTML = `<div class="loader"></div><div>Synthèse vocale en cours...</div>`;
@@ -1653,10 +1767,12 @@
               <div><strong>Lien direct audio :</strong> <a href="${data.audio_url}" target="_blank">${data.audio_url}</a></div>
             </div>
           `;
+          showToast("Voix générée avec succès !", "success");
           initUserSession();
         }
       } catch (err) {
         box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px;">Erreur: ${err.message}</div>`;
+        showToast(err.message, "error");
       } finally {
         btn.disabled = false;
       }
@@ -1673,7 +1789,7 @@
 
     async function unlockAdminPanel() {
       const key = document.getElementById("adminSecretKeyInput").value.trim();
-      if (!key) return alert("Veuillez entrer votre clé administrateur maître.");
+      if (!key) return showToast("Veuillez entrer votre clé administrateur.", "error");
 
       try {
         const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_stats&key=${encodeURIComponent(key)}`);
@@ -1688,9 +1804,10 @@
         renderAdminStats(data.stats);
         loadAdminUsers(key);
         loadAdminTasks(key);
+        showToast("Panel Administrateur déverrouillé !", "success");
 
       } catch (err) {
-        alert("Accès refusé : " + err.message);
+        showToast("Accès refusé : " + err.message, "error");
       }
     }
 
@@ -1757,7 +1874,7 @@
           </table>
         `;
       } catch (e) {
-        container.innerHTML = `<div style="color:var(--md-sys-color-error);padding:14px;">Erreur chargement utilisateurs: ${e.message}</div>`;
+        container.innerHTML = `<div style="color:var(--md-sys-color-error);padding:14px;">Erreur: ${e.message}</div>`;
       }
     }
 
@@ -1801,7 +1918,7 @@
           </table>
         `;
       } catch (e) {
-        container.innerHTML = `<div style="color:var(--md-sys-color-error);padding:14px;">Erreur chargement tâches: ${e.message}</div>`;
+        container.innerHTML = `<div style="color:var(--md-sys-color-error);padding:14px;">Erreur: ${e.message}</div>`;
       }
     }
 
@@ -1817,10 +1934,10 @@
           body: JSON.stringify({ email, credits: parseInt(amount, 10) })
         });
         const data = await res.json();
-        alert(data.message || "Crédits mis à jour !");
+        showToast(data.message || "Crédits mis à jour !", "success");
         loadAdminUsers(key);
       } catch (err) {
-        alert("Erreur: " + err.message);
+        showToast("Erreur: " + err.message, "error");
       }
     }
 
@@ -1835,10 +1952,10 @@
           body: JSON.stringify({ user_id: id })
         });
         const data = await res.json();
-        alert(data.message || "Utilisateur supprimé !");
+        showToast(data.message || "Utilisateur supprimé !", "success");
         loadAdminUsers(key);
       } catch (err) {
-        alert("Erreur: " + err.message);
+        showToast("Erreur: " + err.message, "error");
       }
     }
 
@@ -1853,10 +1970,10 @@
           body: JSON.stringify({ task_id: taskId })
         });
         const data = await res.json();
-        alert(data.message || "Tâche supprimée !");
+        showToast(data.message || "Tâche supprimée !", "success");
         loadAdminTasks(key);
       } catch (err) {
-        alert("Erreur: " + err.message);
+        showToast("Erreur: " + err.message, "error");
       }
     }
 
