@@ -505,6 +505,7 @@ module.exports = async function handler(req, res) {
     let accountType = "studio";
     let claims = [];
     let refStats = { count: 0, total_earned: 0 };
+    let inviteesList = [];
     const today = new Date().toISOString().split("T")[0];
 
     const auth = await security.authenticateRequest(req);
@@ -515,6 +516,7 @@ module.exports = async function handler(req, res) {
       try {
         claims = await turso.getUserQuests(authUser.email);
         refStats = await turso.getReferralStats(authUser.email);
+        inviteesList = await turso.getReferralsList(authUser.email);
       } catch (err) {
         console.warn("[Quests fetch error]", err);
       }
@@ -527,6 +529,7 @@ module.exports = async function handler(req, res) {
           accountType = u.account_type || "studio";
           claims = await turso.getUserQuests(u.email);
           refStats = await turso.getReferralStats(u.email);
+          inviteesList = await turso.getReferralsList(u.email);
         }
       }
     }
@@ -592,7 +595,8 @@ module.exports = async function handler(req, res) {
         invited_count: refStats.count,
         total_earned_credits: refStats.total_earned,
         reward_per_invite: accountType === "developer" ? 5 : 10,
-        invitee_welcome_bonus: 35
+        invitee_welcome_bonus: 35,
+        invitees: inviteesList
       },
       quests: processedQuests,
       summary: {
