@@ -744,7 +744,8 @@
         <span id="userEmailLabel">Mon Compte</span>
         <span id="userCreditsLabel" class="user-credits-pill">100 Crédits</span>
         <button class="action-pill" onclick="copyMyApiKey()" title="Copier ma clé API">Clé API</button>
-        <button class="action-pill" style="background:var(--danger-dim);border-color:var(--danger);color:#fca5a5;" onclick="logoutUser()">Déconnexion</button>
+        <button class="action-pill" style="background:var(--danger-dim);border-color:var(--danger);color:#fca5a5;" onclick="deleteMyAccount()" title="Supprimer définitivement mon compte">Supprimer Compte</button>
+        <button class="action-pill" style="background:var(--surface-hover);border-color:var(--border);" onclick="logoutUser()" title="Se déconnecter">Déconnexion</button>
       </div>
 
       <!-- Bouton Connexion / Inscription -->
@@ -761,7 +762,7 @@
     <div class="hero-banner">
       <div class="hero-banner-text">
         <h2>Moteur Neural de Production Vidéo par Stanley Stawa</h2>
-        <p>Validez votre compte Gmail par code de vérification pour obtenir votre clé d'accès et 100 crédits de bienvenue.</p>
+        <p>Validez votre compte Gmail par code de vérification pour obtenir votre clé d'accès et 100 crédits de bienvenue (limite de 2 créations par e-mail).</p>
       </div>
       <div class="hero-signature">★ Stanley stawa Verified</div>
     </div>
@@ -984,7 +985,7 @@
       <!-- FORMULAIRE INSCRIPTION AVEC VALIDATION OTP STRICTE -->
       <form id="formRegister" onsubmit="handleRegisterSubmit(event)">
         <div class="form-group" style="margin-bottom: 12px;">
-          <label>Adresse Gmail Réelle</label>
+          <label>Adresse Gmail Réelle (Max 2 créations par e-mail)</label>
           <div class="otp-input-group">
             <input type="email" id="regEmail" required placeholder="votre_compte@gmail.com">
             <button type="button" id="btnSendOtp" class="btn-otp-send" onclick="sendOtpCode()">
@@ -1099,7 +1100,7 @@
       }
     }
 
-    // Envoi réel du code OTP par e-mail
+    // Envoi réel du code OTP par e-mail avec contrôle max 2 créations
     async function sendOtpCode() {
       const email = document.getElementById("regEmail").value.trim();
       const alertBox = document.getElementById("authAlert");
@@ -1127,9 +1128,8 @@
         if (!res.ok) throw new Error(data.error || "Échec de l'envoi de l'e-mail OTP.");
 
         alertBox.className = "auth-alert success";
-        alertBox.innerText = data.message || "Code de vérification envoyé ! Vérifiez votre boîte de réception Gmail.";
+        alertBox.innerText = data.message || "Code de vérification envoyé ! Vérifiez votre boîte Gmail.";
 
-        // Compte à rebours 60s
         let countdown = 60;
         btn.innerText = `${countdown}s`;
         if (otpCooldownTimer) clearInterval(otpCooldownTimer);
@@ -1236,6 +1236,34 @@
         alertBox.innerText = err.message;
       } finally {
         btn.disabled = false;
+      }
+    }
+
+    // Suppression définitive de compte
+    async function deleteMyAccount() {
+      if (!isUserLoggedIn()) return;
+      const key = getApiKey();
+      
+      const confirmMsg = "Êtes-vous absolument sûr de vouloir supprimer définitivement votre compte et vos clés ?\n\nAttention : Cette adresse Gmail ne pourra être réutilisée que dans la limite stricte de 2 inscriptions au total.";
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=delete_account&key=${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: { "x-api-key": key }
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Échec de la suppression.");
+
+        alert("Votre compte a été supprimé avec succès.");
+        currentUser = null;
+        localStorage.removeItem("stanley_user_key");
+        localStorage.removeItem("stanley_user_email");
+        updateUserUI();
+
+      } catch (err) {
+        alert(`Erreur: ${err.message}`);
       }
     }
 
