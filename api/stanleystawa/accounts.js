@@ -25,23 +25,14 @@ function readBody(req) {
   });
 }
 
-function applySecurityHeaders(res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-api-key");
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("X-Frame-Options", "SAMEORIGIN");
-  res.setHeader("X-XSS-Protection", "1; mode=block");
-  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-}
-
 module.exports = async function handler(req, res) {
-  applySecurityHeaders(res);
+  security.applySecurityHeaders(res);
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
+  const clientIp = security.getClientIp(req);
   const parsedUrlQuery = url.parse(req.url || "", true).query || {};
   const query = { ...parsedUrlQuery, ...(req.query || {}) };
   const body = req.method === "POST" ? await readBody(req) : {};
@@ -93,7 +84,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // 4. Supprimer / Bannir un utilisateur
+    // 4. Supprimer un utilisateur
     if (action === "admin_delete_user") {
       const target = params.email || params.user_id || params.id;
       if (!target) return res.status(400).json({ error: "Paramètre 'email' ou 'user_id' requis." });
@@ -138,35 +129,38 @@ module.exports = async function handler(req, res) {
       return res.status(429).json({ error: "Trop de demandes d'OTP. Veuillez patienter une minute." });
     }
 
-    const email = (params.email || "").trim().toLowerCase();
+    const rawEmail = (params.email || "").trim().toLowerCase();
+    const canonicalEmail = security.canonicalizeEmail(rawEmail);
 
-    if (!email || !email.includes("@") || !email.includes(".")) {
+    if (!rawEmail || !rawEmail.includes("@") || !rawEmail.includes(".")) {
       return res.status(400).json({ error: "Veuillez saisir une adresse e-mail valide." });
     }
 
-    if (mailer.isDisposableEmail(email)) {
+    // Blocage strict des domaines jetables
+    if (mailer.isDisposableEmail(rawEmail) || mailer.isDisposableEmail(canonicalEmail)) {
       return res.status(400).json({
         error: "Les adresses e-mails temporaires ou jetables sont strictement interdites. Veuillez utiliser une vraie adresse Gmail, Outlook ou Yahoo."
       });
     }
 
     try {
-      const regCount = await turso.getEmailRegistrationCount(email);
+      // Vérification quota sur l'adresse canonique (anti-fraude par alias +tag et points)
+      const regCount = await turso.getEmailRegistrationCount(canonicalEmail);
       if (regCount >= MAX_REGISTRATIONS_PER_GMAIL) {
         return res.status(403).json({
           error: `Limite maximale atteinte : Cette adresse Gmail a déjà été utilisée ${regCount} fois pour créer un compte (maximum autorisé : ${MAX_REGISTRATIONS_PER_GMAIL} fois).`
         });
       }
 
-      const existing = await turso.getUserByEmail(email);
+      const existing = await turso.getUserByEmail(canonicalEmail) || await turso.getUserByEmail(rawEmail);
       if (existing) {
         return res.status(409).json({ error: "Un compte actif existe déjà avec cette adresse e-mail. Veuillez vous connecter." });
       }
 
       const otpCode = mailer.generateOtp();
-      await turso.saveOtp(email, otpCode, 10);
+      await turso.saveOtp(canonicalEmail, otpCode, 10);
 
-      const sendResult = await mailer.sendOtpEmail(email, otpCode);
+      const sendResult = await mailer.sendOtpEmail(rawEmail, otpCode);
 
       if (!sendResult.sent) {
         return res.status(500).json({
@@ -176,8 +170,8 @@ module.exports = async function handler(req, res) {
 
       return res.status(200).json({
         status: "success",
-        message: `Code de vérification expédié à ${email} ! Vérifiez votre boîte de réception Gmail (et vos spams).`,
-        email,
+        message: `Code de vérification expédié à ${rawEmail} ! Vérifiez votre boîte Gmail.`,
+        email: rawEmail,
         creations_used: regCount,
         max_creations: MAX_REGISTRATIONS_PER_GMAIL,
         expires_in: "10 minutes"
@@ -194,15 +188,16 @@ module.exports = async function handler(req, res) {
       return res.status(429).json({ error: "Trop de tentatives d'inscription. Veuillez patienter." });
     }
 
-    const email = (params.email || "").trim().toLowerCase();
+    const rawEmail = (params.email || "").trim().toLowerCase();
+    const canonicalEmail = security.canonicalizeEmail(rawEmail);
     const password = String(params.password || "").trim();
     const otp = String(params.otp || params.code || params.otp_code || "").trim();
 
-    if (!email || !email.includes("@") || !email.includes(".")) {
+    if (!rawEmail || !rawEmail.includes("@") || !rawEmail.includes(".")) {
       return res.status(400).json({ error: "Adresse e-mail valide requise." });
     }
 
-    if (mailer.isDisposableEmail(email)) {
+    if (mailer.isDisposableEmail(rawEmail) || mailer.isDisposableEmail(canonicalEmail)) {
       return res.status(400).json({ error: "Les adresses jetables sont interdites. Utilisez une adresse Gmail réelle." });
     }
 
@@ -217,21 +212,21 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-      const regCount = await turso.getEmailRegistrationCount(email);
+      const regCount = await turso.getEmailRegistrationCount(canonicalEmail);
       if (regCount >= MAX_REGISTRATIONS_PER_GMAIL) {
         return res.status(403).json({
           error: `Limite maximale atteinte : Cette adresse Gmail a déjà été utilisée ${regCount} fois pour créer un compte (maximum autorisé : ${MAX_REGISTRATIONS_PER_GMAIL} fois).`
         });
       }
 
-      const otpValidation = await turso.verifyOtp(email, otp);
+      const otpValidation = await turso.verifyOtp(canonicalEmail, otp);
       if (!otpValidation.valid) {
         return res.status(400).json({
-          error: otpValidation.reason || "Code OTP incorrect ou expiré. Veuillez vérifier votre boîte e-mail ou redemander un nouveau code."
+          error: otpValidation.reason || "Code OTP incorrect ou expiré."
         });
       }
 
-      const existing = await turso.getUserByEmail(email);
+      const existing = await turso.getUserByEmail(canonicalEmail) || await turso.getUserByEmail(rawEmail);
       if (existing) {
         return res.status(409).json({ error: "Un compte existe déjà avec cette adresse e-mail." });
       }
@@ -240,7 +235,7 @@ module.exports = async function handler(req, res) {
       const userApiKey = security.generateUserApiKey();
       const welcomeCredits = 100;
 
-      const user = await turso.createUser(email, passwordHash, userApiKey, welcomeCredits, "user");
+      const user = await turso.createUser(canonicalEmail, passwordHash, userApiKey, welcomeCredits, "user");
 
       return res.status(201).json({
         status: "success",
@@ -258,29 +253,36 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // 3. Connexion
+  // 3. Connexion (avec protection anti-bruteforce)
   if (action === "login" || action === "signin") {
-    if (!security.checkRateLimit(req, 15)) {
-      return res.status(429).json({ error: "Trop de tentatives de connexion. Veuillez patienter." });
+    if (security.isIpLockedOut(clientIp)) {
+      return res.status(429).json({
+        error: "Trop d'échecs de connexion consécutifs. Votre accès est temporairement bloqué pendant 15 minutes par sécurité."
+      });
     }
 
-    const email = (params.email || "").trim().toLowerCase();
+    const rawEmail = (params.email || "").trim().toLowerCase();
+    const canonicalEmail = security.canonicalizeEmail(rawEmail);
     const password = String(params.password || "").trim();
 
-    if (!email || !password) {
+    if (!rawEmail || !password) {
       return res.status(400).json({ error: "E-mail et mot de passe requis." });
     }
 
     try {
-      const user = await turso.getUserByEmail(email);
+      const user = await turso.getUserByEmail(canonicalEmail) || await turso.getUserByEmail(rawEmail);
       if (!user) {
-        return res.status(401).json({ error: "Identifiants incorrects (aucun compte trouvé avec cet e-mail)." });
+        security.recordLoginAttempt(clientIp, false);
+        return res.status(401).json({ error: "Identifiants incorrects." });
       }
 
       const passwordHash = security.hashPassword(password);
       if (user.password_hash !== passwordHash) {
+        security.recordLoginAttempt(clientIp, false);
         return res.status(401).json({ error: "Mot de passe incorrect." });
       }
+
+      security.recordLoginAttempt(clientIp, true);
 
       return res.status(200).json({
         status: "success",

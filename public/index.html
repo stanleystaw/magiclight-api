@@ -38,7 +38,7 @@
       --md-sys-color-on-surface: #f0f3f8;
       --md-sys-color-on-surface-variant: #9aa4b2;
       --md-sys-color-error: #ffb4ab;
-      --md-sys-color-error-container: rgba(255, 180, 171, 0.12);
+      --md-sys-color-error-container: rgba(255, 180, 171, 0.14);
 
       /* Shape Tokens */
       --md-shape-corner-small: 8px;
@@ -76,7 +76,7 @@
 
     /* M3 TOP APP BAR */
     header {
-      background: rgba(18, 23, 34, 0.92);
+      background: rgba(18, 23, 34, 0.94);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--md-sys-color-outline-variant);
@@ -136,39 +136,34 @@
       flex-wrap: wrap;
     }
 
-    /* M3 CHIPS & BADGES */
-    .chip-status {
-      display: inline-flex;
+    /* USER BADGE (DESKTOP & MOBILE RESPONSIVE) */
+    .user-profile-badge {
+      display: none;
       align-items: center;
-      gap: 7px;
+      gap: 8px;
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid var(--md-sys-color-outline);
+      padding: 5px 12px;
+      border-radius: var(--md-shape-corner-full);
+      font-size: 12px;
+      flex-wrap: nowrap;
+    }
+
+    .user-credits-pill {
       background: var(--md-sys-color-primary-container);
       color: var(--md-sys-color-primary);
-      padding: 6px 14px;
+      padding: 3px 9px;
       border-radius: var(--md-shape-corner-full);
+      font-weight: 800;
       font-size: 11px;
-      font-weight: 700;
-      border: 1px solid rgba(124, 240, 196, 0.25);
-    }
-
-    .chip-dot {
-      width: 6px;
-      height: 6px;
-      background: var(--md-sys-color-primary);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--md-sys-color-primary);
-      animation: pulseDot 2s infinite ease-in-out;
-    }
-
-    @keyframes pulseDot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.85); }
+      white-space: nowrap;
     }
 
     .btn-m3-primary {
       background: var(--md-sys-color-primary);
       color: var(--md-sys-color-on-primary);
       border: none;
-      padding: 8px 18px;
+      padding: 9px 18px;
       border-radius: var(--md-shape-corner-full);
       font-size: 12px;
       font-weight: 800;
@@ -186,27 +181,7 @@
       box-shadow: var(--md-elevation-2);
     }
 
-    .user-profile-badge {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      background: var(--md-sys-color-surface-container);
-      border: 1px solid var(--md-sys-color-outline);
-      padding: 4px 10px;
-      border-radius: var(--md-shape-corner-full);
-      font-size: 12px;
-    }
-
-    .user-credits-pill {
-      background: var(--md-sys-color-primary-container);
-      color: var(--md-sys-color-primary);
-      padding: 2px 8px;
-      border-radius: var(--md-shape-corner-full);
-      font-weight: 800;
-      font-size: 11px;
-    }
-
-    /* CONTAINER & M3 NAVIGATION RAIL / TABS */
+    /* CONTAINER & TABS */
     .container {
       max-width: 1280px;
       width: 100%;
@@ -280,7 +255,7 @@
       }
     }
 
-    /* M3 CARDS & SURFACES */
+    /* CARDS */
     .card {
       background: var(--md-sys-color-surface);
       border: 1px solid var(--md-sys-color-outline);
@@ -537,7 +512,7 @@
       to { transform: rotate(360deg); }
     }
 
-    /* STATS GRID (ADMIN & DASHBOARD) */
+    /* STATS GRID */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -749,13 +724,13 @@
     </div>
     <div class="header-actions">
       
-      <!-- Profil Utilisateur Connecté -->
+      <!-- Profil Utilisateur Connecté (VISIBLE SUR DESKTOP ET MOBILE) -->
       <div id="userProfileBadge" class="user-profile-badge">
-        <span id="userEmailLabel">Mon Compte</span>
+        <span id="userEmailLabel" style="font-weight:700;color:#fff;">Mon Compte</span>
         <span id="userCreditsLabel" class="user-credits-pill">100 Crédits</span>
-        <button class="action-pill" onclick="copyMyApiKey()" title="Copier ma clé API">Clé API</button>
-        <button class="action-pill" style="background:var(--md-sys-color-error-container);border-color:var(--md-sys-color-error);color:var(--md-sys-color-error);" onclick="deleteMyAccount()">Supprimer Compte</button>
-        <button class="action-pill" style="background:var(--md-sys-color-surface-container-high);border-color:var(--md-sys-color-outline);" onclick="logoutUser()">Déconnexion</button>
+        <button type="button" class="action-pill" onclick="copyMyApiKey()" title="Copier ma clé API">Clé API</button>
+        <button type="button" class="action-pill" style="background:var(--md-sys-color-error-container);border-color:var(--md-sys-color-error);color:var(--md-sys-color-error);" onclick="deleteMyAccount()">Supprimer</button>
+        <button type="button" class="action-pill" style="background:#262f44;border-color:rgba(255,255,255,0.2);color:#fff;" onclick="logoutUser()">Déconnexion</button>
       </div>
 
       <!-- Bouton Connexion / Inscription -->
@@ -938,10 +913,10 @@
       <div class="card" style="grid-column: 1 / -1;">
         <div class="card-title">
           <span>Mes Créations & Historique Vidéo</span>
-          <button class="btn-secondary" onclick="loadMyCreations()">Actualiser</button>
+          <button type="button" class="btn-secondary" onclick="loadMyCreations()">Actualiser</button>
         </div>
         <div id="myCreationsGrid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;">
-          <div style="text-align:center;color:var(--md-sys-color-on-surface-variant);padding:24px;grid-column:1/-1;">Aucune vidéo enregistrée pour le moment.</div>
+          <div style="text-align:center;color:var(--md-sys-color-on-surface-variant);padding:24px;">Aucune vidéo enregistrée pour le moment.</div>
         </div>
       </div>
     </div>
@@ -951,14 +926,14 @@
       <div class="card" style="grid-column: 1 / -1;">
         <div class="card-title">
           <span>Panel Administrateur — Stanley Stawa Core</span>
-          <button class="btn-secondary" onclick="loadAdminDashboard()">Actualiser Données</button>
+          <button type="button" class="btn-secondary" onclick="loadAdminDashboard()">Actualiser Données</button>
         </div>
 
         <div id="adminAuthLock" style="padding:24px;text-align:center;">
-          <p style="color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;">Entrez votre clé administrateur pour déverrouiller la console de gestion.</p>
+          <p style="color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;">Entrez votre clé administrateur maître pour déverrouiller la console de gestion.</p>
           <div style="max-width:320px;margin:0 auto;display:flex;gap:8px;">
             <input type="password" id="adminSecretKeyInput" placeholder="Clé Maître Admin" value="">
-            <button class="btn-m3-primary" onclick="unlockAdminPanel()">Déverrouiller</button>
+            <button type="button" class="btn-m3-primary" onclick="unlockAdminPanel()">Déverrouiller</button>
           </div>
         </div>
 
@@ -988,11 +963,11 @@
   <!-- MODAL AUTHENTIFICATION AVEC OTP GMAIL -->
   <div id="authModal" class="modal-backdrop">
     <div class="modal-card">
-      <button class="modal-close" onclick="closeAuthModal()">✕</button>
+      <button type="button" class="modal-close" onclick="closeAuthModal()">✕</button>
 
       <div class="modal-tabs">
-        <button id="tabAuthRegister" class="modal-tab-btn active" onclick="switchAuthTab('register')">Inscription (+100 Crédits)</button>
-        <button id="tabAuthLogin" class="modal-tab-btn" onclick="switchAuthTab('login')">Connexion</button>
+        <button type="button" id="tabAuthRegister" class="modal-tab-btn active" onclick="switchAuthTab('register')">Inscription (+100 Crédits)</button>
+        <button type="button" id="tabAuthLogin" class="modal-tab-btn" onclick="switchAuthTab('login')">Connexion</button>
       </div>
 
       <div id="authAlert" class="auth-alert"></div>
@@ -1000,7 +975,7 @@
       <!-- FORMULAIRE INSCRIPTION -->
       <form id="formRegister" onsubmit="handleRegisterSubmit(event)">
         <div class="form-group" style="margin-bottom: 12px;">
-          <label>Adresse Gmail Réelle</label>
+          <label>Adresse Gmail Réelle (Max 2 créations par e-mail)</label>
           <div class="otp-input-group">
             <input type="email" id="regEmail" required placeholder="votre_compte@gmail.com">
             <button type="button" id="btnSendOtp" class="btn-otp-send" onclick="sendOtpCode()">
@@ -1045,7 +1020,7 @@
   </div>
 
   <footer>
-    Plateforme de Production IA développée par <span>★ Stanley stawa</span> • Tous droits réservés • Moteur Neural v2.8 (M3 Engine)
+    Plateforme de Production IA développée par <span>★ Stanley stawa</span> • Tous droits réservés • Moteur Neural v3.0 (M3 Engine)
   </footer>
 
   <script>
@@ -1293,15 +1268,17 @@
       const email = currentUser?.email || localStorage.getItem("stanley_user_email");
       const key = getApiKey();
 
-      if (email && key) {
-        document.getElementById("btnOpenAuth").style.display = "none";
-        const badge = document.getElementById("userProfileBadge");
-        badge.style.display = "flex";
-        document.getElementById("userEmailLabel").innerText = email;
+      const authBtn = document.getElementById("btnOpenAuth");
+      const profileBadge = document.getElementById("userProfileBadge");
+
+      if (email && key && (key.startsWith("stanleystawa_") || key.startsWith("stawa_"))) {
+        authBtn.style.display = "none";
+        profileBadge.style.display = "inline-flex";
+        document.getElementById("userEmailLabel").innerText = email.length > 22 ? email.slice(0, 20) + "..." : email;
         document.getElementById("userCreditsLabel").innerText = (currentUser?.credits ?? 100) + " Crédits";
       } else {
-        document.getElementById("btnOpenAuth").style.display = "flex";
-        document.getElementById("userProfileBadge").style.display = "none";
+        authBtn.style.display = "inline-flex";
+        profileBadge.style.display = "none";
       }
     }
 
@@ -1728,8 +1705,8 @@
                   <td>${u.role}</td>
                   <td><code style="font-size:10px;color:var(--md-sys-color-on-surface-variant);">${u.api_key.slice(0, 20)}...</code></td>
                   <td>
-                    <button class="btn-secondary" style="padding:4px 8px;font-size:11px;" onclick="adminEditCredits('${u.email}', ${u.credits})">+ Crédits</button>
-                    <button class="btn-secondary" style="padding:4px 8px;font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteUser('${u.id}')">Supprimer</button>
+                    <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;" onclick="adminEditCredits('${u.email}', ${u.credits})">+ Crédits</button>
+                    <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteUser('${u.id}')">Supprimer</button>
                   </td>
                 </tr>
               `).join("")}
@@ -1773,7 +1750,7 @@
                   <td>${t.duration || 0}s</td>
                   <td>${t.video_url ? `<a href="${t.video_url}" target="_blank" style="color:var(--md-sys-color-primary);">Regarder</a>` : '—'}</td>
                   <td>
-                    <button class="btn-secondary" style="padding:4px 8px;font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteTask('${t.task_id}')">Suppr</button>
+                    <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteTask('${t.task_id}')">Suppr</button>
                   </td>
                 </tr>
               `).join("")}
