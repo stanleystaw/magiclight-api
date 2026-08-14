@@ -1502,11 +1502,12 @@
         });
 
         if (data.image_url) {
+          const fullImgUrl = data.image_url.startsWith("http") ? data.image_url : `${getBaseUrl()}${data.image_url}`;
           box.innerHTML = `
-            <img class="preview-img" src="${data.image_url}" alt="Image générée">
+            <img class="preview-img" src="${fullImgUrl}" alt="Image générée" onerror="this.onerror=null; this.src='https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?nologo=true'">
             <div class="meta-box">
-              <div><strong>Ratio :</strong> ${data.ratio} | <strong>Moteur :</strong> Vision Studio</div>
-              <div><strong>Lien direct :</strong> <a href="${data.image_url}" target="_blank">${data.image_url}</a></div>
+              <div><strong>Ratio :</strong> ${data.ratio} | <strong>Moteur :</strong> Stanley Stawa Vision HD</div>
+              <div><strong>Lien direct :</strong> <a href="${fullImgUrl}" target="_blank">${fullImgUrl}</a></div>
             </div>
           `;
           initUserSession();
