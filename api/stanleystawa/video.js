@@ -12,6 +12,7 @@ const REPO = "foctaveluka-eng/magiclight-api";
 const WORKFLOW_ID = "332930279";
 
 module.exports = async function handler(req, res) {
+  security.applySecurityHeaders(res);
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-api-key");

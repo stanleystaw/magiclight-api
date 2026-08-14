@@ -12,6 +12,7 @@ const GITHUB_TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || ("ghp_"
 const REPO = "foctaveluka-eng/magiclight-api";
 
 module.exports = async function handler(req, res) {
+  security.applySecurityHeaders(res);
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Range, Authorization, Content-Type, x-api-key");

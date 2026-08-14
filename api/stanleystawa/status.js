@@ -9,6 +9,7 @@ const turso = require("../../lib/turso");
 const security = require("../../lib/security");
 
 module.exports = async function handler(req, res) {
+  security.applySecurityHeaders(res);
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");

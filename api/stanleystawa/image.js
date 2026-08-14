@@ -8,6 +8,7 @@ const engine = require("../../lib/magiclight");
 const CREATIVE_STUDIO_API = "https://creative-image-studio.onrender.com";
 
 module.exports = async function handler(req, res) {
+  security.applySecurityHeaders(res);
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");

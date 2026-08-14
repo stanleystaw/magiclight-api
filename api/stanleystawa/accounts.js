@@ -33,10 +33,18 @@ function readBody(req) {
   });
 }
 
-module.exports = async function handler(req, res) {
+function applySecurityHeaders(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-api-key");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+}
+
+module.exports = async function handler(req, res) {
+  applySecurityHeaders(res);
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -62,7 +70,7 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: "Veuillez saisir une adresse e-mail valide." });
     }
 
-    // 1. Blocage des e-mails jetables
+    // 1. Blocage strict des domaines jetables
     if (mailer.isDisposableEmail(email)) {
       return res.status(400).json({
         error: "Les adresses e-mails temporaires ou jetables sont strictement interdites. Veuillez utiliser une vraie adresse Gmail, Outlook ou Yahoo."
@@ -93,7 +101,7 @@ module.exports = async function handler(req, res) {
 
       if (!sendResult.sent) {
         return res.status(500).json({
-          error: "Impossible d'expédier l'e-mail de vérification. Vérifiez votre adresse Gmail."
+          error: sendResult.error || "Impossible d'expédier l'e-mail de vérification. Vérifiez votre adresse Gmail."
         });
       }
 
@@ -151,10 +159,10 @@ module.exports = async function handler(req, res) {
       }
 
       // 2. Vérification du code OTP dans Turso DB
-      const isValidOtp = await turso.verifyOtp(email, otp);
-      if (!isValidOtp) {
+      const otpValidation = await turso.verifyOtp(email, otp);
+      if (!otpValidation.valid) {
         return res.status(400).json({
-          error: "Code OTP incorrect ou expiré. Veuillez vérifier votre boîte e-mail ou redemander un nouveau code."
+          error: otpValidation.reason || "Code OTP incorrect ou expiré. Veuillez vérifier votre boîte e-mail ou redemander un nouveau code."
         });
       }
 
