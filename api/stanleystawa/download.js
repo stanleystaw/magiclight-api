@@ -14,7 +14,7 @@ const REPO = "foctaveluka-eng/magiclight-api";
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Range, Authorization, Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Range, Authorization, Content-Type, x-api-key");
   res.setHeader("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges");
 
   if (req.method === "OPTIONS") {
@@ -22,9 +22,7 @@ module.exports = async function handler(req, res) {
   }
 
   if (!security.checkRateLimit(req, 100)) {
-    return res.status(429).json({ error: "Trop de requêtes de téléchargement." });
-  }
-    return res.status(200).end();
+    return res.status(429).json({ error: "Trop de requêtes de téléchargement. Veuillez patienter." });
   }
 
   try {
