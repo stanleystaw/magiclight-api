@@ -1444,24 +1444,17 @@
 
   </div>
 
-  <!-- 1. MODAL CONNEXION (DÉDIÉ AVEC CHOIX MOT DE PASSE OU CODE OTP) -->
+  <!-- 1. MODAL CONNEXION (SIMPLE & DIRECT) -->
   <div id="modalLogin" class="modal-backdrop">
     <div class="modal-card">
       <button type="button" class="modal-close" onclick="closeAuthModals()">✕</button>
 
       <div style="font-weight:800;font-size:18px;color:#fff;margin-bottom:2px;">Connexion à votre Espace</div>
-      <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-bottom:12px;">Connectez-vous avec votre mot de passe OU recevez un code par e-mail.</div>
+      <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;">Entrez votre adresse Gmail et votre mot de passe pour vous connecter.</div>
 
       <div id="loginAlert" class="auth-alert"></div>
 
-      <!-- Onglets du mode de connexion -->
-      <div style="display:flex;gap:6px;background:var(--md-sys-color-surface-container);padding:4px;border-radius:var(--md-shape-corner-full);margin-bottom:14px;">
-        <button type="button" id="tabLoginPass" class="modal-tab-btn active" onclick="switchLoginMode('password')">Mot de passe</button>
-        <button type="button" id="tabLoginOtp" class="modal-tab-btn" onclick="switchLoginMode('otp')">Code OTP (E-mail)</button>
-      </div>
-
-      <!-- Mode 1 : Mot de passe -->
-      <form id="formLoginPass" onsubmit="handleLoginSubmit(event)">
+      <form id="formLogin" onsubmit="handleLoginSubmit(event)">
         <div class="form-group" style="margin-bottom: 12px;">
           <label>Adresse Gmail</label>
           <input type="email" id="loginEmail" required placeholder="votre_compte@gmail.com" autocomplete="email">
@@ -1475,34 +1468,11 @@
         <button type="submit" id="btnLoginSubmit" class="btn-submit" style="width: 100%;">
           Se connecter
         </button>
-      </form>
 
-      <!-- Mode 2 : Code OTP (Sans mot de passe / Mot de passe oublié) -->
-      <form id="formLoginOtp" style="display:none;" onsubmit="handleLoginOtpSubmit(event)">
-        <div class="form-group" style="margin-bottom: 10px;">
-          <label>Adresse Gmail</label>
-          <div class="otp-input-group">
-            <input type="email" id="loginOtpEmail" required placeholder="votre_compte@gmail.com">
-            <button type="button" id="btnLoginSendOtp" class="btn-otp-send" onclick="sendLoginOtpCode()">
-              Envoyer Code
-            </button>
-          </div>
-          <span style="font-size:10px;color:var(--md-sys-color-on-surface-variant);">Un code de connexion vous sera envoyé par e-mail.</span>
+        <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--md-sys-color-on-surface-variant);">
+          Pas encore de compte ? <a href="javascript:void(0)" onclick="openRegisterModal()" style="color:var(--md-sys-color-primary);font-weight:800;text-decoration:none;">Créer un compte (+30 Crédits)</a>
         </div>
-
-        <div class="form-group" style="margin-bottom: 18px;">
-          <label>Code Reçu (6 chiffres)</label>
-          <input type="text" id="loginOtpInput" required maxlength="6" pattern="[0-9]{6}" placeholder="------" style="letter-spacing: 6px; font-family: var(--font-family-mono); font-weight: 700; text-align: center;">
-        </div>
-
-        <button type="submit" id="btnLoginOtpSubmit" class="btn-submit" style="width: 100%;">
-          Valider & Se connecter
-        </button>
       </form>
-
-      <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--md-sys-color-on-surface-variant);">
-        Pas encore de compte ? <a href="javascript:void(0)" onclick="openRegisterModal()" style="color:var(--md-sys-color-primary);font-weight:800;text-decoration:none;">Créer un compte (+30 Crédits)</a>
-      </div>
     </div>
   </div>
 
@@ -1721,161 +1691,6 @@
       const mReg = document.getElementById("modalRegister");
       if (mLog) mLog.classList.remove("open");
       if (mReg) mReg.classList.remove("open");
-    }
-
-    function switchLoginMode(mode) {
-      const tabPass = document.getElementById("tabLoginPass");
-      const tabOtp = document.getElementById("tabLoginOtp");
-      const fPass = document.getElementById("formLoginPass");
-      const fOtp = document.getElementById("formLoginOtp");
-      const alertBox = document.getElementById("loginAlert");
-
-      if (alertBox) {
-        alertBox.className = "auth-alert";
-        alertBox.innerText = "";
-      }
-
-      if (mode === "password") {
-        if (tabPass) tabPass.classList.add("active");
-        if (tabOtp) tabOtp.classList.remove("active");
-        if (fPass) fPass.style.display = "block";
-        if (fOtp) fOtp.style.display = "none";
-      } else {
-        if (tabOtp) tabOtp.classList.add("active");
-        if (tabPass) tabPass.classList.remove("active");
-        if (fOtp) fOtp.style.display = "block";
-        if (fPass) fPass.style.display = "none";
-        const emailFromPass = document.getElementById("loginEmail")?.value.trim();
-        if (emailFromPass && document.getElementById("loginOtpEmail")) {
-          document.getElementById("loginOtpEmail").value = emailFromPass;
-        }
-      }
-    }
-
-    async function sendLoginOtpCode() {
-      const email = document.getElementById("loginOtpEmail").value.trim();
-      const btn = document.getElementById("btnLoginSendOtp");
-      const alertBox = document.getElementById("loginAlert");
-
-      if (!email || !email.includes("@") || !email.includes(".")) {
-        if (alertBox) {
-          alertBox.className = "auth-alert error";
-          alertBox.innerText = "Veuillez saisir une adresse Gmail valide.";
-        }
-        return;
-      }
-
-      btn.disabled = true;
-      btn.innerText = "Envoi...";
-      if (alertBox) {
-        alertBox.className = "auth-alert";
-        alertBox.innerText = "";
-      }
-
-      try {
-        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=send_otp&purpose=login&email=${encodeURIComponent(email)}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "send_otp", purpose: "login", email })
-        });
-        const data = await res.json();
-
-        if (!res.ok) throw new Error(data.error || "Erreur lors de l'envoi du code.");
-
-        if (alertBox) {
-          alertBox.className = "auth-alert success";
-          alertBox.innerText = `Code de connexion envoyé à ${email} ! Consultez votre boîte Gmail.`;
-        }
-        showToast("Code de connexion envoyé !", "success");
-
-        let countdown = 60;
-        btn.innerText = `Attendre (${countdown}s)`;
-        const interval = setInterval(() => {
-          countdown--;
-          if (countdown <= 0) {
-            clearInterval(interval);
-            btn.disabled = false;
-            btn.innerText = "Renvoyer Code";
-          } else {
-            btn.innerText = `Attendre (${countdown}s)`;
-          }
-        }, 1000);
-
-      } catch (err) {
-        if (alertBox) {
-          alertBox.className = "auth-alert error";
-          alertBox.innerText = err.message;
-        }
-        showToast(err.message, "error");
-        btn.disabled = false;
-        btn.innerText = "Envoyer Code";
-      }
-    }
-
-    async function handleLoginOtpSubmit(e) {
-      e.preventDefault();
-      const email = document.getElementById("loginOtpEmail").value.trim();
-      const otp = document.getElementById("loginOtpInput").value.trim();
-      const alertBox = document.getElementById("loginAlert");
-      const btn = document.getElementById("btnLoginOtpSubmit");
-
-      if (!email || !otp || otp.length !== 6) {
-        if (alertBox) {
-          alertBox.className = "auth-alert error";
-          alertBox.innerText = "Veuillez renseigner votre e-mail et le code à 6 chiffres reçu dans votre boîte Gmail.";
-        }
-        return;
-      }
-
-      btn.disabled = true;
-      btn.innerText = "Connexion en cours...";
-      if (alertBox) {
-        alertBox.className = "auth-alert";
-        alertBox.innerText = "";
-      }
-
-      try {
-        const loginUrl = `${getBaseUrl()}/stanleystawa/accounts?action=login&email=${encodeURIComponent(email)}&otp=${encodeURIComponent(otp)}`;
-        const res = await fetch(loginUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "login", email, otp })
-        });
-        const data = await res.json();
-
-        if (!res.ok) throw new Error(data.error || "Code invalide ou expiré.");
-
-        currentUser = data.user;
-        localStorage.setItem("stanley_user_key", data.user.api_key);
-        localStorage.setItem("stanley_user_email", data.user.email);
-        localStorage.setItem("stanley_account_type", data.user.account_type || "studio");
-
-        if (alertBox) {
-          alertBox.className = "auth-alert success";
-          alertBox.innerText = "Connexion réussie !";
-        }
-        showToast("Connexion réussie !", "success");
-
-        updateUserUI();
-        loadQuests();
-        if (currentUser.role === "admin" || currentUser.is_admin) {
-          switchTab("admin");
-        }
-        setTimeout(() => {
-          closeAuthModals();
-          btn.disabled = false;
-          btn.innerText = "Valider & Se connecter";
-        }, 600);
-
-      } catch (err) {
-        if (alertBox) {
-          alertBox.className = "auth-alert error";
-          alertBox.innerText = err.message;
-        }
-        showToast(err.message, "error");
-        btn.disabled = false;
-        btn.innerText = "Valider & Se connecter";
-      }
     }
 
     function openAuthModal(mode = "register", customMessage = "") {
