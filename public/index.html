@@ -139,7 +139,7 @@
       flex-wrap: wrap;
     }
 
-    /* USER PROFILE BADGE */
+    /* USER PROFILE BAR DEDIEE AVEC CLE VISIBLE DIRECTEMENT */
     .user-profile-badge {
       display: none;
       align-items: center;
@@ -153,8 +153,8 @@
     }
 
     .user-avatar-circle {
-      width: 24px;
-      height: 24px;
+      width: 26px;
+      height: 26px;
       background: var(--md-sys-color-primary);
       color: var(--md-sys-color-on-primary);
       font-weight: 800;
@@ -168,11 +168,24 @@
     .user-credits-pill {
       background: var(--md-sys-color-primary-container);
       color: var(--md-sys-color-primary);
-      padding: 3px 8px;
+      padding: 3px 9px;
       border-radius: var(--md-shape-corner-full);
       font-weight: 800;
       font-size: 11px;
       white-space: nowrap;
+    }
+
+    .key-display-chip {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--md-sys-color-outline);
+      padding: 2px 8px;
+      border-radius: var(--md-shape-corner-full);
+      font-family: var(--font-family-mono);
+      font-size: 11px;
+      color: var(--md-sys-color-primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .btn-m3-primary {
@@ -274,6 +287,10 @@
       }
       .form-row {
         grid-template-columns: 1fr !important;
+      }
+      .user-profile-badge {
+        font-size: 11px;
+        padding: 4px 8px;
       }
     }
 
@@ -788,12 +805,18 @@
     </div>
     <div class="header-actions">
       
-      <!-- Profil Utilisateur Connecté -->
+      <!-- Profil Utilisateur Connecté (CLE API DIRECTEMENT VISIBLE) -->
       <div id="userProfileBadge" class="user-profile-badge">
         <div class="user-avatar-circle" id="userAvatarChar">S</div>
         <span id="userEmailLabel" style="font-weight:700;color:#fff;">Mon Compte</span>
         <span id="userCreditsLabel" class="user-credits-pill">100 Crédits</span>
-        <button type="button" class="action-pill" onclick="openKeyModal()">Clé API</button>
+        
+        <!-- Clé affichée directement avec bouton copier instantané -->
+        <div class="key-display-chip" title="Votre clé API personnelle">
+          <span id="userKeyText">stanleystawa_usr_...</span>
+          <button type="button" class="action-pill" style="padding:2px 8px;font-size:10px;" onclick="copyDirectApiKey()">Copier</button>
+        </div>
+
         <button type="button" class="action-pill" style="background:var(--md-sys-color-error-container);border-color:var(--md-sys-color-error);color:var(--md-sys-color-error);" onclick="deleteMyAccount()">Supprimer</button>
         <button type="button" class="action-pill" style="background:#262f44;border-color:rgba(255,255,255,0.2);color:#fff;" onclick="logoutUser()">Déconnexion</button>
       </div>
@@ -816,7 +839,9 @@
       <button class="tab-btn" onclick="switchTab('voice')">Voix Studio</button>
       <button class="tab-btn" onclick="switchTab('story')">Laboratoire Scénario</button>
       <button class="tab-btn" onclick="switchTab('creations')">Mes Créations</button>
-      <button class="tab-btn" onclick="switchTab('admin')">Panel Administrateur</button>
+      
+      <!-- ONGLET ADMIN : MASQUE PAR DEFAUT, VISIBLE UNIQUEMENT POUR L'ADMINISTRATEUR OFFICIEL -->
+      <button class="tab-btn" id="tabBtnAdmin" style="display:none;border-color:var(--md-sys-color-primary);" onclick="switchTab('admin')">Panel Administrateur</button>
     </div>
 
     <!-- 1. TAB VIDEO -->
@@ -986,36 +1011,32 @@
       </div>
     </div>
 
-    <!-- 6. TAB PANEL ADMINISTRATEUR -->
+    <!-- 6. TAB PANEL ADMINISTRATEUR (CHARGE DIRECTEMENT POUR LE COMPTE ADMIN) -->
     <div id="tab-admin" class="tab-panel">
       <div class="card" style="grid-column: 1 / -1;">
         <div class="card-title">
-          <span>Panel Administrateur — Stanley Stawa Core</span>
-          <button type="button" class="btn-secondary" onclick="loadAdminDashboard()">Actualiser Données</button>
-        </div>
-
-        <div id="adminAuthLock" style="padding:24px;text-align:center;">
-          <p style="color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;">Entrez votre clé administrateur maître pour déverrouiller la console de gestion.</p>
-          <div style="max-width:320px;margin:0 auto;display:flex;gap:8px;">
-            <input type="password" id="adminSecretKeyInput" placeholder="Clé Maître Admin" value="">
-            <button type="button" class="btn-m3-primary" onclick="unlockAdminPanel()">Déverrouiller</button>
+          <span>Console d'Administration — Stanley Stawa Core</span>
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="btn-secondary" onclick="adminRefillCluster()">+ Ajouter Nœud Cluster</button>
+            <button type="button" class="btn-secondary" onclick="adminCleanDeadNodes()">Nettoyer Nœuds 0 Crédit</button>
+            <button type="button" class="btn-secondary" onclick="loadAdminDashboard()">Actualiser</button>
           </div>
         </div>
 
-        <div id="adminContent" style="display:none;flex-direction:column;gap:20px;">
+        <div id="adminContent" style="display:flex;flex-direction:column;gap:20px;">
           
           <!-- STATS GLOBALES -->
           <div class="stats-grid" id="adminStatsGrid"></div>
 
           <!-- GESTION DES UTILISATEURS -->
           <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="font-weight:800;font-size:14px;color:#fff;">Utilisateurs Enregistrés</div>
+            <div style="font-weight:800;font-size:14px;color:#fff;">Utilisateurs Inscrits & Clés Personnelles</div>
             <div class="table-container" id="adminUsersTable"></div>
           </div>
 
-          <!-- TÂCHES VIDÉO RÉCENTES -->
+          <!-- TACHES VIDEO RECENTES -->
           <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="font-weight:800;font-size:14px;color:#fff;">Tâches Vidéo Récentes</div>
+            <div style="font-weight:800;font-size:14px;color:#fff;">Tâches Vidéo Récentes du Cluster</div>
             <div class="table-container" id="adminTasksTable"></div>
           </div>
 
@@ -1023,29 +1044,6 @@
       </div>
     </div>
 
-  </div>
-
-  <!-- MODAL DETAILS CLE API & PARAMETRES BOT -->
-  <div id="keyModal" class="modal-backdrop">
-    <div class="modal-card">
-      <button type="button" class="modal-close" onclick="closeKeyModal()">✕</button>
-      <div style="font-size:16px;font-weight:800;color:#fff;border-bottom:1px solid var(--md-sys-color-outline-variant);padding-bottom:10px;">
-        Ma Clé API Personnelle
-      </div>
-      <div class="form-group">
-        <label>Clé d'Accès Sécurisée</label>
-        <div style="display:flex;gap:8px;">
-          <input type="text" id="modalKeyDisplay" readonly style="font-family:var(--font-family-mono);font-size:12px;color:var(--md-sys-color-primary);">
-          <button type="button" class="btn-m3-primary" onclick="copyKeyFromModal()">Copier</button>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Paramètre pour votre Bot Facebook / API</label>
-        <div style="background:var(--md-sys-color-surface-container);padding:10px 14px;border-radius:var(--md-shape-corner-medium);border:1px solid var(--md-sys-color-outline);font-size:11px;font-family:var(--font-family-mono);word-break:break-all;color:var(--md-sys-color-on-surface-variant);" id="botParamSnippet">
-        </div>
-      </div>
-      <button type="button" class="btn-secondary" style="width:100%;" onclick="closeKeyModal()">Fermer</button>
-    </div>
   </div>
 
   <!-- MODAL AUTHENTIFICATION AVEC OTP GMAIL -->
@@ -1107,7 +1105,7 @@
     </div>
   </div>
 
-  <!-- TOAST NOTIFICATION M3 (REMPLACE LES ALERTS NAVIGATEUR) -->
+  <!-- TOAST NOTIFICATION M3 -->
   <div id="m3Snackbar" class="m3-snackbar">
     <span id="snackbarIcon">✓</span>
     <span id="snackbarText">Opération réussie</span>
@@ -1135,7 +1133,6 @@
       return !!(currentUser?.api_key || localStorage.getItem("stanley_user_key"));
     }
 
-    // Toast Notification Material 3 (Remplace alert)
     function showToast(text, type = "success") {
       const el = document.getElementById("m3Snackbar");
       const icon = document.getElementById("snackbarIcon");
@@ -1156,11 +1153,15 @@
     function switchTab(tabId) {
       document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
       document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
-      event.target.classList.add("active");
-      document.getElementById("tab-" + tabId).classList.add("active");
+      
+      const targetBtn = document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
+      if (targetBtn) targetBtn.classList.add("active");
+      
+      const targetPanel = document.getElementById("tab-" + tabId);
+      if (targetPanel) targetPanel.classList.add("active");
 
       if (tabId === "creations") loadMyCreations();
-      if (tabId === "admin") checkAdminAccess();
+      if (tabId === "admin") loadAdminDashboard();
     }
 
     // --- PROMPT ENHANCER IA ---
@@ -1172,20 +1173,10 @@
       showToast("Prompt enrichi par l'IA !", "success");
     }
 
-    // --- MODAL CLE API ---
-    function openKeyModal() {
+    // --- COPIE DIRECTE DE CLE API SANS POPUP ---
+    function copyDirectApiKey() {
       const key = getApiKey();
-      document.getElementById("modalKeyDisplay").value = key;
-      document.getElementById("botParamSnippet").innerText = `https://magiclight-api.vercel.app/stanleystawa/video?prompt=VOTRE_HISTOIRE&key=${key}`;
-      document.getElementById("keyModal").classList.add("open");
-    }
-
-    function closeKeyModal() {
-      document.getElementById("keyModal").classList.remove("open");
-    }
-
-    function copyKeyFromModal() {
-      const key = getApiKey();
+      if (!key) return;
       navigator.clipboard.writeText(key);
       showToast("Clé API copiée dans le presse-papier !", "success");
     }
@@ -1261,7 +1252,7 @@
 
         alertBox.className = "auth-alert success";
         alertBox.innerText = data.message || "Code de vérification envoyé ! Vérifiez votre boîte Gmail.";
-        showToast("Code OTP expédié à votre Gmail !", "success");
+        showToast("Code de vérification envoyé à votre Gmail !", "success");
 
         let countdown = 60;
         btn.innerText = `${countdown}s`;
@@ -1405,6 +1396,7 @@
 
       const authBtn = document.getElementById("btnOpenAuth");
       const profileBadge = document.getElementById("userProfileBadge");
+      const adminTabBtn = document.getElementById("tabBtnAdmin");
 
       if (email && key && (key.startsWith("stanleystawa_") || key.startsWith("stawa_"))) {
         authBtn.style.display = "none";
@@ -1412,9 +1404,22 @@
         document.getElementById("userAvatarChar").innerText = email.charAt(0).toUpperCase();
         document.getElementById("userEmailLabel").innerText = email.length > 20 ? email.slice(0, 18) + "..." : email;
         document.getElementById("userCreditsLabel").innerText = (currentUser?.credits ?? 100) + " Crédits";
+        
+        // Affichage direct de la clé dans le chip
+        const shortKey = key.length > 24 ? key.slice(0, 18) + "..." : key;
+        document.getElementById("userKeyText").innerText = shortKey;
+        document.getElementById("userKeyText").title = key;
+
+        // Afficher l'onglet Admin UNIQUEMENT si le compte est administrateur
+        if (currentUser?.role === "admin" || currentUser?.is_admin || email.toLowerCase().includes("stanleystawa")) {
+          adminTabBtn.style.display = "inline-flex";
+        } else {
+          adminTabBtn.style.display = "none";
+        }
       } else {
         authBtn.style.display = "inline-flex";
         profileBadge.style.display = "none";
+        adminTabBtn.style.display = "none";
       }
     }
 
@@ -1424,6 +1429,7 @@
       localStorage.removeItem("stanley_user_key");
       localStorage.removeItem("stanley_user_email");
       updateUserUI();
+      switchTab("video");
       showToast("Déconnexion réussie.", "info");
     }
 
@@ -1433,7 +1439,7 @@
         try {
           const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/accounts?action=me&key=${savedKey}`);
           if (data.user) {
-            currentUser = { ...data.user, api_key: savedKey };
+            currentUser = { ...data.user, api_key: savedKey, is_admin: data.is_admin };
             updateUserUI();
           }
         } catch (e) {
@@ -1778,36 +1784,23 @@
       }
     }
 
-    // --- 6. PANEL ADMINISTRATEUR ---
-    function checkAdminAccess() {
-      const savedAdminKey = localStorage.getItem("stanley_admin_key");
-      if (savedAdminKey) {
-        document.getElementById("adminSecretKeyInput").value = savedAdminKey;
-        unlockAdminPanel();
-      }
-    }
-
-    async function unlockAdminPanel() {
-      const key = document.getElementById("adminSecretKeyInput").value.trim();
-      if (!key) return showToast("Veuillez entrer votre clé administrateur.", "error");
+    // --- 6. PANEL ADMINISTRATEUR (CHARGE DIRECTEMENT POUR LE COMPTE ADMIN) ---
+    async function loadAdminDashboard() {
+      const key = getApiKey();
+      if (!key) return showToast("Authentification administrateur requise.", "error");
 
       try {
         const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_stats&key=${encodeURIComponent(key)}`);
         const data = await res.json();
 
-        if (!res.ok) throw new Error(data.error || "Clé administrateur invalide.");
-
-        localStorage.setItem("stanley_admin_key", key);
-        document.getElementById("adminAuthLock").style.display = "none";
-        document.getElementById("adminContent").style.display = "flex";
+        if (!res.ok) throw new Error(data.error || "Accès refusé.");
 
         renderAdminStats(data.stats);
         loadAdminUsers(key);
         loadAdminTasks(key);
-        showToast("Panel Administrateur déverrouillé !", "success");
 
       } catch (err) {
-        showToast("Accès refusé : " + err.message, "error");
+        showToast("Erreur admin : " + err.message, "error");
       }
     }
 
@@ -1863,7 +1856,7 @@
                   <td><strong>${u.email}</strong></td>
                   <td><span style="color:var(--md-sys-color-primary);font-weight:700;">${u.credits}</span></td>
                   <td>${u.role}</td>
-                  <td><code style="font-size:10px;color:var(--md-sys-color-on-surface-variant);">${u.api_key.slice(0, 20)}...</code></td>
+                  <td><code style="font-size:10px;color:var(--md-sys-color-on-surface-variant);">${u.api_key.slice(0, 24)}...</code></td>
                   <td>
                     <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;" onclick="adminEditCredits('${u.email}', ${u.credits})">+ Crédits</button>
                     <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteUser('${u.id}')">Supprimer</button>
@@ -1905,8 +1898,8 @@
               ${data.tasks.map(t => `
                 <tr>
                   <td><code>${t.task_id}</code></td>
-                  <td>${t.prompt.slice(0, 45)}...</td>
-                  <td><span class="chip-status">${t.status}</span></td>
+                  <td>${t.prompt.slice(0, 40)}...</td>
+                  <td><span class="user-credits-pill">${t.status}</span></td>
                   <td>${t.duration || 0}s</td>
                   <td>${t.video_url ? `<a href="${t.video_url}" target="_blank" style="color:var(--md-sys-color-primary);">Regarder</a>` : '—'}</td>
                   <td>
@@ -1923,7 +1916,7 @@
     }
 
     async function adminEditCredits(email, currentCredits) {
-      const key = localStorage.getItem("stanley_admin_key");
+      const key = getApiKey();
       const amount = prompt(`Entrez le nouveau solde de crédits pour ${email} :`, currentCredits);
       if (amount === null) return;
 
@@ -1942,7 +1935,7 @@
     }
 
     async function adminDeleteUser(id) {
-      const key = localStorage.getItem("stanley_admin_key");
+      const key = getApiKey();
       if (!confirm(`Voulez-vous vraiment supprimer l'utilisateur #${id} ?`)) return;
 
       try {
@@ -1960,7 +1953,7 @@
     }
 
     async function adminDeleteTask(taskId) {
-      const key = localStorage.getItem("stanley_admin_key");
+      const key = getApiKey();
       if (!confirm(`Supprimer la tâche ${taskId} ?`)) return;
 
       try {
@@ -1977,9 +1970,29 @@
       }
     }
 
-    function loadAdminDashboard() {
-      const key = localStorage.getItem("stanley_admin_key");
-      if (key) unlockAdminPanel();
+    async function adminRefillCluster() {
+      const key = getApiKey();
+      try {
+        const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/refill?key=${encodeURIComponent(key)}`);
+        showToast("Nouveau nœud ajouté au cluster (+800 crédits) !", "success");
+        loadAdminDashboard();
+      } catch (err) {
+        showToast("Erreur: " + err.message, "error");
+      }
+    }
+
+    async function adminCleanDeadNodes() {
+      const key = getApiKey();
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_clean_nodes&key=${encodeURIComponent(key)}`, {
+          method: "POST"
+        });
+        const data = await res.json();
+        showToast(data.message || "Cluster nettoyé !", "success");
+        loadAdminDashboard();
+      } catch (err) {
+        showToast("Erreur: " + err.message, "error");
+      }
     }
 
     initUserSession();

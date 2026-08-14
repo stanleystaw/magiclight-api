@@ -40,7 +40,7 @@ module.exports = function handler(req, res) {
       description: "Plateforme de Production Vidéo IA Multi-Scènes, Synthèse Vocale et Création Visuelle HD par Stanley Stawa.",
       status: "online",
       author: "Stanley Stawa",
-      version: "3.0.0",
+      version: "3.1.0",
       watermark: "★ Stanley stawa",
       auth: {
         otp_verification: "/stanleystawa/accounts?action=send_otp",

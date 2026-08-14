@@ -46,7 +46,7 @@ module.exports = async function handler(req, res) {
   if (action.startsWith("admin_")) {
     const auth = await security.authenticateRequest(req);
     if (!auth.authorized || !auth.is_admin) {
-      return res.status(403).json({ error: "Accès refusé : Droits administrateur requis pour cette action." });
+      return res.status(403).json({ error: "Accès refusé : Seul le compte administrateur associé à l'e-mail officiel peut accéder à cette section." });
     }
 
     // 1. Statistiques globales
@@ -99,7 +99,7 @@ module.exports = async function handler(req, res) {
     // 5. Liste des tâches vidéo
     if (action === "admin_tasks") {
       try {
-        const tasks = await turso.getRecentTasks(40);
+        const tasks = await turso.getRecentTasks(50);
         return res.status(200).json({ status: "success", tasks });
       } catch (err) {
         return res.status(500).json({ error: err.message });
@@ -113,6 +113,26 @@ module.exports = async function handler(req, res) {
       try {
         await turso.deleteTask(taskId);
         return res.status(200).json({ status: "success", message: `Tâche ${taskId} supprimée.` });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    // 7. Liste détaillée des nœuds de calcul du cluster
+    if (action === "admin_cluster_nodes") {
+      try {
+        const nodes = await turso.getAllAccountsDetailed();
+        return res.status(200).json({ status: "success", nodes });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    // 8. Nettoyage des nœuds à 0 crédit
+    if (action === "admin_clean_nodes") {
+      try {
+        await turso.cleanDeadAccounts();
+        return res.status(200).json({ status: "success", message: "Nœuds inactifs ou à 0 crédit nettoyés avec succès." });
       } catch (err) {
         return res.status(500).json({ error: err.message });
       }
@@ -136,7 +156,6 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: "Veuillez saisir une adresse e-mail valide." });
     }
 
-    // Blocage strict des domaines jetables
     if (mailer.isDisposableEmail(rawEmail) || mailer.isDisposableEmail(canonicalEmail)) {
       return res.status(400).json({
         error: "Les adresses e-mails temporaires ou jetables sont strictement interdites. Veuillez utiliser une vraie adresse Gmail, Outlook ou Yahoo."
@@ -144,7 +163,6 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-      // Vérification quota sur l'adresse canonique (anti-fraude par alias +tag et points)
       const regCount = await turso.getEmailRegistrationCount(canonicalEmail);
       if (regCount >= MAX_REGISTRATIONS_PER_GMAIL) {
         return res.status(403).json({
@@ -233,9 +251,11 @@ module.exports = async function handler(req, res) {
 
       const passwordHash = security.hashPassword(password);
       const userApiKey = security.generateUserApiKey();
-      const welcomeCredits = 100;
+      const isAdm = security.isAdminEmail(rawEmail) || security.isAdminEmail(canonicalEmail);
+      const welcomeCredits = isAdm ? 999999 : 100;
+      const role = isAdm ? "admin" : "user";
 
-      const user = await turso.createUser(canonicalEmail, passwordHash, userApiKey, welcomeCredits, "user");
+      const user = await turso.createUser(canonicalEmail, passwordHash, userApiKey, welcomeCredits, role);
 
       return res.status(201).json({
         status: "success",
@@ -253,7 +273,7 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // 3. Connexion (avec protection anti-bruteforce)
+  // 3. Connexion
   if (action === "login" || action === "signin") {
     if (security.isIpLockedOut(clientIp)) {
       return res.status(429).json({
@@ -283,6 +303,7 @@ module.exports = async function handler(req, res) {
       }
 
       security.recordLoginAttempt(clientIp, true);
+      const isAdm = user.role === "admin" || security.isAdminEmail(user.email);
 
       return res.status(200).json({
         status: "success",
@@ -291,8 +312,8 @@ module.exports = async function handler(req, res) {
           id: user.id,
           email: user.email,
           api_key: user.api_key,
-          credits: parseInt(user.credits || 0, 10),
-          role: user.role
+          credits: isAdm ? 999999 : parseInt(user.credits || 0, 10),
+          role: isAdm ? "admin" : "user"
         }
       });
     } catch (err) {
