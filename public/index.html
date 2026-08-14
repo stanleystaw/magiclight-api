@@ -3,34 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>★ Stanley Stawa — MagicLight AI Studio</title>
+  <title>★ Stanley Stawa — Studio Vidéo & IA Générative</title>
   
   <!-- Meta tags de partage (Facebook, Messenger, WhatsApp, Twitter) -->
-  <meta name="description" content="Stanley Stawa AI Studio — Plateforme de Génération Vidéo IA Multi-Scènes, Synthèse Vocale et Création Visuelle HD par Stanley Stawa.">
+  <meta name="description" content="★ Stanley Stawa AI Studio — Plateforme de Production Vidéo IA Multi-Scènes, Synthèse Vocale et Création Visuelle Haute Définition par Stanley Stawa.">
   <meta name="author" content="Stanley Stawa">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="★ Stanley Stawa — MagicLight AI Studio">
+  <meta property="og:title" content="★ Stanley Stawa — Studio Vidéo & IA Générative">
   <meta property="og:description" content="Créez des films IA complets avec dialogues parlés, cohérence du personnage et filigrane officiel ★ Stanley stawa.">
   <meta property="og:site_name" content="Stanley Stawa AI Studio">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="★ Stanley Stawa — MagicLight AI Studio">
+  <meta name="twitter:title" content="★ Stanley Stawa — Studio Vidéo & IA Générative">
   <meta name="twitter:description" content="Plateforme de Génération Vidéo et Création IA par Stanley Stawa.">
 
   <style>
     :root {
-      --bg-base: #0b0f19;
-      --bg-surface: #111827;
-      --bg-card: #1f2937;
-      --border: #374151;
-      --primary: #6366f1;
-      --primary-hover: #4f46e5;
-      --primary-glow: rgba(99, 102, 241, 0.25);
-      --accent: #ec4899;
-      --success: #10b981;
-      --stanley-neon: #7cf0c4;
-      --text-main: #f9fafb;
-      --text-muted: #9ca3af;
-      --radius: 12px;
+      --bg: #07090e;
+      --surface: #0e121b;
+      --surface-raised: #141a27;
+      --surface-hover: #1b2334;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(0, 242, 173, 0.5);
+      --accent: #00f2ad;
+      --accent-hover: #00d698;
+      --accent-dim: rgba(0, 242, 173, 0.12);
+      --accent-glow: rgba(0, 242, 173, 0.25);
+      --text: #f0f3f8;
+      --text-muted: #8b949e;
+      --text-dim: #545d68;
+      --danger: #ff4d4f;
+      --danger-dim: rgba(255, 77, 79, 0.12);
+      --radius: 14px;
+      --radius-sm: 8px;
+      --transition: cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     * {
@@ -42,19 +47,22 @@
     }
 
     body {
-      background-color: var(--bg-base);
-      color: var(--text-main);
+      background-color: var(--bg);
+      color: var(--text);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
+      line-height: 1.5;
     }
 
+    /* HEADER */
     header {
-      background: rgba(17, 24, 39, 0.95);
-      backdrop-filter: blur(12px);
+      background: rgba(14, 18, 27, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
-      padding: 12px 18px;
+      padding: 14px 24px;
       position: sticky;
       top: 0;
       z-index: 50;
@@ -62,37 +70,44 @@
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     .brand-logo {
       font-size: 20px;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      padding: 6px 10px;
-      border-radius: 8px;
-      box-shadow: 0 0 12px var(--primary-glow);
+      background: linear-gradient(135deg, var(--surface-raised), #1f293d);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      box-shadow: 0 0 16px var(--accent-glow);
     }
 
     .brand-title h1 {
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 800;
-      letter-spacing: -0.3px;
+      letter-spacing: -0.4px;
       color: #fff;
     }
 
     .brand-title h1 span {
-      color: var(--stanley-neon);
+      color: var(--accent);
     }
 
     .brand-title p {
       font-size: 11px;
       color: var(--text-muted);
+      font-weight: 500;
     }
 
     .header-actions {
@@ -102,40 +117,48 @@
       flex-wrap: wrap;
     }
 
-    .badge-stanley {
+    .badge-status {
       display: flex;
       align-items: center;
-      gap: 6px;
-      background: rgba(124, 240, 196, 0.1);
-      color: var(--stanley-neon);
-      padding: 5px 12px;
+      gap: 7px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      padding: 6px 14px;
       border-radius: 20px;
       font-size: 11px;
       font-weight: 700;
-      border: 1px solid rgba(124, 240, 196, 0.4);
+      border: 1px solid rgba(0, 242, 173, 0.35);
+      letter-spacing: 0.2px;
     }
 
     .badge-dot {
       width: 7px;
       height: 7px;
-      background: var(--stanley-neon);
+      background: var(--accent);
       border-radius: 50%;
-      box-shadow: 0 0 6px var(--stanley-neon);
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulseDot 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
     }
 
     .btn-auth-header {
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      color: #fff;
+      background: linear-gradient(135deg, #00f2ad, #00b884);
+      color: #07090e;
       border: none;
-      padding: 7px 14px;
-      border-radius: 8px;
+      padding: 8px 16px;
+      border-radius: 10px;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.2s;
+      transition: transform 0.2s var(--transition), filter 0.2s;
+      box-shadow: 0 4px 14px var(--accent-glow);
     }
 
     .btn-auth-header:hover {
@@ -147,46 +170,48 @@
       display: none;
       align-items: center;
       gap: 8px;
-      background: rgba(255,255,255,0.05);
+      background: var(--surface-raised);
       border: 1px solid var(--border);
-      padding: 5px 10px;
-      border-radius: 8px;
+      padding: 6px 12px;
+      border-radius: 10px;
       font-size: 12px;
     }
 
     .user-credits-pill {
-      background: rgba(124, 240, 196, 0.15);
-      color: var(--stanley-neon);
-      padding: 2px 7px;
-      border-radius: 10px;
-      font-weight: 700;
+      background: var(--accent-dim);
+      color: var(--accent);
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 800;
       font-size: 11px;
+      border: 1px solid rgba(0, 242, 173, 0.2);
     }
 
+    /* CONTAINER & HERO */
     .container {
-      max-width: 1200px;
+      max-width: 1240px;
       width: 100%;
       margin: 0 auto;
-      padding: 16px;
+      padding: 20px 16px;
       flex: 1;
     }
 
     .hero-banner {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(236, 72, 153, 0.1));
-      border: 1px solid rgba(99, 102, 241, 0.3);
+      background: linear-gradient(135deg, rgba(0, 242, 173, 0.08) 0%, rgba(20, 26, 39, 0.6) 100%);
+      border: 1px solid rgba(0, 242, 173, 0.2);
       border-radius: var(--radius);
-      padding: 14px 18px;
-      margin-bottom: 16px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
     }
 
     .hero-banner-text h2 {
-      font-size: 14px;
-      font-weight: 700;
+      font-size: 15px;
+      font-weight: 800;
       color: #fff;
     }
 
@@ -198,22 +223,23 @@
 
     .hero-signature {
       font-size: 12px;
-      font-weight: 700;
-      color: var(--stanley-neon);
-      background: rgba(0,0,0,0.3);
-      padding: 6px 12px;
+      font-weight: 800;
+      color: var(--accent);
+      background: rgba(0, 0, 0, 0.4);
+      padding: 6px 14px;
       border-radius: 20px;
-      border: 1px solid rgba(124, 240, 196, 0.2);
+      border: 1px solid rgba(0, 242, 173, 0.25);
     }
 
+    /* TABS */
     .tabs-nav {
       display: flex;
-      gap: 6px;
+      gap: 8px;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 16px;
+      margin-bottom: 20px;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: 6px;
+      padding-bottom: 8px;
       scrollbar-width: none;
     }
 
@@ -222,28 +248,30 @@
     }
 
     .tab-btn {
-      background: none;
-      border: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
       color: var(--text-muted);
-      padding: 9px 14px;
+      padding: 10px 16px;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
-      border-radius: 8px;
-      transition: all 0.2s ease;
+      border-radius: 10px;
+      transition: all 0.2s var(--transition);
       white-space: nowrap;
       flex-shrink: 0;
     }
 
     .tab-btn:hover {
-      color: var(--text-main);
-      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      background: var(--surface-hover);
+      border-color: rgba(255, 255, 255, 0.15);
     }
 
     .tab-btn.active {
-      color: #fff;
-      background: var(--primary);
-      box-shadow: 0 0 10px var(--primary-glow);
+      color: #07090e;
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 16px var(--accent-glow);
     }
 
     .tab-panel {
@@ -253,10 +281,10 @@
     .tab-panel.active {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 20px;
     }
 
-    @media (max-width: 860px) {
+    @media (max-width: 880px) {
       header {
         flex-direction: column;
         align-items: stretch;
@@ -272,74 +300,80 @@
       }
     }
 
+    /* CARDS */
     .card {
-      background: var(--bg-surface);
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 16px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
     }
 
     .card-title {
       font-size: 15px;
-      font-weight: 700;
+      font-weight: 800;
       display: flex;
       align-items: center;
       gap: 8px;
       border-bottom: 1px solid var(--border);
-      padding-bottom: 10px;
+      padding-bottom: 12px;
+      color: #fff;
     }
 
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 6px;
     }
 
     .form-group label {
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     input, textarea, select {
-      background: var(--bg-base);
+      background: var(--bg);
       border: 1px solid var(--border);
-      color: var(--text-main);
-      padding: 10px 12px;
-      border-radius: 8px;
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
       font-size: 13px;
       outline: none;
       width: 100%;
-      transition: border 0.2s;
+      transition: border 0.2s, box-shadow 0.2s;
     }
 
     input:focus, textarea:focus, select:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px var(--primary-glow);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
     }
 
     textarea {
       resize: vertical;
-      min-height: 80px;
+      min-height: 85px;
+      line-height: 1.5;
     }
 
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      gap: 12px;
     }
 
     .upload-box {
       border: 2px dashed var(--border);
-      border-radius: 8px;
-      padding: 12px;
+      border-radius: var(--radius-sm);
+      padding: 16px;
       text-align: center;
       cursor: pointer;
-      background: rgba(255,255,255,0.02);
-      transition: border 0.2s;
+      background: rgba(255,255,255,0.01);
+      transition: all 0.2s var(--transition);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -347,62 +381,69 @@
     }
 
     .upload-box:hover {
-      border-color: var(--primary);
-      background: rgba(99, 102, 241, 0.05);
+      border-color: var(--accent);
+      background: var(--accent-dim);
     }
 
     .upload-preview-thumb {
-      max-height: 80px;
+      max-height: 85px;
       border-radius: 6px;
       margin-top: 6px;
       display: none;
+      border: 1px solid var(--accent);
     }
 
     .btn-submit {
-      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
-      color: #fff;
+      background: linear-gradient(135deg, var(--accent), #00b884);
+      color: #07090e;
       border: none;
-      padding: 12px 18px;
+      padding: 13px 20px;
       font-size: 14px;
-      font-weight: 700;
-      border-radius: 8px;
+      font-weight: 800;
+      border-radius: 10px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      min-height: 44px;
-      transition: all 0.2s;
-      box-shadow: 0 4px 12px var(--primary-glow);
+      min-height: 46px;
+      transition: transform 0.2s var(--transition), filter 0.2s;
+      box-shadow: 0 4px 18px var(--accent-glow);
     }
 
     .btn-submit:hover {
       filter: brightness(1.1);
+      transform: translateY(-1px);
     }
 
     .btn-submit:disabled {
-      opacity: 0.6;
+      opacity: 0.5;
       cursor: not-allowed;
+      transform: none;
     }
 
     .btn-secondary {
-      background: var(--bg-card);
+      background: var(--surface-raised);
       border: 1px solid var(--border);
-      color: var(--text-main);
-      padding: 8px 12px;
+      color: var(--text);
+      padding: 8px 14px;
       border-radius: 8px;
       font-size: 12px;
       cursor: pointer;
-      font-weight: 600;
-      min-height: 38px;
+      font-weight: 700;
+      transition: background 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface-hover);
     }
 
     .preview-box {
-      background: var(--bg-base);
+      background: var(--bg);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px;
-      min-height: 220px;
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      min-height: 260px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -414,36 +455,37 @@
       color: var(--text-muted);
       font-size: 13px;
       text-align: center;
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
     .preview-video {
       width: 100%;
       max-height: 440px;
-      border-radius: 8px;
+      border-radius: 10px;
       background: #000;
+      border: 1px solid var(--border);
     }
 
     .preview-img {
       max-width: 100%;
       max-height: 380px;
-      border-radius: 8px;
+      border-radius: 10px;
       object-fit: contain;
     }
 
     .preview-audio {
       width: 100%;
-      margin-top: 10px;
+      margin-top: 12px;
     }
 
     .meta-box {
       width: 100%;
-      background: rgba(0,0,0,0.3);
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 8px;
-      padding: 10px;
-      margin-top: 10px;
-      font-size: 11px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-top: 12px;
+      font-size: 12px;
       color: var(--text-muted);
       display: flex;
       flex-direction: column;
@@ -451,7 +493,7 @@
     }
 
     .meta-box a {
-      color: #818cf8;
+      color: var(--accent);
       text-decoration: none;
       word-break: break-all;
     }
@@ -464,47 +506,50 @@
     }
 
     .action-pill {
-      background: rgba(99, 102, 241, 0.2);
-      border: 1px solid var(--primary);
+      background: var(--accent-dim);
+      border: 1px solid rgba(0, 242, 173, 0.35);
       color: #fff;
-      padding: 5px 10px;
-      border-radius: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
       font-size: 11px;
+      font-weight: 700;
       text-decoration: none;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
+      transition: background 0.2s;
     }
 
     .action-pill:hover {
-      background: var(--primary);
+      background: var(--accent);
+      color: #07090e;
     }
 
     .progress-bar-wrap {
       width: 100%;
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.06);
       border-radius: 20px;
-      height: 7px;
-      margin: 10px 0 5px;
+      height: 8px;
+      margin: 14px 0 6px;
       overflow: hidden;
     }
 
     .progress-bar-fill {
-      background: linear-gradient(90deg, var(--primary), var(--accent));
+      background: linear-gradient(90deg, #00f2ad, #38bdf8);
       height: 100%;
       width: 15%;
       transition: width 0.4s ease;
     }
 
     .loader {
-      width: 32px;
-      height: 32px;
-      border: 3px solid rgba(99, 102, 241, 0.2);
-      border-top-color: var(--primary);
+      width: 34px;
+      height: 34px;
+      border: 3px solid rgba(0, 242, 173, 0.2);
+      border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     @keyframes spin {
@@ -525,36 +570,27 @@
     }
 
     th, td {
-      padding: 10px 12px;
+      padding: 12px 14px;
       border-bottom: 1px solid var(--border);
     }
 
     th {
       color: var(--text-muted);
-      font-weight: 600;
-      background: rgba(0,0,0,0.2);
+      font-weight: 700;
+      background: rgba(0,0,0,0.3);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
     }
 
-    .badge-status {
-      display: inline-block;
-      padding: 2px 7px;
-      border-radius: 10px;
-      font-size: 10px;
-      font-weight: 600;
-    }
-
-    .status-active {
-      background: #064e3b;
-      color: #6ee7b7;
-    }
-
-    /* MODAL AUTH */
+    /* MODAL AUTH AVEC OTP */
     .modal-backdrop {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(8px);
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       z-index: 100;
       justify-content: center;
       align-items: center;
@@ -566,23 +602,23 @@
     }
 
     .modal-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
+      background: var(--surface);
+      border: 1px solid rgba(0, 242, 173, 0.25);
+      border-radius: 18px;
       width: 100%;
-      max-width: 420px;
-      padding: 24px;
+      max-width: 440px;
+      padding: 28px 24px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      gap: 18px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 30px var(--accent-glow);
       position: relative;
     }
 
     .modal-close {
       position: absolute;
-      top: 16px;
-      right: 16px;
+      top: 18px;
+      right: 18px;
       background: none;
       border: none;
       color: var(--text-muted);
@@ -594,7 +630,7 @@
       display: flex;
       gap: 8px;
       border-bottom: 1px solid var(--border);
-      padding-bottom: 8px;
+      padding-bottom: 10px;
     }
 
     .modal-tab-btn {
@@ -604,41 +640,73 @@
       color: var(--text-muted);
       font-size: 13px;
       font-weight: 700;
-      padding: 8px;
-      border-radius: 6px;
+      padding: 9px;
+      border-radius: 8px;
       cursor: pointer;
+      transition: all 0.2s;
     }
 
     .modal-tab-btn.active {
-      color: #fff;
-      background: var(--primary);
+      color: #07090e;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
     }
 
     .auth-alert {
-      padding: 10px;
+      padding: 12px;
       border-radius: 8px;
       font-size: 12px;
       display: none;
+      line-height: 1.4;
     }
 
     .auth-alert.error {
       display: block;
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid #ef4444;
+      background: var(--danger-dim);
+      border: 1px solid var(--danger);
       color: #fca5a5;
     }
 
     .auth-alert.success {
       display: block;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid #10b981;
-      color: #6ee7b7;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+
+    .otp-input-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-otp-send {
+      background: var(--surface-raised);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 12px;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+
+    .btn-otp-send:hover {
+      background: var(--accent-dim);
+    }
+
+    .btn-otp-send:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      border-color: var(--border);
+      color: var(--text-muted);
     }
 
     footer {
-      background: rgba(17, 24, 39, 0.95);
+      background: rgba(14, 18, 27, 0.95);
       border-top: 1px solid var(--border);
-      padding: 14px 18px;
+      padding: 18px 24px;
       text-align: center;
       font-size: 12px;
       color: var(--text-muted);
@@ -646,8 +714,8 @@
     }
 
     footer span {
-      color: var(--stanley-neon);
-      font-weight: 700;
+      color: var(--accent);
+      font-weight: 800;
     }
   </style>
 </head>
@@ -655,10 +723,10 @@
 
   <header>
     <div class="brand">
-      <div class="brand-logo">⚡</div>
+      <div class="brand-logo">★</div>
       <div class="brand-title">
-        <h1>★ Stanley Stawa <span>AI Studio</span></h1>
-        <p>Console Officielle de Création & Rendu Vidéo</p>
+        <h1>Stanley Stawa <span>AI Studio</span></h1>
+        <p>Production Vidéo Multi-Scènes & Intelligence Artificielle</p>
       </div>
     </div>
     <div class="header-actions">
@@ -667,13 +735,13 @@
       <div id="userProfileBadge" class="user-profile-badge">
         <span id="userEmailLabel">👤 Mon Compte</span>
         <span id="userCreditsLabel" class="user-credits-pill">⚡ 100 Crédits</span>
-        <button class="action-pill" onclick="copyMyApiKey()" title="Copier ma clé API">🔑 Clé</button>
-        <button class="action-pill" style="background:rgba(239,68,68,0.2);border-color:#ef4444;" onclick="logoutUser()">🚪</button>
+        <button class="action-pill" onclick="copyMyApiKey()" title="Copier ma clé API">🔑 Clé API</button>
+        <button class="action-pill" style="background:var(--danger-dim);border-color:var(--danger);color:#fca5a5;" onclick="logoutUser()">🚪</button>
       </div>
 
       <!-- Bouton Connexion / Inscription -->
       <button id="btnOpenAuth" class="btn-auth-header" onclick="openAuthModal('register')">
-        🔐 Connexion / Inscription (+100 Crédits)
+        🔐 Inscription (+100 Crédits) / Connexion
       </button>
 
       <input type="hidden" id="apiKeyInput" value="stawa_live_9f83a7c4e2b1d680">
@@ -684,8 +752,8 @@
 
     <div class="hero-banner">
       <div class="hero-banner-text">
-        <h2>🎬 Stanley Stawa Multi-Scene Video Production Engine</h2>
-        <p>Inscrivez-vous pour obtenir votre propre clé API et 100 crédits offerts pour créer vos films IA.</p>
+        <h2>🎬 Moteur Neural de Production Vidéo par Stanley Stawa</h2>
+        <p>Validez votre adresse Gmail par code OTP pour débloquer votre clé API personnelle et 100 crédits offerts.</p>
       </div>
       <div class="hero-signature">★ Stanley stawa Verified</div>
     </div>
@@ -696,7 +764,7 @@
       <button class="tab-btn" onclick="switchTab('edit')">✨ Retouche & Cohérence</button>
       <button class="tab-btn" onclick="switchTab('story')">📖 Scénario IA</button>
       <button class="tab-btn" onclick="switchTab('voice')">🎙️ Voix TTS</button>
-      <button class="tab-btn" onclick="switchTab('accounts')">👥 Cluster & Nœuds</button>
+      <button class="tab-btn" onclick="switchTab('accounts')">👥 Cluster & Serveurs</button>
     </div>
 
     <!-- 1. TAB VIDEO -->
@@ -720,7 +788,7 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label>Nombre de Sections (2 à 10+)</label>
+            <label>Nombre de Sections</label>
             <select id="videoSections">
               <option value="2">2 Sections (~1.5 Mo)</option>
               <option value="3">3 Sections (~2.2 Mo)</option>
@@ -745,7 +813,7 @@
           <div class="form-group">
             <label>Format Vidéo</label>
             <select id="videoRatio">
-              <option value="1" selected>16:9 Paysage (YouTube / TV)</option>
+              <option value="1" selected>16:9 Paysage (YouTube / TV / FB)</option>
               <option value="2">9:16 Portrait (TikTok / Shorts / Reels)</option>
             </select>
           </div>
@@ -753,18 +821,18 @@
             <label>Durée par Section</label>
             <select id="videoDuration">
               <option value="5">5 secondes</option>
-              <option value="10" selected>10 secondes</option>
+              <option value="10" selected>10 secondes (60s au total)</option>
             </select>
           </div>
         </div>
 
-        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">⚡ Lancer la Génération Vidéo (Coût : 5 Crédits)</button>
+        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">⚡ Lancer la Production Vidéo (Coût : 5 Crédits)</button>
       </div>
 
       <div class="card">
-        <div class="card-title">📺 Lecteur & Résultat Vidéo</div>
+        <div class="card-title">📺 Lecteur & Rendu Vidéo</div>
         <div id="videoPreviewBox" class="preview-box">
-          <div class="preview-placeholder">La vidéo finale s'affichera ici dès la fin du rendu.<br>Cohérence personnage 100% avec filigrane dynamique officiel <strong>★ Stanley stawa</strong>.</div>
+          <div class="preview-placeholder">La vidéo finale s'affichera ici dès la fin du rendu.<br>Cohérence personnage 100% avec filigrane officiel <strong>★ Stanley stawa</strong>.</div>
         </div>
       </div>
     </div>
@@ -886,50 +954,80 @@
           <button class="btn-secondary" onclick="refillAccount()">⚡ Recharger le Cluster</button>
         </div>
         <div class="table-container" id="accountsTableContainer">
-          <div style="text-align: center; color: var(--text-muted); padding: 16px;">Chargement des données...</div>
+          <div style="text-align: center; color: var(--text-muted); padding: 16px;">Chargement du cluster...</div>
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- MODAL AUTHENTIFICATION / INSCRIPTION -->
+  <!-- MODAL AUTHENTIFICATION / INSCRIPTION AVEC VÉRIFICATION OTP -->
   <div id="authModal" class="modal-backdrop">
     <div class="modal-card">
       <button class="modal-close" onclick="closeAuthModal()">✕</button>
 
       <div class="modal-tabs">
-        <button id="tabAuthRegister" class="modal-tab-btn active" onclick="switchAuthTab('register')">✨ Créer un compte (+100 Crédits)</button>
+        <button id="tabAuthRegister" class="modal-tab-btn active" onclick="switchAuthTab('register')">✨ Inscription (+100 Crédits)</button>
         <button id="tabAuthLogin" class="modal-tab-btn" onclick="switchAuthTab('login')">🔐 Connexion</button>
       </div>
 
       <div id="authAlert" class="auth-alert"></div>
 
-      <form id="authForm" onsubmit="handleAuthSubmit(event)">
+      <!-- FORMULAIRE INSCRIPTION AVEC OTP -->
+      <form id="formRegister" onsubmit="handleRegisterSubmit(event)">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label>Votre Adresse Gmail Réelle</label>
+          <div class="otp-input-group">
+            <input type="email" id="regEmail" required placeholder="votre_adresse@gmail.com">
+            <button type="button" id="btnSendOtp" class="btn-otp-send" onclick="sendOtpCode()">
+              Envoyer OTP
+            </button>
+          </div>
+          <span style="font-size:10px;color:var(--text-muted);">Un code à 6 chiffres vous sera envoyé par e-mail.</span>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label>Code de Vérification OTP (6 chiffres)</label>
+          <input type="text" id="regOtp" required maxlength="6" pattern="[0-9]{6}" placeholder="Ex: 482915" style="letter-spacing: 4px; font-family: monospace; font-weight: 700;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 18px;">
+          <label>Mot de passe (min 6 caractères)</label>
+          <input type="password" id="regPassword" required minlength="6" placeholder="••••••••">
+        </div>
+
+        <button type="submit" id="btnRegisterSubmit" class="btn-submit" style="width: 100%;">
+          ✨ Valider & Obtenir ma Clé (+100 Crédits)
+        </button>
+      </form>
+
+      <!-- FORMULAIRE CONNEXION -->
+      <form id="formLogin" style="display:none;" onsubmit="handleLoginSubmit(event)">
         <div class="form-group" style="margin-bottom: 12px;">
           <label>Adresse E-mail</label>
-          <input type="email" id="authEmail" required placeholder="nom@exemple.com">
+          <input type="email" id="loginEmail" required placeholder="votre_adresse@gmail.com">
         </div>
 
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label>Mot de passe (min 6 caractères)</label>
-          <input type="password" id="authPassword" required minlength="6" placeholder="••••••••">
+        <div class="form-group" style="margin-bottom: 18px;">
+          <label>Mot de passe</label>
+          <input type="password" id="loginPassword" required minlength="6" placeholder="••••••••">
         </div>
 
-        <button type="submit" id="btnAuthSubmit" class="btn-submit" style="width: 100%;">
-          ✨ Obtenir ma Clé API & 100 Crédits
+        <button type="submit" id="btnLoginSubmit" class="btn-submit" style="width: 100%;">
+          🔐 Se connecter
         </button>
       </form>
     </div>
   </div>
 
   <footer>
-    Plateforme de Génération IA développée par <span>★ Stanley stawa</span> • Tous droits réservés • Moteur Neural v2.5
+    Plateforme de Production IA développée par <span>★ Stanley stawa</span> • Tous droits réservés • Moteur Neural v2.6
   </footer>
 
   <script>
     let currentAuthMode = "register";
     let currentUser = null;
+    let otpCooldownTimer = null;
 
     function getBaseUrl() {
       return window.location.origin;
@@ -946,7 +1044,7 @@
       document.getElementById("tab-" + tabId).classList.add("active");
     }
 
-    // --- GESTION DE L'AUTHENTIFICATION & DU COMPTE ---
+    // --- MODAL & AUTHENTIFICATION ---
 
     function openAuthModal(mode = "register") {
       currentAuthMode = mode;
@@ -964,54 +1062,152 @@
       currentAuthMode = mode;
       const tabReg = document.getElementById("tabAuthRegister");
       const tabLog = document.getElementById("tabAuthLogin");
-      const btn = document.getElementById("btnAuthSubmit");
+      const formReg = document.getElementById("formRegister");
+      const formLog = document.getElementById("formLogin");
 
       if (mode === "register") {
         tabReg.classList.add("active");
         tabLog.classList.remove("active");
-        btn.innerText = "✨ Obtenir ma Clé API & 100 Crédits";
+        formReg.style.display = "block";
+        formLog.style.display = "none";
       } else {
         tabLog.classList.add("active");
         tabReg.classList.remove("active");
-        btn.innerText = "🔐 Se connecter";
+        formLog.style.display = "block";
+        formReg.style.display = "none";
       }
     }
 
-    async function handleAuthSubmit(e) {
-      e.preventDefault();
-      const email = document.getElementById("authEmail").value.trim();
-      const password = document.getElementById("authPassword").value.trim();
+    // Envoi du code OTP par e-mail
+    async function sendOtpCode() {
+      const email = document.getElementById("regEmail").value.trim();
       const alertBox = document.getElementById("authAlert");
-      const btn = document.getElementById("btnAuthSubmit");
+      const btn = document.getElementById("btnSendOtp");
+
+      if (!email || !email.includes("@") || !email.includes(".")) {
+        alertBox.className = "auth-alert error";
+        alertBox.innerText = "Veuillez saisir une adresse e-mail valide.";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = "Envoi...";
+      alertBox.className = "auth-alert";
+      alertBox.innerText = "";
+
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=send_otp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Échec de l'envoi de l'OTP.");
+
+        alertBox.className = "auth-alert success";
+        alertBox.innerText = data.message || "Code OTP envoyé ! Vérifiez votre boîte de réception.";
+
+        // Si simulation en dev, pré-remplir le champ
+        if (data.debug_otp) {
+          document.getElementById("regOtp").value = data.debug_otp;
+        }
+
+        // Compte à rebours 60s
+        let countdown = 60;
+        btn.innerText = `${countdown}s`;
+        if (otpCooldownTimer) clearInterval(otpCooldownTimer);
+        otpCooldownTimer = setInterval(() => {
+          countdown--;
+          if (countdown <= 0) {
+            clearInterval(otpCooldownTimer);
+            btn.disabled = false;
+            btn.innerText = "Renvoyer";
+          } else {
+            btn.innerText = `${countdown}s`;
+          }
+        }, 1000);
+
+      } catch (err) {
+        alertBox.className = "auth-alert error";
+        alertBox.innerText = err.message;
+        btn.disabled = false;
+        btn.innerText = "Envoyer OTP";
+      }
+    }
+
+    // Inscription avec validation OTP
+    async function handleRegisterSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById("regEmail").value.trim();
+      const password = document.getElementById("regPassword").value.trim();
+      const otp = document.getElementById("regOtp").value.trim();
+      const alertBox = document.getElementById("authAlert");
+      const btn = document.getElementById("btnRegisterSubmit");
 
       btn.disabled = true;
       alertBox.className = "auth-alert";
       alertBox.innerText = "";
 
-      const endpoint = currentAuthMode === "register" ? "/stanleystawa/accounts?action=register" : "/stanleystawa/accounts?action=login";
-
       try {
-        const res = await fetch(`${getBaseUrl()}${endpoint}`, {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ email, password, otp })
         });
         const data = await res.json();
 
-        if (!res.ok) throw new Error(data.error || "Échec de l'authentification.");
+        if (!res.ok) throw new Error(data.error || "Échec de l'inscription.");
 
         currentUser = data.user;
         localStorage.setItem("stanley_user_key", data.user.api_key);
         localStorage.setItem("stanley_user_email", data.user.email);
 
         alertBox.className = "auth-alert success";
-        alertBox.innerText = data.message || "Opération réussie !";
+        alertBox.innerText = data.message || "E-mail vérifié ! 100 crédits offerts.";
 
         updateUserUI();
+        setTimeout(() => closeAuthModal(), 1400);
 
-        setTimeout(() => {
-          closeAuthModal();
-        }, 1200);
+      } catch (err) {
+        alertBox.className = "auth-alert error";
+        alertBox.innerText = err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // Connexion
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+      const alertBox = document.getElementById("authAlert");
+      const btn = document.getElementById("btnLoginSubmit");
+
+      btn.disabled = true;
+      alertBox.className = "auth-alert";
+      alertBox.innerText = "";
+
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Identifiants invalides.");
+
+        currentUser = data.user;
+        localStorage.setItem("stanley_user_key", data.user.api_key);
+        localStorage.setItem("stanley_user_email", data.user.email);
+
+        alertBox.className = "auth-alert success";
+        alertBox.innerText = "Connexion réussie !";
+
+        updateUserUI();
+        setTimeout(() => closeAuthModal(), 1200);
 
       } catch (err) {
         alertBox.className = "auth-alert error";
@@ -1040,7 +1236,7 @@
     function copyMyApiKey() {
       const key = getApiKey();
       navigator.clipboard.writeText(key);
-      alert(`🔑 Clé API copiée dans le presse-papier :\n${key}\n\nUtilisez-la dans votre bot Facebook avec : &key=${key}`);
+      alert(`🔑 Clé API personnelle copiée :\n${key}\n\nUtilisez-la dans votre bot Facebook avec : &key=${key}`);
     }
 
     function logoutUser() {
@@ -1116,7 +1312,7 @@
       btn.disabled = true;
       box.innerHTML = `
         <div class="loader"></div>
-        <div id="progressLabel" style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">Initialisation par Stanley Stawa Engine...</div>
+        <div id="progressLabel" style="font-weight: 800; font-size: 14px; margin-bottom: 4px; color: #fff;">Initialisation par Stanley Stawa Engine...</div>
         <div id="progressDetail" style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Scénarisation & cohérence personnage...</div>
         <div class="progress-bar-wrap"><div id="progressBar" class="progress-bar-fill" style="width: 15%"></div></div>
       `;
@@ -1174,7 +1370,7 @@
           throw new Error("Rendu en cours sur les serveurs. Réinterrogez /stanleystawa/status?task_id=" + taskId);
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--danger); padding: 16px; font-weight: 700;">❌ Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
@@ -1210,7 +1406,7 @@
           initUserSession();
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--danger); padding: 16px;">❌ Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
@@ -1249,7 +1445,7 @@
           initUserSession();
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--danger); padding: 16px;">❌ Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
@@ -1271,20 +1467,20 @@
         const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/story?idea=${encodeURIComponent(idea)}&language=${language}`);
 
         let scenesHtml = data.scenes.map((s, i) => `
-          <div class="scene-item" style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px; margin-bottom: 6px; font-size: 12px; border-left: 3px solid var(--stanley-neon);">
-            <div style="font-weight: 700; color: var(--stanley-neon); margin-bottom: 2px;">Section #${i+1}</div>
+          <div class="scene-item" style="background: rgba(255,255,255,0.03); padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; border-left: 3px solid var(--accent);">
+            <div style="font-weight: 800; color: var(--accent); margin-bottom: 2px;">Section #${i+1}</div>
             <div>${s}</div>
           </div>
         `).join("");
 
         box.innerHTML = `
-          <div style="font-weight: 700; font-size: 15px; margin-bottom: 6px; color: var(--stanley-neon);">${data.title}</div>
-          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">${data.expanded_story}</div>
-          <div style="font-weight: 600; font-size: 12px; margin-bottom: 6px;">Sections découpées (${data.scenes.length}) :</div>
+          <div style="font-weight: 800; font-size: 15px; margin-bottom: 6px; color: var(--accent);">${data.title}</div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">${data.expanded_story}</div>
+          <div style="font-weight: 700; font-size: 12px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Sections découpées (${data.scenes.length}) :</div>
           <div class="scenes-grid">${scenesHtml}</div>
         `;
       } catch (err) {
-        box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--danger); padding: 16px;">❌ Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
@@ -1316,13 +1512,13 @@
           initUserSession();
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: #ef4444; padding: 16px;">❌ Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--danger); padding: 16px;">❌ Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
     }
 
-    // --- 6. ACCOUNTS & TURSO ---
+    // --- 6. ACCOUNTS & CLUSTER ---
     async function loadAccounts() {
       const container = document.getElementById("accountsTableContainer");
       container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 16px;"><div class="loader" style="margin: 0 auto 8px;"></div>Chargement du cluster...</div>`;
@@ -1333,8 +1529,8 @@
         let rowsHtml = data.accounts.map((acc, idx) => `
           <tr>
             <td><strong>${acc.node_id}</strong></td>
-            <td><span style="font-weight: 700; color: #34d399;">${acc.credits}</span> crédits</td>
-            <td><span class="badge-status status-active">Actif & Sécurisé</span></td>
+            <td><span style="font-weight: 800; color: var(--accent);">${acc.credits}</span> crédits</td>
+            <td><span class="badge-status">Actif & Sécurisé</span></td>
             <td style="color: var(--text-muted);">${acc.created_at || '—'}</td>
           </tr>
         `).join("");
@@ -1355,7 +1551,7 @@
           </table>
         `;
       } catch (err) {
-        container.innerHTML = `<div style="color: #ef4444; padding: 12px;">❌ Erreur chargement : ${err.message}</div>`;
+        container.innerHTML = `<div style="color: var(--danger); padding: 12px;">❌ Erreur chargement : ${err.message}</div>`;
       }
     }
 
