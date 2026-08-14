@@ -3,25 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>★ Stanley Stawa — Studio Vidéo & IA Générative</title>
+  <title>Stanley Stawa — Studio Vidéo & IA Générative</title>
   
+  <!-- Polices typographiques professionnelles (Plus Jakarta Sans & JetBrains Mono) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <!-- Meta tags de partage (Facebook, Messenger, WhatsApp, Twitter) -->
-  <meta name="description" content="★ Stanley Stawa AI Studio — Plateforme de Production Vidéo IA Multi-Scènes, Synthèse Vocale et Création Visuelle Haute Définition par Stanley Stawa.">
+  <meta name="description" content="Stanley Stawa AI Studio — Plateforme de Production Vidéo IA Multi-Scènes, Synthèse Vocale et Création Visuelle Haute Définition par Stanley Stawa.">
   <meta name="author" content="Stanley Stawa">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="★ Stanley Stawa — Studio Vidéo & IA Générative">
-  <meta property="og:description" content="Créez des films IA complets avec dialogues parlés, cohérence du personnage et filigrane officiel ★ Stanley stawa.">
+  <meta property="og:title" content="Stanley Stawa — Studio Vidéo & IA Générative">
+  <meta property="og:description" content="Production de films IA complets avec voix parlée, cohérence du personnage et filigrane officiel Stanley stawa.">
   <meta property="og:site_name" content="Stanley Stawa AI Studio">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="★ Stanley Stawa — Studio Vidéo & IA Générative">
-  <meta name="twitter:description" content="Plateforme de Génération Vidéo et Création IA par Stanley Stawa.">
+  <meta name="twitter:title" content="Stanley Stawa — Studio Vidéo & IA Générative">
+  <meta name="twitter:description" content="Plateforme de Production Vidéo et Création IA par Stanley Stawa.">
 
   <style>
     :root {
-      --bg: #07090e;
-      --surface: #0e121b;
-      --surface-raised: #141a27;
-      --surface-hover: #1b2334;
+      --bg: #080a0f;
+      --surface: #0f131d;
+      --surface-raised: #161c2b;
+      --surface-hover: #1e263a;
       --border: rgba(255, 255, 255, 0.08);
       --border-focus: rgba(0, 242, 173, 0.5);
       --accent: #00f2ad;
@@ -35,6 +40,8 @@
       --danger-dim: rgba(255, 77, 79, 0.12);
       --radius: 14px;
       --radius-sm: 8px;
+      --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
       --transition: cubic-bezier(0.16, 1, 0.3, 1);
     }
 
@@ -42,7 +49,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: var(--font-main);
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -58,7 +65,7 @@
 
     /* HEADER */
     header {
-      background: rgba(14, 18, 27, 0.88);
+      background: rgba(15, 19, 29, 0.9);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
@@ -80,23 +87,24 @@
     }
 
     .brand-logo {
-      font-size: 20px;
       background: linear-gradient(135deg, var(--surface-raised), #1f293d);
       border: 1px solid var(--accent);
       color: var(--accent);
-      width: 38px;
-      height: 38px;
+      width: 36px;
+      height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 10px;
+      font-weight: 800;
+      font-size: 16px;
       box-shadow: 0 0 16px var(--accent-glow);
     }
 
     .brand-title h1 {
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 800;
-      letter-spacing: -0.4px;
+      letter-spacing: -0.3px;
       color: #fff;
     }
 
@@ -127,7 +135,7 @@
       border-radius: 20px;
       font-size: 11px;
       font-weight: 700;
-      border: 1px solid rgba(0, 242, 173, 0.35);
+      border: 1px solid rgba(0, 242, 173, 0.3);
       letter-spacing: 0.2px;
     }
 
@@ -147,7 +155,7 @@
 
     .btn-auth-header {
       background: linear-gradient(135deg, #00f2ad, #00b884);
-      color: #07090e;
+      color: #080a0f;
       border: none;
       padding: 8px 16px;
       border-radius: 10px;
@@ -184,7 +192,7 @@
       border-radius: 12px;
       font-weight: 800;
       font-size: 11px;
-      border: 1px solid rgba(0, 242, 173, 0.2);
+      border: 1px solid rgba(0, 242, 173, 0.25);
     }
 
     /* CONTAINER & HERO */
@@ -197,7 +205,7 @@
     }
 
     .hero-banner {
-      background: linear-gradient(135deg, rgba(0, 242, 173, 0.08) 0%, rgba(20, 26, 39, 0.6) 100%);
+      background: linear-gradient(135deg, rgba(0, 242, 173, 0.08) 0%, rgba(22, 28, 43, 0.6) 100%);
       border: 1px solid rgba(0, 242, 173, 0.2);
       border-radius: var(--radius);
       padding: 16px 20px;
@@ -268,7 +276,7 @@
     }
 
     .tab-btn.active {
-      color: #07090e;
+      color: #080a0f;
       background: var(--accent);
       border-color: var(--accent);
       box-shadow: 0 0 16px var(--accent-glow);
@@ -330,7 +338,7 @@
     }
 
     .form-group label {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
@@ -395,7 +403,7 @@
 
     .btn-submit {
       background: linear-gradient(135deg, var(--accent), #00b884);
-      color: #07090e;
+      color: #080a0f;
       border: none;
       padding: 13px 20px;
       font-size: 14px;
@@ -523,7 +531,7 @@
 
     .action-pill:hover {
       background: var(--accent);
-      color: #07090e;
+      color: #080a0f;
     }
 
     .progress-bar-wrap {
@@ -583,14 +591,14 @@
       letter-spacing: 0.5px;
     }
 
-    /* MODAL AUTH AVEC OTP */
+    /* MODAL AUTH AVEC VÉRIFICATION GMAIL OTP */
     .modal-backdrop {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       z-index: 100;
       justify-content: center;
       align-items: center;
@@ -603,7 +611,7 @@
 
     .modal-card {
       background: var(--surface);
-      border: 1px solid rgba(0, 242, 173, 0.25);
+      border: 1px solid rgba(0, 242, 173, 0.3);
       border-radius: 18px;
       width: 100%;
       max-width: 440px;
@@ -647,7 +655,7 @@
     }
 
     .modal-tab-btn.active {
-      color: #07090e;
+      color: #080a0f;
       background: var(--accent);
       box-shadow: 0 0 12px var(--accent-glow);
     }
@@ -704,7 +712,7 @@
     }
 
     footer {
-      background: rgba(14, 18, 27, 0.95);
+      background: rgba(15, 19, 29, 0.95);
       border-top: 1px solid var(--border);
       padding: 18px 24px;
       text-align: center;
@@ -733,15 +741,15 @@
       
       <!-- Profil Utilisateur Connecté -->
       <div id="userProfileBadge" class="user-profile-badge">
-        <span id="userEmailLabel">👤 Mon Compte</span>
-        <span id="userCreditsLabel" class="user-credits-pill">⚡ 100 Crédits</span>
-        <button class="action-pill" onclick="copyMyApiKey()" title="Copier ma clé API">🔑 Clé API</button>
-        <button class="action-pill" style="background:var(--danger-dim);border-color:var(--danger);color:#fca5a5;" onclick="logoutUser()">🚪</button>
+        <span id="userEmailLabel">Mon Compte</span>
+        <span id="userCreditsLabel" class="user-credits-pill">100 Crédits</span>
+        <button class="action-pill" onclick="copyMyApiKey()" title="Copier ma clé API">Clé API</button>
+        <button class="action-pill" style="background:var(--danger-dim);border-color:var(--danger);color:#fca5a5;" onclick="logoutUser()">Déconnexion</button>
       </div>
 
       <!-- Bouton Connexion / Inscription -->
       <button id="btnOpenAuth" class="btn-auth-header" onclick="openAuthModal('register')">
-        🔐 Inscription (+100 Crédits) / Connexion
+        Inscription (+100 Crédits) / Connexion
       </button>
 
       <input type="hidden" id="apiKeyInput" value="stawa_live_9f83a7c4e2b1d680">
@@ -752,35 +760,35 @@
 
     <div class="hero-banner">
       <div class="hero-banner-text">
-        <h2>🎬 Moteur Neural de Production Vidéo par Stanley Stawa</h2>
-        <p>Validez votre adresse Gmail par code OTP pour débloquer votre clé API personnelle et 100 crédits offerts.</p>
+        <h2>Moteur Neural de Production Vidéo par Stanley Stawa</h2>
+        <p>Validez votre compte Gmail par code de vérification pour obtenir votre clé d'accès et 100 crédits de bienvenue.</p>
       </div>
       <div class="hero-signature">★ Stanley stawa Verified</div>
     </div>
 
     <div class="tabs-nav">
-      <button class="tab-btn active" onclick="switchTab('video')">🎬 Vidéo Multi-Scènes</button>
-      <button class="tab-btn" onclick="switchTab('image')">🎨 Image HD</button>
-      <button class="tab-btn" onclick="switchTab('edit')">✨ Retouche & Cohérence</button>
-      <button class="tab-btn" onclick="switchTab('story')">📖 Scénario IA</button>
-      <button class="tab-btn" onclick="switchTab('voice')">🎙️ Voix TTS</button>
-      <button class="tab-btn" onclick="switchTab('accounts')">👥 Cluster & Serveurs</button>
+      <button class="tab-btn active" onclick="switchTab('video')">Vidéo Multi-Scènes</button>
+      <button class="tab-btn" onclick="switchTab('image')">Image HD</button>
+      <button class="tab-btn" onclick="switchTab('edit')">Retouche & Cohérence</button>
+      <button class="tab-btn" onclick="switchTab('story')">Scénario IA</button>
+      <button class="tab-btn" onclick="switchTab('voice')">Voix TTS</button>
+      <button class="tab-btn" onclick="switchTab('accounts')">Cluster & Nœuds</button>
     </div>
 
     <!-- 1. TAB VIDEO -->
     <div id="tab-video" class="tab-panel active">
       <div class="card">
-        <div class="card-title">🚀 Génération Vidéo IA par Stanley Stawa</div>
+        <div class="card-title">Production Vidéo IA — Stanley Stawa</div>
         <div class="form-group">
-          <label>Histoire / Scénario / Prompt Vidéo</label>
+          <label>Scénario / Description de l'histoire</label>
           <textarea id="videoPrompt" placeholder="Décrivez l'histoire (ex: Un jeune aventurier découvre un grimoire magique)">Un jeune aventurier courageux avec une cape rouge découvre un grimoire magique dans une bibliothèque antique</textarea>
         </div>
 
         <div class="form-group">
-          <label>Personnage de Référence (Optionnel — Cohérence garantie 100%)</label>
+          <label>Personnage de Référence (Optionnel — Cohérence garantie)</label>
           <div class="upload-box" onclick="document.getElementById('videoCharFile').click()">
             <input type="file" id="videoCharFile" accept="image/*" style="display:none" onchange="handleImageUpload(event, 'videoCharPreview', 'videoCharData')">
-            <span id="videoCharPlaceholder">📁 Cliquez pour uploader l'image du personnage</span>
+            <span id="videoCharPlaceholder">Sélectionner l'image de référence du personnage</span>
             <img id="videoCharPreview" class="upload-preview-thumb" alt="Aperçu">
           </div>
           <input type="hidden" id="videoCharData">
@@ -802,9 +810,9 @@
           <div class="form-group">
             <label>Qualité Vidéo (Compression)</label>
             <select id="videoQuality">
-              <option value="medium" selected>Medium HD (CRF 27 — Ultra-léger)</option>
-              <option value="low">Low (CRF 29 — Poids plume &lt; 1 Mo)</option>
-              <option value="high">High (CRF 23 — Qualité maximale)</option>
+              <option value="medium" selected>Medium HD (CRF 27 — Recommandé)</option>
+              <option value="low">Low (CRF 29 — Poids plume)</option>
+              <option value="high">High (CRF 23 — Haute Qualité)</option>
             </select>
           </div>
         </div>
@@ -826,13 +834,13 @@
           </div>
         </div>
 
-        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">⚡ Lancer la Production Vidéo (Coût : 5 Crédits)</button>
+        <button id="btnGenVideo" class="btn-submit" onclick="generateVideo()">Lancer la Production Vidéo (Coût : 5 Crédits)</button>
       </div>
 
       <div class="card">
-        <div class="card-title">📺 Lecteur & Rendu Vidéo</div>
+        <div class="card-title">Lecteur & Résultat Vidéo</div>
         <div id="videoPreviewBox" class="preview-box">
-          <div class="preview-placeholder">La vidéo finale s'affichera ici dès la fin du rendu.<br>Cohérence personnage 100% avec filigrane officiel <strong>★ Stanley stawa</strong>.</div>
+          <div class="preview-placeholder">Le film final s'affichera ici dès la fin du rendu.<br>Cohérence personnage avec filigrane officiel <strong>★ Stanley stawa</strong>.</div>
         </div>
       </div>
     </div>
@@ -840,9 +848,9 @@
     <!-- 2. TAB IMAGE -->
     <div id="tab-image" class="tab-panel">
       <div class="card">
-        <div class="card-title">🎨 Génération d'Image HD — Stanley Stawa Vision</div>
+        <div class="card-title">Génération d'Image HD — Stanley Stawa Vision</div>
         <div class="form-group">
-          <label>Prompt Image</label>
+          <label>Prompt Visuel</label>
           <textarea id="imagePrompt" placeholder="Description visuelle détaillée">A majestic futuristic cyberpunk warrior with glowing neon armor, 8k masterpiece</textarea>
         </div>
         <div class="form-group">
@@ -854,12 +862,12 @@
             <option value="4:3">4:3</option>
           </select>
         </div>
-        <button id="btnGenImg" class="btn-submit" onclick="generateImage()">✨ Générer l'Image HD</button>
+        <button id="btnGenImg" class="btn-submit" onclick="generateImage()">Générer l'Image HD</button>
       </div>
       <div class="card">
-        <div class="card-title">🖼️ Aperçu de l'Image</div>
+        <div class="card-title">Aperçu de l'Image</div>
         <div id="imagePreviewBox" class="preview-box">
-          <div class="preview-placeholder">L'image générée par le moteur Stanley Stawa s'affichera ici.</div>
+          <div class="preview-placeholder">L'image générée apparaîtra ici.</div>
         </div>
       </div>
     </div>
@@ -867,25 +875,25 @@
     <!-- 3. TAB EDIT -->
     <div id="tab-edit" class="tab-panel">
       <div class="card">
-        <div class="card-title">✨ Retouche & Cohérence Visuelle — Stanley Stawa</div>
+        <div class="card-title">Retouche & Cohérence Visuelle — Stanley Stawa</div>
         <div class="form-group">
           <label>Image Source (Upload ou URL)</label>
           <div class="upload-box" onclick="document.getElementById('editFile').click()">
             <input type="file" id="editFile" accept="image/*" style="display:none" onchange="handleImageUpload(event, 'editPreview', 'editData')">
-            <span id="editPlaceholder">📁 Cliquez pour uploader l'image à retoucher</span>
+            <span id="editPlaceholder">Sélectionner l'image à retoucher</span>
             <img id="editPreview" class="upload-preview-thumb" alt="Aperçu">
           </div>
           <input type="hidden" id="editData">
           <input type="text" id="editImgUrl" placeholder="Ou collez l'URL d'une image existante" style="margin-top: 6px;">
         </div>
         <div class="form-group">
-          <label>Consigne de Retouche (Prompt)</label>
+          <label>Consigne de Retouche</label>
           <textarea id="editPrompt" placeholder="Ex: Change the background into a snowy mountain, add sunglasses">Change the background into an enchanted forest with bioluminescent mushrooms</textarea>
         </div>
-        <button id="btnEditImg" class="btn-submit" onclick="editImage()">🪄 Appliquer la Retouche</button>
+        <button id="btnEditImg" class="btn-submit" onclick="editImage()">Appliquer la Retouche</button>
       </div>
       <div class="card">
-        <div class="card-title">🖼️ Résultat de la Retouche</div>
+        <div class="card-title">Résultat de la Retouche</div>
         <div id="editPreviewBox" class="preview-box">
           <div class="preview-placeholder">L'image retouchée avec le même personnage apparaîtra ici.</div>
         </div>
@@ -895,7 +903,7 @@
     <!-- 4. TAB STORY -->
     <div id="tab-story" class="tab-panel">
       <div class="card">
-        <div class="card-title">📖 Scénarisation IA — Stanley Stawa Story Engine</div>
+        <div class="card-title">Scénarisation IA — Stanley Stawa Story Engine</div>
         <div class="form-group">
           <label>Idée ou Résumé</label>
           <textarea id="storyIdea" placeholder="Une courte idée d'histoire...">Une aventure magique dans un château volant dans les nuages</textarea>
@@ -909,10 +917,10 @@
             <option value="german">Allemand</option>
           </select>
         </div>
-        <button id="btnStory" class="btn-submit" onclick="expandStory()">📝 Découper en Scènes</button>
+        <button id="btnStory" class="btn-submit" onclick="expandStory()">Découper en Scènes</button>
       </div>
       <div class="card">
-        <div class="card-title">📑 Scènes & Dialogues Découpés</div>
+        <div class="card-title">Scènes & Dialogues Découpés</div>
         <div id="storyPreviewBox" class="preview-box">
           <div class="preview-placeholder">Les scènes découpées apparaîtront ici.</div>
         </div>
@@ -922,7 +930,7 @@
     <!-- 5. TAB VOICE -->
     <div id="tab-voice" class="tab-panel">
       <div class="card">
-        <div class="card-title">🎙️ Synthèse Vocale HD — Stanley Stawa Voice Core</div>
+        <div class="card-title">Synthèse Vocale HD — Stanley Stawa Voice Core</div>
         <div class="form-group">
           <label>Texte à Synthétiser</label>
           <textarea id="voiceText" placeholder="Entrez le texte parlé...">Bienvenue dans le studio Stanley Stawa AI. Voici une voix naturelle et ultra-réaliste pour vos projets vidéo.</textarea>
@@ -936,10 +944,10 @@
             <option value="MM:baqi_zongcai">Voix Profonde (Grave / Cinématique)</option>
           </select>
         </div>
-        <button id="btnVoice" class="btn-submit" onclick="synthesizeVoice()">🔊 Générer la Voix</button>
+        <button id="btnVoice" class="btn-submit" onclick="synthesizeVoice()">Générer la Voix</button>
       </div>
       <div class="card">
-        <div class="card-title">🎧 Lecteur Audio</div>
+        <div class="card-title">Lecteur Audio</div>
         <div id="voicePreviewBox" class="preview-box">
           <div class="preview-placeholder">Le fichier audio MP3 généré apparaîtra ici.</div>
         </div>
@@ -950,11 +958,11 @@
     <div id="tab-accounts" class="tab-panel">
       <div class="card" style="grid-column: 1 / -1;">
         <div class="card-title" style="justify-content: space-between;">
-          <span>👥 État du Cluster — Stanley Stawa Engine</span>
-          <button class="btn-secondary" onclick="refillAccount()">⚡ Recharger le Cluster</button>
+          <span>État du Cluster — Stanley Stawa Engine</span>
+          <button class="btn-secondary" onclick="refillAccount()">Recharger le Cluster</button>
         </div>
         <div class="table-container" id="accountsTableContainer">
-          <div style="text-align: center; color: var(--text-muted); padding: 16px;">Chargement du cluster...</div>
+          <div style="text-align: center; color: var(--text-muted); padding: 16px;"><div class="loader" style="margin: 0 auto 8px;"></div>Chargement du cluster...</div>
         </div>
       </div>
     </div>
@@ -967,28 +975,28 @@
       <button class="modal-close" onclick="closeAuthModal()">✕</button>
 
       <div class="modal-tabs">
-        <button id="tabAuthRegister" class="modal-tab-btn active" onclick="switchAuthTab('register')">✨ Inscription (+100 Crédits)</button>
-        <button id="tabAuthLogin" class="modal-tab-btn" onclick="switchAuthTab('login')">🔐 Connexion</button>
+        <button id="tabAuthRegister" class="modal-tab-btn active" onclick="switchAuthTab('register')">Inscription (+100 Crédits)</button>
+        <button id="tabAuthLogin" class="modal-tab-btn" onclick="switchAuthTab('login')">Connexion</button>
       </div>
 
       <div id="authAlert" class="auth-alert"></div>
 
-      <!-- FORMULAIRE INSCRIPTION AVEC OTP -->
+      <!-- FORMULAIRE INSCRIPTION AVEC VALIDATION OTP STRICTE -->
       <form id="formRegister" onsubmit="handleRegisterSubmit(event)">
         <div class="form-group" style="margin-bottom: 12px;">
-          <label>Votre Adresse Gmail Réelle</label>
+          <label>Adresse Gmail Réelle</label>
           <div class="otp-input-group">
-            <input type="email" id="regEmail" required placeholder="votre_adresse@gmail.com">
+            <input type="email" id="regEmail" required placeholder="votre_compte@gmail.com">
             <button type="button" id="btnSendOtp" class="btn-otp-send" onclick="sendOtpCode()">
-              Envoyer OTP
+              Envoyer Code
             </button>
           </div>
-          <span style="font-size:10px;color:var(--text-muted);">Un code à 6 chiffres vous sera envoyé par e-mail.</span>
+          <span style="font-size:11px;color:var(--text-muted);">Un code à 6 chiffres sera expédié à votre boîte de réception.</span>
         </div>
 
         <div class="form-group" style="margin-bottom: 12px;">
-          <label>Code de Vérification OTP (6 chiffres)</label>
-          <input type="text" id="regOtp" required maxlength="6" pattern="[0-9]{6}" placeholder="Ex: 482915" style="letter-spacing: 4px; font-family: monospace; font-weight: 700;">
+          <label>Code de Vérification (6 chiffres reçus par e-mail)</label>
+          <input type="text" id="regOtp" required maxlength="6" pattern="[0-9]{6}" placeholder="------" style="letter-spacing: 6px; font-family: var(--font-mono); font-weight: 700; text-align: center;">
         </div>
 
         <div class="form-group" style="margin-bottom: 18px;">
@@ -997,7 +1005,7 @@
         </div>
 
         <button type="submit" id="btnRegisterSubmit" class="btn-submit" style="width: 100%;">
-          ✨ Valider & Obtenir ma Clé (+100 Crédits)
+          Valider & Obtenir ma Clé (+100 Crédits)
         </button>
       </form>
 
@@ -1005,7 +1013,7 @@
       <form id="formLogin" style="display:none;" onsubmit="handleLoginSubmit(event)">
         <div class="form-group" style="margin-bottom: 12px;">
           <label>Adresse E-mail</label>
-          <input type="email" id="loginEmail" required placeholder="votre_adresse@gmail.com">
+          <input type="email" id="loginEmail" required placeholder="votre_compte@gmail.com">
         </div>
 
         <div class="form-group" style="margin-bottom: 18px;">
@@ -1014,14 +1022,14 @@
         </div>
 
         <button type="submit" id="btnLoginSubmit" class="btn-submit" style="width: 100%;">
-          🔐 Se connecter
+          Se connecter
         </button>
       </form>
     </div>
   </div>
 
   <footer>
-    Plateforme de Production IA développée par <span>★ Stanley stawa</span> • Tous droits réservés • Moteur Neural v2.6
+    Plateforme de Production IA développée par <span>★ Stanley stawa</span> • Tous droits réservés • Moteur Neural v2.7
   </footer>
 
   <script>
@@ -1034,7 +1042,11 @@
     }
 
     function getApiKey() {
-      return currentUser?.api_key || localStorage.getItem("stanley_user_key") || localStorage.getItem("stanley_api_key") || "stawa_live_9f83a7c4e2b1d680";
+      return currentUser?.api_key || localStorage.getItem("stanley_user_key") || "";
+    }
+
+    function isUserLoggedIn() {
+      return !!(currentUser?.api_key || localStorage.getItem("stanley_user_key"));
     }
 
     function switchTab(tabId) {
@@ -1046,10 +1058,19 @@
 
     // --- MODAL & AUTHENTIFICATION ---
 
-    function openAuthModal(mode = "register") {
+    function openAuthModal(mode = "register", customMessage = "") {
       currentAuthMode = mode;
       switchAuthTab(mode);
       document.getElementById("authModal").classList.add("open");
+
+      const alertBox = document.getElementById("authAlert");
+      if (customMessage) {
+        alertBox.className = "auth-alert error";
+        alertBox.innerText = customMessage;
+      } else {
+        alertBox.className = "auth-alert";
+        alertBox.innerText = "";
+      }
     }
 
     function closeAuthModal() {
@@ -1078,7 +1099,7 @@
       }
     }
 
-    // Envoi du code OTP par e-mail
+    // Envoi réel du code OTP par e-mail
     async function sendOtpCode() {
       const email = document.getElementById("regEmail").value.trim();
       const alertBox = document.getElementById("authAlert");
@@ -1103,15 +1124,10 @@
         });
         const data = await res.json();
 
-        if (!res.ok) throw new Error(data.error || "Échec de l'envoi de l'OTP.");
+        if (!res.ok) throw new Error(data.error || "Échec de l'envoi de l'e-mail OTP.");
 
         alertBox.className = "auth-alert success";
-        alertBox.innerText = data.message || "Code OTP envoyé ! Vérifiez votre boîte de réception.";
-
-        // Si simulation en dev, pré-remplir le champ
-        if (data.debug_otp) {
-          document.getElementById("regOtp").value = data.debug_otp;
-        }
+        alertBox.innerText = data.message || "Code de vérification envoyé ! Vérifiez votre boîte de réception Gmail.";
 
         // Compte à rebours 60s
         let countdown = 60;
@@ -1132,11 +1148,11 @@
         alertBox.className = "auth-alert error";
         alertBox.innerText = err.message;
         btn.disabled = false;
-        btn.innerText = "Envoyer OTP";
+        btn.innerText = "Envoyer Code";
       }
     }
 
-    // Inscription avec validation OTP
+    // Inscription avec validation OTP obligatoire
     async function handleRegisterSubmit(e) {
       e.preventDefault();
       const email = document.getElementById("regEmail").value.trim();
@@ -1144,6 +1160,12 @@
       const otp = document.getElementById("regOtp").value.trim();
       const alertBox = document.getElementById("authAlert");
       const btn = document.getElementById("btnRegisterSubmit");
+
+      if (!otp || otp.length !== 6) {
+        alertBox.className = "auth-alert error";
+        alertBox.innerText = "Veuillez entrer le code à 6 chiffres reçu dans votre boîte Gmail.";
+        return;
+      }
 
       btn.disabled = true;
       alertBox.className = "auth-alert";
@@ -1221,12 +1243,12 @@
       const email = currentUser?.email || localStorage.getItem("stanley_user_email");
       const key = getApiKey();
 
-      if (email && key && key.startsWith("stawa_usr_")) {
+      if (email && key) {
         document.getElementById("btnOpenAuth").style.display = "none";
         const badge = document.getElementById("userProfileBadge");
         badge.style.display = "flex";
-        document.getElementById("userEmailLabel").innerText = "👤 " + email;
-        document.getElementById("userCreditsLabel").innerText = "⚡ " + (currentUser?.credits ?? 100) + " Crédits";
+        document.getElementById("userEmailLabel").innerText = email;
+        document.getElementById("userCreditsLabel").innerText = (currentUser?.credits ?? 100) + " Crédits";
       } else {
         document.getElementById("btnOpenAuth").style.display = "flex";
         document.getElementById("userProfileBadge").style.display = "none";
@@ -1236,7 +1258,7 @@
     function copyMyApiKey() {
       const key = getApiKey();
       navigator.clipboard.writeText(key);
-      alert(`🔑 Clé API personnelle copiée :\n${key}\n\nUtilisez-la dans votre bot Facebook avec : &key=${key}`);
+      alert(`Clé API personnelle copiée :\n${key}\n\nUtilisez-la dans votre bot Facebook avec le paramètre : &key=${key}`);
     }
 
     function logoutUser() {
@@ -1298,6 +1320,10 @@
 
     // --- 1. VIDEO GENERATION ---
     async function generateVideo() {
+      if (!isUserLoggedIn()) {
+        return openAuthModal("register", "Inscription requise : Veuillez valider votre e-mail pour générer des vidéos.");
+      }
+
       const prompt = document.getElementById("videoPrompt").value.trim();
       const initialImage = document.getElementById("videoCharData").value;
       const sections = document.getElementById("videoSections").value;
@@ -1342,8 +1368,8 @@
                   <div><strong>Durée :</strong> ${statusData.duration}s | <strong>Sections :</strong> ${statusData.scenes_count} | <strong>Qualité :</strong> ${quality} | <strong>Filigrane :</strong> ★ Stanley stawa (Dynamique)</div>
                   <div><strong>Lien direct MP4 :</strong> <a href="${statusData.video_url}" target="_blank">${statusData.video_url}</a></div>
                   <div class="meta-actions">
-                    <a class="action-pill" href="${statusData.video_url}" target="_blank">▶️ Ouvrir dans un onglet</a>
-                    <a class="action-pill" href="${directDlUrl}">⬇️ Télécharger le MP4</a>
+                    <a class="action-pill" href="${statusData.video_url}" target="_blank">Ouvrir dans un onglet</a>
+                    <a class="action-pill" href="${directDlUrl}">Télécharger le MP4</a>
                   </div>
                 </div>
               `;
@@ -1370,7 +1396,7 @@
           throw new Error("Rendu en cours sur les serveurs. Réinterrogez /stanleystawa/status?task_id=" + taskId);
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: var(--danger); padding: 16px; font-weight: 700;">❌ Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--danger); padding: 16px; font-weight: 700;">Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
@@ -1378,6 +1404,10 @@
 
     // --- 2. IMAGE HD ---
     async function generateImage() {
+      if (!isUserLoggedIn()) {
+        return openAuthModal("register", "Inscription requise : Veuillez valider votre e-mail pour générer des images.");
+      }
+
       const prompt = document.getElementById("imagePrompt").value.trim();
       const ratio = document.getElementById("imageRatio").value;
       const box = document.getElementById("imagePreviewBox");
@@ -1406,7 +1436,7 @@
           initUserSession();
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: var(--danger); padding: 16px;">❌ Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--danger); padding: 16px;">Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
@@ -1414,6 +1444,10 @@
 
     // --- 3. RETOUCHE IMAGE ---
     async function editImage() {
+      if (!isUserLoggedIn()) {
+        return openAuthModal("register", "Inscription requise : Veuillez valider votre e-mail pour retoucher des images.");
+      }
+
       const editData = document.getElementById("editData").value;
       const imageUrl = document.getElementById("editImgUrl").value.trim();
       const image = editData || imageUrl;
@@ -1445,7 +1479,7 @@
           initUserSession();
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: var(--danger); padding: 16px;">❌ Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--danger); padding: 16px;">Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
@@ -1453,6 +1487,10 @@
 
     // --- 4. SCÉNARIO IA ---
     async function expandStory() {
+      if (!isUserLoggedIn()) {
+        return openAuthModal("register", "Inscription requise : Veuillez valider votre e-mail pour créer des scénarios.");
+      }
+
       const idea = document.getElementById("storyIdea").value.trim();
       const language = document.getElementById("storyLang").value;
       const box = document.getElementById("storyPreviewBox");
@@ -1480,7 +1518,7 @@
           <div class="scenes-grid">${scenesHtml}</div>
         `;
       } catch (err) {
-        box.innerHTML = `<div style="color: var(--danger); padding: 16px;">❌ Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--danger); padding: 16px;">Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
@@ -1488,6 +1526,10 @@
 
     // --- 5. SYNTHÈSE VOCALE ---
     async function synthesizeVoice() {
+      if (!isUserLoggedIn()) {
+        return openAuthModal("register", "Inscription requise : Veuillez valider votre e-mail pour générer des voix.");
+      }
+
       const text = document.getElementById("voiceText").value.trim();
       const voiceId = document.getElementById("voiceId").value;
       const box = document.getElementById("voicePreviewBox");
@@ -1512,7 +1554,7 @@
           initUserSession();
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: var(--danger); padding: 16px;">❌ Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--danger); padding: 16px;">Erreur: ${err.message}</div>`;
       } finally {
         btn.disabled = false;
       }
@@ -1551,7 +1593,7 @@
           </table>
         `;
       } catch (err) {
-        container.innerHTML = `<div style="color: var(--danger); padding: 12px;">❌ Erreur chargement : ${err.message}</div>`;
+        container.innerHTML = `<div style="color: var(--danger); padding: 12px;">Erreur chargement : ${err.message}</div>`;
       }
     }
 
@@ -1559,10 +1601,10 @@
       if (!confirm("Voulez-vous ajouter un nouveau nœud de calcul au cluster ?")) return;
       try {
         const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/refill`);
-        alert(`✅ Nœud ajouté avec succès (+${data.account.credits} crédits) !`);
+        alert(`Nœud ajouté avec succès (+${data.account.credits} crédits) !`);
         loadAccounts();
       } catch (err) {
-        alert(`❌ Erreur: ${err.message}`);
+        alert(`Erreur: ${err.message}`);
       }
     }
 

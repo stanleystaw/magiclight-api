@@ -1,12 +1,5 @@
 /**
- * api/stanleystawa/accounts.js — Authentification, Inscription Sécurisée par OTP & Cluster Turso
- *
- * Actions :
- * - POST /stanleystawa/accounts?action=send_otp { email }
- * - POST /stanleystawa/accounts?action=register { email, password, otp }
- * - POST /stanleystawa/accounts?action=login { email, password }
- * - GET  /stanleystawa/accounts?action=me (avec x-api-key ou ?key=)
- * - GET  /stanleystawa/accounts (Cluster status)
+ * api/stanleystawa/accounts.js — Authentification, Inscription Sécurisée par OTP Réel & Cluster Turso
  */
 
 const url = require("url");
@@ -46,10 +39,10 @@ module.exports = async function handler(req, res) {
   const action = String(params.action || query.action || body.action || "").toLowerCase();
 
   // ----------------------------------------------------
-  // ACTION 1 : ENVOI DU CODE OTP DE VÉRIFICATION EMAIL
+  // ACTION 1 : ENVOI RÉEL DU CODE OTP (GMAIL / SMTP)
   // ----------------------------------------------------
   if (action === "send_otp" || action === "sendotp" || action === "otp") {
-    if (!security.checkRateLimit(req, 8)) {
+    if (!security.checkRateLimit(req, 6)) {
       return res.status(429).json({ error: "Trop de demandes d'OTP. Veuillez patienter une minute." });
     }
 
@@ -62,7 +55,7 @@ module.exports = async function handler(req, res) {
     // Blocage strict des domaines jetables / faux e-mails
     if (mailer.isDisposableEmail(email)) {
       return res.status(400).json({
-        error: "Les adresses e-mails temporaires ou jetables sont strictement interdites. Veuillez utiliser une vraie adresse Gmail, Outlook, Yahoo ou iCloud."
+        error: "Les adresses e-mails temporaires ou jetables sont strictement interdites. Veuillez utiliser une vraie adresse Gmail, Outlook ou Yahoo."
       });
     }
 
@@ -72,20 +65,24 @@ module.exports = async function handler(req, res) {
         return res.status(409).json({ error: "Un compte existe déjà avec cette adresse e-mail. Veuillez vous connecter." });
       }
 
-      // Génération et enregistrement du code OTP à 6 chiffres
+      // Génération et enregistrement du code OTP à 6 chiffres dans Turso DB
       const otpCode = mailer.generateOtp();
       await turso.saveOtp(email, otpCode, 10);
 
-      // Envoi de l'e-mail de confirmation
+      // Envoi réel de l'e-mail (Nodemailer / Gmail SMTP / Resend)
       const sendResult = await mailer.sendOtpEmail(email, otpCode);
+
+      if (!sendResult.sent) {
+        return res.status(500).json({
+          error: "Impossible d'envoyer l'e-mail de confirmation. Veuillez vérifier que votre compte Gmail existe et que le service d'envoi est actif."
+        });
+      }
 
       return res.status(200).json({
         status: "success",
-        message: `Code de vérification envoyé à ${email} ! Vérifiez votre boîte de réception (et vos spams).`,
+        message: `Code de vérification envoyé à ${email} ! Vérifiez votre boîte de réception Gmail (et vos spams).`,
         email,
-        expires_in: "10 minutes",
-        simulated: !!sendResult.simulated,
-        ...(sendResult.simulated ? { debug_otp: otpCode } : {})
+        expires_in: "10 minutes"
       });
     } catch (err) {
       console.error("[Send OTP Error]", err);
@@ -94,7 +91,7 @@ module.exports = async function handler(req, res) {
   }
 
   // ----------------------------------------------------
-  // ACTION 2 : INSCRIPTION AVEC CODE OTP VALIDE
+  // ACTION 2 : INSCRIPTION AVEC VALIDATION OBLIGATOIRE DU CODE OTP
   // ----------------------------------------------------
   if (action === "register" || action === "signup") {
     if (!security.checkRateLimit(req, 10)) {
@@ -119,7 +116,7 @@ module.exports = async function handler(req, res) {
 
     if (!otp || otp.length !== 6) {
       return res.status(400).json({
-        error: "Le code de vérification OTP à 6 chiffres envoyé à votre adresse e-mail est obligatoire."
+        error: "Le code de vérification OTP à 6 chiffres reçu dans votre boîte Gmail est obligatoire."
       });
     }
 
@@ -128,7 +125,7 @@ module.exports = async function handler(req, res) {
       const isValidOtp = await turso.verifyOtp(email, otp);
       if (!isValidOtp) {
         return res.status(400).json({
-          error: "Code OTP incorrect ou expiré. Veuillez vérifier votre boîte e-mail ou demander un nouveau code."
+          error: "Code OTP incorrect ou expiré. Veuillez vérifier votre boîte e-mail ou redemander un nouveau code."
         });
       }
 
