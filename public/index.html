@@ -1412,12 +1412,78 @@
           <div class="card" style="background:var(--md-sys-color-surface-container);padding:16px;">
             <div style="font-weight:800;font-size:14px;color:#fff;margin-bottom:4px;">Code Secret du Groupe WhatsApp (Vérification Anti-Fraude)</div>
             <p style="font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-bottom:10px;">
-              Ce code doit figurer dans la description de votre groupe WhatsApp. Les utilisateurs doivent obligatoirement le saisir pour valider les +50 crédits.
+              Ce code doit figurer dans la description de votre groupe WhatsApp. Les utilisateurs doivent obligatoirement le saisir pour valider les +15 crédits.
             </p>
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
               <input type="text" id="adminSecretCodeInput" style="font-family:var(--font-family-mono);font-weight:800;font-size:13px;max-width:240px;" placeholder="STAWA-VIP-2026">
               <button type="button" class="btn-submit" style="padding:10px 16px;" onclick="adminUpdateSecretCode()">Enregistrer le Nouveau Code</button>
             </div>
+          </div>
+
+          <!-- GESTIONNAIRE DYNAMIQUE DE QUÊTES (ADMINISTRATION AVANCÉE) -->
+          <div class="card" style="background:var(--md-sys-color-surface-container);padding:16px;">
+            <div style="font-weight:800;font-size:15px;color:#fff;margin-bottom:4px;">🎯 Gestionnaire & Créateur de Quêtes Personnalisées</div>
+            <p style="font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;">
+              Ajoutez de nouvelles quêtes en direct avec leurs conditions de validation, récompenses et liens d'action sans toucher au code.
+            </p>
+
+            <form id="formAdminCreateQuest" onsubmit="adminSubmitCreateQuest(event)" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px;margin-bottom:14px;">
+              <div class="form-group">
+                <label>Clé Unique (ex: join_telegram, avis_google)</label>
+                <input type="text" id="adminQKey" required placeholder="cle_sans_espace">
+              </div>
+              <div class="form-group">
+                <label>Titre de la Quête</label>
+                <input type="text" id="adminQTitle" required placeholder="Rejoindre notre canal VIP">
+              </div>
+              <div class="form-group">
+                <label>Badge Visuel (ex: Spécial, Bonus, Nouveau)</label>
+                <input type="text" id="adminQBadge" placeholder="VIP" value="Bonus">
+              </div>
+              <div class="form-group">
+                <label>Type de Quête</label>
+                <select id="adminQType">
+                  <option value="one_time" selected>Unique (1 seule fois)</option>
+                  <option value="daily">Quotidienne (Toutes les 24h)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Mode de Vérification Réelle</label>
+                <select id="adminQVerif">
+                  <option value="instant" selected>Instantané (Check-in / Visite)</option>
+                  <option value="secret_code_and_phone">Code Secret + N° WhatsApp</option>
+                  <option value="phone_proof">Preuve par Numéro WhatsApp</option>
+                  <option value="video_generation_check">Vérification de Création Vidéo IA</option>
+                  <option value="url_link">Lien externe obligatoire</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Récompense Compte Studio</label>
+                <input type="number" id="adminQRewardStudio" min="1" max="100" value="15">
+              </div>
+              <div class="form-group">
+                <label>Récompense Compte Développeur</label>
+                <input type="number" id="adminQRewardDev" min="1" max="100" value="10">
+              </div>
+              <div class="form-group">
+                <label>Texte du Bouton d'Action</label>
+                <input type="text" id="adminQButtonText" value="Participer & Valider">
+              </div>
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label>Lien d'action ou d'invitation (Optionnel)</label>
+                <input type="url" id="adminQUrl" placeholder="https://...">
+              </div>
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label>Description détaillée de la quête</label>
+                <textarea id="adminQDesc" placeholder="Expliquez l'action à accomplir..." style="min-height:60px;"></textarea>
+              </div>
+              <div style="grid-column: 1 / -1;">
+                <button type="submit" class="btn-submit" style="width:100%;">+ Créer & Publier cette Quête</button>
+              </div>
+            </form>
+
+            <div style="font-weight:800;font-size:13px;color:#fff;margin:12px 0 6px;">Quêtes Actuellement en Ligne sur la Plateforme :</div>
+            <div class="table-container" id="adminCustomQuestsTable"></div>
           </div>
 
           <!-- GESTION DES UTILISATEURS -->
@@ -2512,12 +2578,125 @@
         if (data.whatsapp_secret_code) {
           document.getElementById("adminSecretCodeInput").value = data.whatsapp_secret_code;
         }
+        loadAdminCustomQuests(key);
         loadAdminUsers(key);
         loadAdminQuestClaims(key);
         loadAdminTasks(key);
 
       } catch (err) {
         showToast("Erreur admin : " + err.message, "error");
+      }
+    }
+
+    async function loadAdminCustomQuests(key) {
+      const container = document.getElementById("adminCustomQuestsTable");
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_get_quests&key=${encodeURIComponent(key)}`);
+        const data = await res.json();
+
+        if (!data.quests || !data.quests.length) {
+          container.innerHTML = `<div style="padding:14px;color:var(--md-sys-color-on-surface-variant);">Aucune quête personnalisée. Utilisez le formulaire ci-dessus pour en ajouter une.</div>`;
+          return;
+        }
+
+        container.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Clé / Badge</th>
+                <th>Titre</th>
+                <th>Type / Vérification</th>
+                <th>Récompense</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.quests.map(q => `
+                <tr>
+                  <td><code>${q.quest_key}</code> <span style="font-size:10px;color:var(--md-sys-color-primary);">[${q.badge || 'VIP'}]</span></td>
+                  <td><strong>${q.title}</strong></td>
+                  <td><small>${q.quest_type} / ${q.verification_type}</small></td>
+                  <td><span style="color:var(--md-sys-color-primary);font-weight:800;">+${q.reward_studio} / +${q.reward_dev}</span></td>
+                  <td><span class="user-credits-pill" style="${q.is_active ? 'background:rgba(37,211,102,0.15);color:var(--color-whatsapp);' : 'background:rgba(255,180,171,0.15);color:var(--md-sys-color-error);'}">${q.is_active ? 'Actif' : 'Inactif'}</span></td>
+                  <td>
+                    <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;" onclick="adminToggleCustomQuest('${q.quest_key}')">${q.is_active ? 'Désactiver' : 'Activer'}</button>
+                    <button type="button" class="btn-secondary" style="padding:4px 8px;font-size:11px;color:var(--md-sys-color-error);" onclick="adminDeleteCustomQuest('${q.quest_key}')">Suppr</button>
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        `;
+      } catch (e) {
+        container.innerHTML = `<div style="color:var(--md-sys-color-error);padding:14px;">Erreur: ${e.message}</div>`;
+      }
+    }
+
+    async function adminSubmitCreateQuest(e) {
+      e.preventDefault();
+      const key = getApiKey();
+      const payload = {
+        action: "admin_create_quest",
+        quest_key: document.getElementById("adminQKey").value.trim(),
+        title: document.getElementById("adminQTitle").value.trim(),
+        badge: document.getElementById("adminQBadge").value.trim(),
+        quest_type: document.getElementById("adminQType").value,
+        verification_type: document.getElementById("adminQVerif").value,
+        reward_studio: parseInt(document.getElementById("adminQRewardStudio").value, 10) || 15,
+        reward_dev: parseInt(document.getElementById("adminQRewardDev").value, 10) || 10,
+        button_text: document.getElementById("adminQButtonText").value.trim(),
+        action_url: document.getElementById("adminQUrl").value.trim(),
+        description: document.getElementById("adminQDesc").value.trim()
+      };
+
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_create_quest&key=${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Erreur de création.");
+
+        showToast(data.message || "Quête créée et publiée avec succès !", "success");
+        document.getElementById("formAdminCreateQuest").reset();
+        loadAdminCustomQuests(key);
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    }
+
+    async function adminToggleCustomQuest(questKey) {
+      const key = getApiKey();
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_toggle_quest&key=${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quest_id: questKey })
+        });
+        const data = await res.json();
+        showToast(data.message || "Statut de la quête modifié.", "success");
+        loadAdminCustomQuests(key);
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    }
+
+    async function adminDeleteCustomQuest(questKey) {
+      if (!confirm(`Supprimer définitivement la quête ${questKey} ?`)) return;
+      const key = getApiKey();
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_delete_quest&key=${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quest_id: questKey })
+        });
+        const data = await res.json();
+        showToast(data.message || "Quête supprimée.", "success");
+        loadAdminCustomQuests(key);
+      } catch (err) {
+        showToast(err.message, "error");
       }
     }
 

@@ -239,6 +239,50 @@ module.exports = async function handler(req, res) {
         return res.status(500).json({ error: err.message });
       }
     }
+
+    // 11. Liste de toutes les quêtes personnalisées
+    if (action === "admin_get_quests") {
+      try {
+        const quests = await turso.getCustomQuests(false);
+        return res.status(200).json({ status: "success", quests });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    // 12. Créer / Mettre à jour une quête personnalisée
+    if (action === "admin_create_quest") {
+      try {
+        const result = await turso.createCustomQuest(params);
+        return res.status(200).json({ status: "success", message: "Quête enregistrée avec succès !", result });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    // 13. Activer / Désactiver une quête personnalisée
+    if (action === "admin_toggle_quest") {
+      const target = params.quest_id || params.id || params.key;
+      if (!target) return res.status(400).json({ error: "Paramètre 'quest_id' requis." });
+      try {
+        await turso.toggleCustomQuest(target);
+        return res.status(200).json({ status: "success", message: "Statut de la quête modifié." });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    // 14. Supprimer une quête personnalisée
+    if (action === "admin_delete_quest") {
+      const target = params.quest_id || params.id || params.key;
+      if (!target) return res.status(400).json({ error: "Paramètre 'quest_id' requis." });
+      try {
+        await turso.deleteCustomQuest(target);
+        return res.status(200).json({ status: "success", message: "Quête supprimée avec succès." });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
   }
 
   // ====================================================
