@@ -1556,11 +1556,11 @@
     }
 
     function getApiKey() {
-      return currentUser?.api_key || localStorage.getItem("stanley_user_key") || MASTER_ADMIN_KEY;
+      return currentUser?.api_key || localStorage.getItem("stanley_user_key") || "";
     }
 
     function isUserLoggedIn() {
-      return !!(currentUser?.email || localStorage.getItem("stanley_user_email"));
+      return Boolean(currentUser && currentUser.api_key && currentUser.email);
     }
 
     // --- SNACKBAR M3 ---
@@ -1828,12 +1828,18 @@
     }
 
     async function deleteMyAccount() {
-      if (!isUserLoggedIn()) return;
-      const key = getApiKey();
+      if (!isUserLoggedIn()) {
+        currentUser = null;
+        localStorage.clear();
+        updateUserUI();
+        loadQuests();
+        return;
+      }
       
       const confirmMsg = "Êtes-vous absolument sûr de vouloir supprimer définitivement votre compte et vos clés ?\n\nAttention : Cette adresse Gmail ne pourra plus être réutilisée.";
       if (!confirm(confirmMsg)) return;
 
+      const key = currentUser.api_key;
       try {
         const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=delete_account&key=${encodeURIComponent(key)}`, {
           method: "POST",
@@ -1842,37 +1848,35 @@
         const data = await res.json();
         showToast(data.message || "Votre compte a été supprimé.", "info");
       } catch (err) {
-        showToast("Compte déconnecté et réinitialisé.", "info");
+        showToast("Compte réinitialisé.", "info");
       } finally {
         currentUser = null;
-        localStorage.removeItem("stanley_user_key");
-        localStorage.removeItem("stanley_user_email");
-        localStorage.removeItem("stanley_account_type");
+        localStorage.clear();
         updateUserUI();
         loadQuests();
       }
     }
 
     function updateUserUI() {
-      const email = currentUser?.email || localStorage.getItem("stanley_user_email");
-      const key = getApiKey();
-      const accountType = currentUser?.account_type || localStorage.getItem("stanley_account_type") || "studio";
-
       const authGroup = document.getElementById("authButtonsGroup");
       const profileBadge = document.getElementById("userProfileBadge");
       const adminTabBtn = document.getElementById("tabBtnAdmin");
       const keyChip = document.getElementById("userKeyChip");
       const btnUpgradeDev = document.getElementById("btnUpgradeDev");
 
-      if (email && key && (key.startsWith("stanleystawa_") || key.startsWith("stawa_"))) {
+      if (currentUser && currentUser.api_key && currentUser.email) {
+        const email = currentUser.email;
+        const key = currentUser.api_key;
+        const accountType = currentUser.account_type || "studio";
+
         if (authGroup) authGroup.style.display = "none";
         profileBadge.style.display = "inline-flex";
         document.getElementById("userAvatarChar").innerText = email.charAt(0).toUpperCase();
         document.getElementById("userEmailLabel").innerText = email.length > 20 ? email.slice(0, 18) + "..." : email;
-        document.getElementById("userCreditsLabel").innerText = (currentUser?.credits ?? 30) + " Crédits";
+        document.getElementById("userCreditsLabel").innerText = (currentUser.credits ?? 30) + " Crédits";
         
         // Affichage Clé API ou Bouton Conversion
-        if (accountType === "developer" || currentUser?.role === "admin" || currentUser?.is_admin) {
+        if (accountType === "developer" || currentUser.role === "admin" || currentUser.is_admin) {
           keyChip.style.display = "inline-flex";
           if (btnUpgradeDev) btnUpgradeDev.style.display = "none";
           const shortKey = key.length > 22 ? key.slice(0, 16) + "..." : key;
@@ -1884,7 +1888,7 @@
         }
 
         // Seul l'administrateur officiel a accès au panel admin
-        if (currentUser?.role === "admin" || currentUser?.is_admin) {
+        if (currentUser.role === "admin" || currentUser.is_admin) {
           adminTabBtn.style.display = "inline-flex";
         } else {
           adminTabBtn.style.display = "none";
@@ -1926,9 +1930,7 @@
     function logoutUser() {
       if (!confirm("Voulez-vous vous déconnecter ?")) return;
       currentUser = null;
-      localStorage.removeItem("stanley_user_key");
-      localStorage.removeItem("stanley_user_email");
-      localStorage.removeItem("stanley_account_type");
+      localStorage.clear();
       updateUserUI();
       loadQuests();
       switchTab("video");
@@ -1939,21 +1941,21 @@
       const savedKey = localStorage.getItem("stanley_user_key");
       if (savedKey) {
         try {
-          const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/accounts?action=me&key=${savedKey}`);
-          if (data.user) {
-            currentUser = { ...data.user, api_key: savedKey, is_admin: data.is_admin };
-            updateUserUI();
+          const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=me&key=${encodeURIComponent(savedKey)}`);
+          const data = await res.json();
+          if (res.ok && data && data.user) {
+            currentUser = { ...data.user, api_key: savedKey, is_admin: Boolean(data.is_admin) };
           } else {
-            localStorage.removeItem("stanley_user_key");
-            localStorage.removeItem("stanley_user_email");
             currentUser = null;
+            localStorage.clear();
           }
         } catch (e) {
           console.warn("Session check fallback:", e);
-          localStorage.removeItem("stanley_user_key");
-          localStorage.removeItem("stanley_user_email");
           currentUser = null;
+          localStorage.clear();
         }
+      } else {
+        currentUser = null;
       }
       updateUserUI();
       loadQuests();
@@ -2028,12 +2030,12 @@
         const joinQuest = data.quests.find(q => q.id === "join_whatsapp");
         const claimJoinBtn = document.getElementById("btnClaimJoinWhatsApp");
         if (joinQuest && joinQuest.claimed) {
-          claimJoinBtn.innerText = "✓ Quête Validée (+50)";
+          claimJoinBtn.innerText = "✓ Quête Validée (+15)";
           claimJoinBtn.disabled = true;
           document.getElementById("waJoinPhoneInput").disabled = true;
           document.getElementById("waJoinSecretInput").disabled = true;
         } else {
-          claimJoinBtn.innerText = "2. Valider ma Preuve (+50)";
+          claimJoinBtn.innerText = "2. Valider ma Preuve (+15)";
           claimJoinBtn.disabled = false;
           document.getElementById("waJoinPhoneInput").disabled = false;
           document.getElementById("waJoinSecretInput").disabled = false;
@@ -2097,7 +2099,7 @@
 
     async function submitWhatsAppJoinQuest() {
       if (!isUserLoggedIn()) {
-        return openAuthModal("register", "Inscription requise : Créez votre compte pour réclamer vos +50 Crédits !");
+        return openAuthModal("register", "Inscription requise : Créez votre compte pour réclamer vos +15 Crédits !");
       }
 
       const phone = document.getElementById("waJoinPhoneInput").value.trim();
@@ -2111,7 +2113,7 @@
 
     function openWhatsAppStatusShare() {
       const refUrl = document.getElementById("userReferralLinkInput").value || getBaseUrl();
-      const text = `🎬 Créez des vidéos et images IA gratuitement avec Stanley Stawa AI Studio !\n\nRejoignez le nouveau groupe WhatsApp VIP officiel ici 👉 ${WHATSAPP_VIP_LINK}\n\nEt testez la plateforme gratuitement (+40 crédits offerts) : ${refUrl}`;
+      const text = `🎬 Créez des vidéos et images IA gratuitement avec Stanley Stawa AI Studio !\n\nRejoignez le nouveau groupe WhatsApp VIP officiel ici 👉 ${WHATSAPP_VIP_LINK}\n\nEt testez la plateforme gratuitement (+35 crédits offerts) : ${refUrl}`;
       const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
       window.open(waUrl, "_blank");
       showToast("WhatsApp ouvert ! Publiez le texte sur votre statut puis renseignez votre numéro.", "info");
@@ -2163,7 +2165,7 @@
 
     function shareToWhatsAppContacts() {
       const refUrl = document.getElementById("userReferralLinkInput").value || getBaseUrl();
-      const text = `Salut ! Je t'invite à tester Stanley Stawa AI Studio pour créer des vidéos cinématiques et générer des voix HD par IA.\n\nEn passant par mon lien d'invitation, tu reçois 40 Crédits offerts 🎁 :\n👉 ${refUrl}\n\nEt rejoins le groupe VIP officiel WhatsApp : ${WHATSAPP_VIP_LINK}`;
+      const text = `Salut ! Je t'invite à tester Stanley Stawa AI Studio pour créer des vidéos cinématiques et générer des voix HD par IA.\n\nEn passant par mon lien d'invitation, tu reçois 35 Crédits offerts 🎁 :\n👉 ${refUrl}\n\nEt rejoins le groupe VIP officiel WhatsApp : ${WHATSAPP_VIP_LINK}`;
       const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
       window.open(waUrl, "_blank");
     }
@@ -2176,7 +2178,7 @@
       const input = document.getElementById("userReferralLinkInput");
       input.select();
       navigator.clipboard.writeText(input.value);
-      showToast("Lien de parrainage copié ! Partagez-le pour gagner +30 Crédits par ami.", "success");
+      showToast("Lien de parrainage copié ! Partagez-le pour gagner +10 Crédits par ami.", "success");
     }
 
     // --- 1. VIDEO GENERATION ---

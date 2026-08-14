@@ -40,14 +40,14 @@ module.exports = function handler(req, res) {
       description: "Plateforme de Production Vidéo IA Multi-Scènes, Synthèse Vocale et Création Visuelle HD par Stanley Stawa.",
       status: "online",
       author: "Stanley Stawa",
-      version: "3.3.0",
+      version: "3.4.0",
       watermark: "★ Stanley stawa",
       community: {
         whatsapp_vip_group: "https://chat.whatsapp.com/C21rwzKmQlA3nA1MppQ4oO"
       },
       pricing: {
         welcome_credits: 30,
-        referred_welcome_bonus: 40,
+        referred_welcome_bonus: 35,
         video: "1 credit per section (e.g. 2 sections = 2 credits, 6 sections = 6 credits)",
         image: "1 credit",
         edit: "2 credits",
@@ -55,10 +55,11 @@ module.exports = function handler(req, res) {
         story: "1 credit"
       },
       quests_and_rewards: {
-        join_whatsapp: "50 credits (Studio) / 20 credits (Dev)",
-        share_whatsapp_status: "25 credits/day (Studio) / 10 credits/day (Dev)",
-        daily_checkin: "10 credits/day (Studio) / 5 credits/day (Dev)",
-        referral_invite: "30 credits per friend invited (Studio) / 15 credits (Dev)"
+        join_whatsapp: "15 credits (Studio) / 10 credits (Dev)",
+        share_whatsapp_status: "5 credits/day (Studio) / 3 credits/day (Dev)",
+        share_video: "5 credits/day (Studio) / 3 credits/day (Dev)",
+        daily_checkin: "2 credits/day (Studio) / 1 credit/day (Dev)",
+        referral_invite: "10 credits per friend invited (Studio) / 5 credits (Dev)"
       },
       auth: {
         otp_verification: "/stanleystawa/accounts?action=send_otp",
@@ -66,6 +67,7 @@ module.exports = function handler(req, res) {
         login: "/stanleystawa/accounts?action=login",
         quests: "/stanleystawa/accounts?action=quests",
         claim_quest: "/stanleystawa/accounts?action=claim_quest",
+        convert_to_developer: "/stanleystawa/accounts?action=convert_to_developer",
         delete_account: "/stanleystawa/accounts?action=delete_account",
         me: "/stanleystawa/accounts?action=me"
       },
@@ -73,6 +75,8 @@ module.exports = function handler(req, res) {
         stats: "/stanleystawa/accounts?action=admin_stats",
         users: "/stanleystawa/accounts?action=admin_users",
         tasks: "/stanleystawa/accounts?action=admin_tasks",
+        quest_claims: "/stanleystawa/accounts?action=admin_quest_claims",
+        set_quest_code: "/stanleystawa/accounts?action=admin_set_quest_code",
         update_credits: "/stanleystawa/accounts?action=admin_update_credits",
         delete_user: "/stanleystawa/accounts?action=admin_delete_user",
         delete_task: "/stanleystawa/accounts?action=admin_delete_task",
