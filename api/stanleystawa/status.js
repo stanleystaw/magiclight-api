@@ -6,6 +6,7 @@
  */
 
 const turso = require("../../lib/turso");
+const security = require("../../lib/security");
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -13,6 +14,12 @@ module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  if (!security.checkRateLimit(req, 60)) {
+    return res.status(429).json({ error: "Trop de requêtes de statut. Veuillez patienter." });
+  }
     return res.status(200).end();
   }
 

@@ -1,18 +1,27 @@
 /**
- * api/stanleystawa/edit.js — Retouche d'images via Creative Image Studio
- *
- * POST /stanleystawa/edit { image, prompt, ratio }
+ * api/stanleystawa/edit.js — Retouche d'images sécurisée avec clé API
  */
 
 const engine = require("../../lib/magiclight");
+const security = require("../../lib/security");
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-api-key");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
+  }
+
+  if (!security.isAuthorized(req)) {
+    return res.status(401).json({
+      error: "Accès refusé : Clé API secrète invalide ou manquante."
+    });
+  }
+
+  if (!security.checkRateLimit(req, 20)) {
+    return res.status(429).json({ error: "Trop de requêtes. Veuillez patienter une minute." });
   }
 
   try {

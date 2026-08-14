@@ -551,9 +551,12 @@
     <div class="header-actions">
       <div class="badge-stanley">
         <div class="badge-dot"></div>
-        <span id="tursoStats">★ Stanley Stawa Neural Core</span>
+        <span id="tursoStats">★ Stanley Stawa Core</span>
       </div>
-      <input type="text" id="apiBaseUrl" class="base-url-input" value="" placeholder="Base URL">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <input type="password" id="apiKeyInput" class="base-url-input" style="width:150px;" placeholder="🔑 Clé API Secrète" value="stawa_live_9f83a7c4e2b1d680" onchange="localStorage.setItem('stanley_api_key', this.value)">
+        <input type="text" id="apiBaseUrl" class="base-url-input" value="" placeholder="Base URL">
+      </div>
     </div>
   </header>
 
@@ -803,8 +806,26 @@
       reader.readAsDataURL(file);
     }
 
+    function getApiKey() {
+      const el = document.getElementById("apiKeyInput");
+      const val = (el ? el.value.trim() : "") || localStorage.getItem("stanley_api_key") || "stawa_live_9f83a7c4e2b1d680";
+      return val;
+    }
+
     async function safeFetchJson(url, options = {}) {
-      const res = await fetch(url, options);
+      const key = getApiKey();
+      const headers = {
+        "x-api-key": key,
+        ...(options.headers || {})
+      };
+      
+      // Also add key query param if not present
+      let finalUrl = url;
+      if (!finalUrl.includes("key=") && !finalUrl.includes("apiKey=")) {
+        finalUrl += (finalUrl.includes("?") ? "&" : "?") + "key=" + encodeURIComponent(key);
+      }
+
+      const res = await fetch(finalUrl, { ...options, headers });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur serveur " + res.status);
       return data;

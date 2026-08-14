@@ -6,6 +6,7 @@
     { "source": "/stanleystawa/:path*", "destination": "/api/stanleystawa/:path*" }
   ],
   "env": {
+    "STANLEY_API_KEY": "stawa_live_9f83a7c4e2b1d680",
     "TURSO_DATABASE_URL": "libsql://magicligth-stanleystawa354.aws-eu-west-1.turso.io",
     "TURSO_AUTH_TOKEN": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODY1NDMwODcsImlkIjoiMDE5ZmY2NDMtZmEwMS03NzBkLWE3YjgtMWFkMDQzOWEzN2Q0Iiwia2lkIjoiRUowd0tEaER4WmxUYlZ5MHJLX1VRRnhGZml6NF9nTEp2WXBPdFdiQlM2USIsInJpZCI6ImYzNDE1MGEzLTJkMzMtNDBjOC05ZmFmLWViMDBhODFhOGFhMiJ9.DVj4IWSi5WgU1frG8BVvUmINQYQRN77Kqe0-GLT2qgTv_w6M4ccKOP-GsEkNnaL3jX7Ikb4g7Eo45llVcQAgBQ"
   }

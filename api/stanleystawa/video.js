@@ -1,20 +1,11 @@
 /**
- * api/stanleystawa/video.js — Point d'entrée vidéo serverless MagicLight AI
+ * api/stanleystawa/video.js — Déclencheur vidéo sécurisé avec Authentification & Anti-Abus
  *
- * GET/POST /stanleystawa/video?imageUrl=...&prompt=...&sections=6&duration=10&quality=medium&format=json
- *
- * Paramètres :
- *   - imageUrl / image / initial_image : URL ou base64 du personnage de référence (optionnel)
- *   - prompt / text / idea             : Scénario / description de la vidéo (requis)
- *   - sections / scenes                : Nombre de sections 2 à 10 (défaut : 6)
- *   - duration / seconds               : Durée par section 5 ou 10s (défaut : 10)
- *   - quality                          : low | medium | high (défaut : medium)
- *   - ratio                            : 1 (16:9 Paysage) ou 2 (9:16 Portrait) (défaut : 1)
- *   - language                         : french | english | spanish | german (défaut : french)
- *   - format                           : json | mp4 | redirect (défaut : json)
+ * GET/POST /stanleystawa/video?prompt=...&key=...&sections=6&duration=10&quality=medium
  */
 
 const turso = require("../../lib/turso");
+const security = require("../../lib/security");
 
 const GITHUB_TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || ("ghp_" + "xR2NKjc2PgzOl0kmCQSjy7nEVvAIQw0ue3HS");
 const REPO = "foctaveluka-eng/magiclight-api";
@@ -23,40 +14,55 @@ const WORKFLOW_ID = "332930279";
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-api-key");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
+  }
+
+  // 1. Authentification stricte par clé API secrète
+  if (!security.isAuthorized(req)) {
+    return res.status(401).json({
+      error: "Accès refusé : Clé API secrète invalide ou manquante.",
+      auth_methods: "Passez votre clé via l'en-tête 'x-api-key: ...' ou le paramètre '?key=...'"
+    });
+  }
+
+  // 2. Limitation de débit anti-spam par IP (max 10 requêtes de création vidéo par minute par client)
+  if (!security.checkRateLimit(req, 10)) {
+    return res.status(429).json({
+      error: "Trop de requêtes vidéo initiées. Veuillez patienter une minute avant de relancer un rendu."
+    });
   }
 
   try {
     const params = { ...(req.query || {}), ...(req.body || {}) };
     const prompt = (params.prompt || params.text || params.idea || "").trim();
     const initialImage = (params.imageUrl || params.image || params.initial_image || params.initialImage || "").trim();
-    const sections = String(params.sections || params.scenes || "6"); // 6 sections par défaut
-    const quality = String(params.quality || "medium").toLowerCase(); // medium par défaut
-    const duration = String(params.duration || params.seconds || "10"); // 10s par section par défaut
-    const ratio = String(params.ratio || "1"); // 16:9 par défaut
+    const sections = String(params.sections || params.scenes || "6");
+    const quality = String(params.quality || "medium").toLowerCase();
+    const duration = String(params.duration || params.seconds || "10");
+    const ratio = String(params.ratio || "1");
     const language = String(params.language || "french");
     const format = String(params.format || "json").toLowerCase();
 
     if (!prompt) {
       return res.status(400).json({
         error: "Le paramètre 'prompt' ou 'text' est requis.",
-        example: "https://magiclight-api.vercel.app/stanleystawa/video?prompt=Un+petit+chaton+qui+explore+la+lune&imageUrl=...&sections=6&duration=10&quality=medium"
+        example: `https://${req.headers.host || 'magiclight-api.vercel.app'}/stanleystawa/video?prompt=Un+jeune+magicien+explore+la+lune&key=${security.MASTER_API_KEY}`
       });
     }
 
     const taskId = `vid_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
-    // 1. Enregistrement dans Turso DB
+    // 3. Enregistrement sécurisé dans Turso DB
     const sql = `
       INSERT INTO video_tasks (task_id, prompt, initial_image, status, progress, step, message)
       VALUES (?, ?, ?, 'queued', 10, 'queued', 'Initialisation du film IA (6 sections, 60s)...');
     `;
     await turso.execute(sql, [taskId, prompt, initialImage]);
 
-    // 2. Déclenchement du worker de compilation vidéo GitHub Actions
+    // 4. Déclenchement du worker GitHub Actions
     const ghHeaders = {
       "Authorization": `token ${GITHUB_TOKEN}`,
       "Accept": "application/vnd.github.v3+json",
@@ -84,7 +90,6 @@ module.exports = async function handler(req, res) {
           }
         })
       });
-      console.log("[GitHub Dispatch Status]:", dispatchRes.status);
       if (!dispatchRes.ok) {
         const txt = await dispatchRes.text();
         console.error("[GitHub Dispatch Error Body]:", txt);
@@ -100,7 +105,6 @@ module.exports = async function handler(req, res) {
     const mp4PollUrl = `${protocol}://${host}/stanleystawa/status?task_id=${taskId}&format=mp4`;
 
     if (format === "redirect" || format === "mp4") {
-      // Renvoie vers le lien d'attente MP4
       return res.redirect(302, mp4PollUrl);
     }
 

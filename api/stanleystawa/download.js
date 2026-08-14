@@ -6,6 +6,7 @@
  */
 
 const { Readable } = require("stream");
+const security = require("../../lib/security");
 
 const GITHUB_TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || ("ghp_" + "xR2NKjc2PgzOl0kmCQSjy7nEVvAIQw0ue3HS");
 const REPO = "foctaveluka-eng/magiclight-api";
@@ -17,6 +18,12 @@ module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Expose-Headers", "Content-Range, Content-Length, Accept-Ranges");
 
   if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  if (!security.checkRateLimit(req, 100)) {
+    return res.status(429).json({ error: "Trop de requêtes de téléchargement." });
+  }
     return res.status(200).end();
   }
 
