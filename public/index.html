@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Stanley Stawa — Studio Vidéo & IA Générative</title>
   
   <!-- Typographies Google Material Design 3 (Roboto Flex & JetBrains Mono) -->
@@ -24,10 +24,10 @@
   <style>
     :root {
       /* Google Material 3 Dark Palette Tokens */
-      --md-sys-color-background: #0b0e14;
-      --md-sys-color-surface: #121722;
-      --md-sys-color-surface-container: #181f2e;
-      --md-sys-color-surface-container-high: #20293d;
+      --md-sys-color-background: #080a0f;
+      --md-sys-color-surface: #0f131d;
+      --md-sys-color-surface-container: #161c2b;
+      --md-sys-color-surface-container-high: #1e263a;
       --md-sys-color-primary: #7cf0c4;
       --md-sys-color-on-primary: #003827;
       --md-sys-color-primary-container: rgba(124, 240, 196, 0.12);
@@ -64,10 +64,11 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    body {
+    html, body {
+      width: 100%;
+      min-height: 100vh;
       background-color: var(--md-sys-color-background);
       color: var(--md-sys-color-on-surface);
-      min-height: 100vh;
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
@@ -76,11 +77,11 @@
 
     /* M3 TOP APP BAR */
     header {
-      background: rgba(18, 23, 34, 0.94);
+      background: rgba(15, 19, 29, 0.94);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--md-sys-color-outline-variant);
-      padding: 12px 24px;
+      padding: 12px 20px;
       position: sticky;
       top: 0;
       z-index: 50;
@@ -94,7 +95,7 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .brand-logo {
@@ -110,13 +111,15 @@
       font-weight: 800;
       font-size: 16px;
       box-shadow: 0 0 16px var(--md-sys-color-primary-container);
+      flex-shrink: 0;
     }
 
     .brand-title h1 {
-      font-size: 16px;
+      font-size: clamp(14px, 4vw, 16px);
       font-weight: 800;
       letter-spacing: -0.3px;
       color: #fff;
+      white-space: nowrap;
     }
 
     .brand-title h1 span {
@@ -127,32 +130,33 @@
       font-size: 11px;
       color: var(--md-sys-color-on-surface-variant);
       font-weight: 500;
+      display: block;
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
-    /* USER BADGE (DESKTOP & MOBILE RESPONSIVE) */
+    /* USER BADGE */
     .user-profile-badge {
       display: none;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       background: var(--md-sys-color-surface-container);
       border: 1px solid var(--md-sys-color-outline);
-      padding: 5px 12px;
+      padding: 4px 10px;
       border-radius: var(--md-shape-corner-full);
       font-size: 12px;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
     }
 
     .user-credits-pill {
       background: var(--md-sys-color-primary-container);
       color: var(--md-sys-color-primary);
-      padding: 3px 9px;
+      padding: 3px 8px;
       border-radius: var(--md-shape-corner-full);
       font-weight: 800;
       font-size: 11px;
@@ -163,16 +167,18 @@
       background: var(--md-sys-color-primary);
       color: var(--md-sys-color-on-primary);
       border: none;
-      padding: 9px 18px;
+      padding: 8px 16px;
       border-radius: var(--md-shape-corner-full);
       font-size: 12px;
       font-weight: 800;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
       transition: all 0.2s var(--transition-standard);
       box-shadow: var(--md-elevation-1);
+      white-space: nowrap;
     }
 
     .btn-m3-primary:hover {
@@ -186,7 +192,7 @@
       max-width: 1280px;
       width: 100%;
       margin: 0 auto;
-      padding: 20px 16px;
+      padding: 16px 14px;
       flex: 1;
     }
 
@@ -194,7 +200,7 @@
       display: flex;
       gap: 8px;
       border-bottom: 1px solid var(--md-sys-color-outline-variant);
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       padding-bottom: 8px;
@@ -209,8 +215,8 @@
       background: var(--md-sys-color-surface);
       border: 1px solid var(--md-sys-color-outline-variant);
       color: var(--md-sys-color-on-surface-variant);
-      padding: 10px 18px;
-      font-size: 13px;
+      padding: 9px 16px;
+      font-size: clamp(12px, 3.5vw, 13px);
       font-weight: 700;
       cursor: pointer;
       border-radius: var(--md-shape-corner-full);
@@ -239,19 +245,27 @@
     .tab-panel.active {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 24px;
+      gap: 20px;
     }
 
-    @media (max-width: 900px) {
+    /* RESPONSIVE LAYOUT */
+    @media (max-width: 920px) {
       header {
-        flex-direction: column;
-        align-items: stretch;
+        padding: 10px 14px;
       }
-      .header-actions {
-        justify-content: space-between;
+      .brand-title p {
+        display: none;
       }
       .tab-panel.active {
         grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .form-row {
+        grid-template-columns: 1fr !important;
+      }
+      .user-profile-badge {
+        font-size: 11px;
+        padding: 4px 8px;
       }
     }
 
@@ -260,22 +274,24 @@
       background: var(--md-sys-color-surface);
       border: 1px solid var(--md-sys-color-outline);
       border-radius: var(--md-shape-corner-large);
-      padding: 24px;
+      padding: clamp(16px, 4vw, 24px);
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 16px;
       box-shadow: var(--md-elevation-1);
     }
 
     .card-title {
-      font-size: 16px;
+      font-size: clamp(14px, 4vw, 16px);
       font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--md-sys-color-outline-variant);
-      padding-bottom: 14px;
+      padding-bottom: 12px;
       color: #fff;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .form-group {
@@ -296,12 +312,18 @@
       background: var(--md-sys-color-background);
       border: 1px solid var(--md-sys-color-outline);
       color: var(--md-sys-color-on-surface);
-      padding: 12px 16px;
+      padding: 12px 14px;
       border-radius: var(--md-shape-corner-medium);
-      font-size: 13px;
+      font-size: 16px; /* Empêche l'auto-zoom d'iOS */
       outline: none;
       width: 100%;
       transition: border 0.2s, box-shadow 0.2s;
+    }
+
+    @media (min-width: 600px) {
+      input, textarea, select {
+        font-size: 13px;
+      }
     }
 
     input:focus, textarea:focus, select:focus {
@@ -311,7 +333,7 @@
 
     textarea {
       resize: vertical;
-      min-height: 90px;
+      min-height: 85px;
       line-height: 1.5;
     }
 
@@ -324,7 +346,7 @@
     .upload-box {
       border: 2px dashed var(--md-sys-color-outline);
       border-radius: var(--md-shape-corner-medium);
-      padding: 18px;
+      padding: 16px;
       text-align: center;
       cursor: pointer;
       background: rgba(255,255,255,0.01);
@@ -341,7 +363,7 @@
     }
 
     .upload-preview-thumb {
-      max-height: 90px;
+      max-height: 85px;
       border-radius: var(--md-shape-corner-small);
       margin-top: 6px;
       display: none;
@@ -352,7 +374,7 @@
       background: var(--md-sys-color-primary);
       color: var(--md-sys-color-on-primary);
       border: none;
-      padding: 14px 22px;
+      padding: 13px 20px;
       font-size: 14px;
       font-weight: 800;
       border-radius: var(--md-shape-corner-medium);
@@ -382,7 +404,7 @@
       background: var(--md-sys-color-surface-container);
       border: 1px solid var(--md-sys-color-outline);
       color: var(--md-sys-color-on-surface);
-      padding: 8px 16px;
+      padding: 8px 14px;
       border-radius: var(--md-shape-corner-medium);
       font-size: 12px;
       cursor: pointer;
@@ -398,8 +420,8 @@
       background: var(--md-sys-color-background);
       border: 1px solid var(--md-sys-color-outline);
       border-radius: var(--md-shape-corner-medium);
-      padding: 18px;
-      min-height: 280px;
+      padding: 16px;
+      min-height: 240px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -416,7 +438,7 @@
 
     .preview-video {
       width: 100%;
-      max-height: 440px;
+      max-height: min(440px, 60vh);
       border-radius: var(--md-shape-corner-medium);
       background: #000;
       border: 1px solid var(--md-sys-color-outline);
@@ -424,7 +446,7 @@
 
     .preview-img {
       max-width: 100%;
-      max-height: 380px;
+      max-height: min(380px, 50vh);
       border-radius: var(--md-shape-corner-medium);
       object-fit: contain;
     }
@@ -439,8 +461,8 @@
       background: var(--md-sys-color-surface-container);
       border: 1px solid var(--md-sys-color-outline);
       border-radius: var(--md-shape-corner-medium);
-      padding: 14px 16px;
-      margin-top: 14px;
+      padding: 12px 14px;
+      margin-top: 12px;
       font-size: 12px;
       color: var(--md-sys-color-on-surface-variant);
       display: flex;
@@ -465,7 +487,7 @@
       background: var(--md-sys-color-primary-container);
       border: 1px solid rgba(124, 240, 196, 0.3);
       color: #fff;
-      padding: 6px 14px;
+      padding: 6px 12px;
       border-radius: var(--md-shape-corner-full);
       font-size: 11px;
       font-weight: 700;
@@ -487,7 +509,7 @@
       background: rgba(255,255,255,0.06);
       border-radius: var(--md-shape-corner-full);
       height: 8px;
-      margin: 14px 0 6px;
+      margin: 12px 0 6px;
       overflow: hidden;
     }
 
@@ -499,13 +521,13 @@
     }
 
     .loader {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border: 3px solid var(--md-sys-color-primary-container);
       border-top-color: var(--md-sys-color-primary);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     @keyframes spin {
@@ -515,8 +537,8 @@
     /* STATS GRID */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
       margin-bottom: 16px;
     }
 
@@ -524,21 +546,21 @@
       background: var(--md-sys-color-surface-container);
       border: 1px solid var(--md-sys-color-outline);
       border-radius: var(--md-shape-corner-medium);
-      padding: 16px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
 
     .stat-number {
-      font-size: 24px;
+      font-size: clamp(18px, 5vw, 24px);
       font-weight: 800;
       color: var(--md-sys-color-primary);
       font-family: var(--font-family-mono);
     }
 
     .stat-label {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--md-sys-color-on-surface-variant);
       text-transform: uppercase;
       font-weight: 700;
@@ -558,11 +580,11 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 12px;
-      min-width: 540px;
+      min-width: 500px;
     }
 
     th, td {
-      padding: 12px 16px;
+      padding: 10px 12px;
       border-bottom: 1px solid var(--md-sys-color-outline-variant);
       text-align: left;
     }
@@ -576,18 +598,18 @@
       letter-spacing: 0.6px;
     }
 
-    /* M3 MODAL */
+    /* M3 MODAL RESPONSIVE */
     .modal-backdrop {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.88);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       z-index: 100;
       justify-content: center;
       align-items: center;
-      padding: 16px;
+      padding: 14px;
     }
 
     .modal-backdrop.open {
@@ -599,19 +621,21 @@
       border: 1px solid var(--md-sys-color-outline);
       border-radius: var(--md-shape-corner-large);
       width: 100%;
-      max-width: 440px;
-      padding: 28px 24px;
+      max-width: min(440px, 94vw);
+      padding: clamp(20px, 5vw, 28px);
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 16px;
       box-shadow: var(--md-elevation-3);
       position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     .modal-close {
       position: absolute;
-      top: 18px;
-      right: 18px;
+      top: 16px;
+      right: 16px;
       background: none;
       border: none;
       color: var(--md-sys-color-on-surface-variant);
@@ -631,9 +655,9 @@
       background: none;
       border: none;
       color: var(--md-sys-color-on-surface-variant);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
-      padding: 9px;
+      padding: 8px;
       border-radius: var(--md-shape-corner-medium);
       cursor: pointer;
       transition: all 0.2s;
@@ -645,7 +669,7 @@
     }
 
     .auth-alert {
-      padding: 12px;
+      padding: 10px 12px;
       border-radius: var(--md-shape-corner-small);
       font-size: 12px;
       display: none;
@@ -677,11 +701,12 @@
       color: var(--md-sys-color-primary);
       font-weight: 700;
       font-size: 12px;
-      padding: 0 14px;
+      padding: 0 12px;
       border-radius: var(--md-shape-corner-medium);
       cursor: pointer;
       white-space: nowrap;
       transition: background 0.2s;
+      flex-shrink: 0;
     }
 
     .btn-otp-send:hover {
@@ -698,7 +723,7 @@
     footer {
       background: var(--md-sys-color-surface);
       border-top: 1px solid var(--md-sys-color-outline-variant);
-      padding: 18px 24px;
+      padding: 16px 20px;
       text-align: center;
       font-size: 12px;
       color: var(--md-sys-color-on-surface-variant);
@@ -1274,7 +1299,7 @@
       if (email && key && (key.startsWith("stanleystawa_") || key.startsWith("stawa_"))) {
         authBtn.style.display = "none";
         profileBadge.style.display = "inline-flex";
-        document.getElementById("userEmailLabel").innerText = email.length > 22 ? email.slice(0, 20) + "..." : email;
+        document.getElementById("userEmailLabel").innerText = email.length > 20 ? email.slice(0, 18) + "..." : email;
         document.getElementById("userCreditsLabel").innerText = (currentUser?.credits ?? 100) + " Crédits";
       } else {
         authBtn.style.display = "inline-flex";
