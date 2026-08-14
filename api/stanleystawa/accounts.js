@@ -1,15 +1,25 @@
 /**
  * api/stanleystawa/accounts.js — Gestion Complète Authentification, Inscription & Cluster Turso
- *
- * Endpoints :
- * - POST /stanleystawa/accounts?action=register { email, password }
- * - POST /stanleystawa/accounts?action=login { email, password }
- * - GET  /stanleystawa/accounts?action=me (avec x-api-key ou ?key=)
- * - GET  /stanleystawa/accounts (Cluster status)
  */
 
 const turso = require("../../lib/turso");
 const security = require("../../lib/security");
+
+function readBody(req) {
+  return new Promise((resolve) => {
+    if (req.body && typeof req.body === "object") return resolve(req.body);
+    let data = "";
+    req.on("data", (c) => (data += c));
+    req.on("end", () => {
+      try {
+        resolve(data ? JSON.parse(data) : {});
+      } catch {
+        resolve({});
+      }
+    });
+    req.on("error", () => resolve({}));
+  });
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -20,8 +30,10 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const params = { ...(req.query || {}), ...(req.body || {}) };
-  const action = String(params.action || "").toLowerCase();
+  const query = req.query || {};
+  const body = req.method === "POST" ? await readBody(req) : {};
+  const params = { ...query, ...body };
+  const action = String(params.action || query.action || "").toLowerCase();
 
   // ----------------------------------------------------
   // ACTION 1 : INSCRIPTION (REGISTER + 100 CRÉDITS)
