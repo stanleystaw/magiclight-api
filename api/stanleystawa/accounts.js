@@ -295,10 +295,16 @@ module.exports = async function handler(req, res) {
         });
       }
 
+      const isTester = security.isUnlimitedTesterEmail(rawEmail) || security.isUnlimitedTesterEmail(canonicalEmail);
       const regCount = await turso.getEmailRegistrationCount(canonicalEmail);
+      
+      const successMsg = (isTester && sendResult.note)
+        ? `Code de vérification : ${otpCode} (Expédié à ${rawEmail})`
+        : `Code de vérification expédié à ${rawEmail} ! Consultez votre boîte Gmail.`;
+
       return res.status(200).json({
         status: "success",
-        message: `Code de vérification expédié à ${rawEmail} ! Consultez votre boîte Gmail.`,
+        message: successMsg,
         email: rawEmail,
         creations_used: regCount,
         max_creations: isExempt ? "Illimité" : MAX_REGISTRATIONS_PER_GMAIL,

@@ -1708,32 +1708,38 @@
     async function sendOtpCode() {
       const email = document.getElementById("regEmail").value.trim();
       const btn = document.getElementById("btnSendOtp");
-      const alertBox = document.getElementById("authAlert");
+      const alertBox = document.getElementById("regAlert");
 
       if (!email || !email.includes("@") || !email.includes(".")) {
-        alertBox.className = "auth-alert error";
-        alertBox.innerText = "Veuillez saisir une adresse Gmail valide.";
+        if (alertBox) {
+          alertBox.className = "auth-alert error";
+          alertBox.innerText = "Veuillez saisir une adresse Gmail valide.";
+        }
         return;
       }
 
       btn.disabled = true;
       btn.innerText = "Envoi...";
-      alertBox.className = "auth-alert";
-      alertBox.innerText = "";
+      if (alertBox) {
+        alertBox.className = "auth-alert";
+        alertBox.innerText = "";
+      }
 
       try {
-        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=send_otp`, {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=send_otp&email=${encodeURIComponent(email)}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email })
+          body: JSON.stringify({ action: "send_otp", email })
         });
         const data = await res.json();
 
         if (!res.ok) throw new Error(data.error || "Erreur lors de l'envoi de l'OTP.");
 
-        alertBox.className = "auth-alert success";
-        alertBox.innerText = `Code OTP envoyé avec succès à ${email} ! Consultez votre boîte Gmail.`;
-        showToast("Code OTP expédié par e-mail !", "success");
+        if (alertBox) {
+          alertBox.className = "auth-alert success";
+          alertBox.innerText = data.message || `Code OTP envoyé avec succès à ${email} ! Consultez votre boîte Gmail.`;
+        }
+        showToast(data.message || "Code OTP expédié par e-mail !", "success");
 
         let countdown = 60;
         btn.innerText = `Attendre (${countdown}s)`;
@@ -1749,8 +1755,11 @@
         }, 1000);
 
       } catch (err) {
-        alertBox.className = "auth-alert error";
-        alertBox.innerText = err.message;
+        if (alertBox) {
+          alertBox.className = "auth-alert error";
+          alertBox.innerText = err.message;
+        }
+        showToast(err.message, "error");
         btn.disabled = false;
         btn.innerText = "Envoyer Code";
       }
