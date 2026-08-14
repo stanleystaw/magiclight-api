@@ -1,8 +1,5 @@
 /**
- * api/stanleystawa/status.js — Suivi en temps réel de l'état des vidéos & images (Turso DB)
- *
- * GET /stanleystawa/status?task_id=...
- * GET /stanleystawa/status?task_id=...&format=mp4
+ * api/stanleystawa/status.js — Suivi en temps réel de l'état des vidéos avec détection automatique des échecs
  */
 
 const turso = require("../../lib/turso");
@@ -10,9 +7,6 @@ const security = require("../../lib/security");
 
 module.exports = async function handler(req, res) {
   security.applySecurityHeaders(res);
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -20,8 +14,6 @@ module.exports = async function handler(req, res) {
 
   if (!security.checkRateLimit(req, 60)) {
     return res.status(429).json({ error: "Trop de requêtes de statut. Veuillez patienter." });
-  }
-    return res.status(200).end();
   }
 
   try {
@@ -41,9 +33,9 @@ module.exports = async function handler(req, res) {
         return res.status(200).send(`
           <html>
             <head><meta http-equiv="refresh" content="3"><title>Génération de votre vidéo...</title></head>
-            <body style="background:#0b0f19;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;gap:12px;">
-              <div style="font-size:18px;font-weight:bold;">⚡ Initialisation du rendu vidéo (${taskId})...</div>
-              <div style="color:#9ca3af;font-size:14px;">Cette page se rechargera automatiquement dès que la vidéo sera prête.</div>
+            <body style="background:#0b0e14;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;gap:12px;">
+              <div style="font-size:18px;font-weight:bold;">Initialisation du rendu (${taskId})...</div>
+              <div style="color:#8b949e;font-size:14px;">Actualisation automatique en cours...</div>
             </body>
           </html>
         `);
@@ -56,7 +48,20 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    const task = rows[0];
+    let task = rows[0];
+
+    // Détection d'échec / timeout : si la tâche est en processing depuis plus de 8 minutes
+    if (task.status === "processing" || task.status === "queued") {
+      const createdAtMs = new Date(task.created_at || Date.now()).getTime();
+      const ageMs = Date.now() - createdAtMs;
+      if (ageMs > 480000) { // 8 minutes
+        await turso.execute(`UPDATE video_tasks SET status='failed', progress=0, step='timeout', message="Le rendu a échoué (délai dépassé sur GitHub Actions).", error="Délai dépassé", updated_at=CURRENT_TIMESTAMP WHERE task_id = ?;`, [taskId]);
+        task.status = "failed";
+        task.progress = 0;
+        task.message = "Le rendu a échoué sur le serveur de calcul.";
+        task.error = "Délai de traitement dépassé sur GitHub Actions.";
+      }
+    }
 
     // Redirection directe vers le streaming MP4 si format=mp4 et vidéo terminée
     if ((format === "mp4" || format === "redirect") && task.status === "completed" && task.video_url) {
@@ -69,9 +74,9 @@ module.exports = async function handler(req, res) {
         res.setHeader("Content-Type", "text/html; charset=utf-8");
         return res.status(500).send(`
           <html>
-            <body style="background:#0b0f19;color:#ef4444;font-family:sans-serif;padding:30px;">
-              <h2>❌ Échec du rendu</h2>
-              <p>${task.error || task.message || "Erreur de traitement"}</p>
+            <body style="background:#0b0e14;color:#ffb4ab;font-family:sans-serif;padding:30px;text-align:center;">
+              <h2>Échec du rendu vidéo</h2>
+              <p>${task.error || task.message || "Erreur de traitement survenue."}</p>
             </body>
           </html>
         `);
@@ -81,17 +86,21 @@ module.exports = async function handler(req, res) {
       return res.status(200).send(`
         <html>
           <head><meta http-equiv="refresh" content="4"><title>Rendu en cours (${task.progress || 20}%)...</title></head>
-          <body style="background:#0b0f19;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;gap:14px;text-align:center;">
-            <div style="font-size:20px;font-weight:bold;">🎬 Production de votre vidéo (${task.progress || 20}%)...</div>
-            <div style="color:#818cf8;font-size:14px;">${task.message || "Animation des scènes IA en cours..."}</div>
+          <body style="background:#0b0e14;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;gap:14px;text-align:center;">
+            <div style="font-size:20px;font-weight:bold;">Production de votre vidéo (${task.progress || 20}%)...</div>
+            <div style="color:#7cf0c4;font-size:14px;">${task.message || "Animation des scènes IA en cours..."}</div>
             <div style="width:280px;height:6px;background:rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;">
-              <div style="width:${task.progress || 20}%;height:100%;background:#6366f1;"></div>
+              <div style="width:${task.progress || 20}%;height:100%;background:#7cf0c4;"></div>
             </div>
-            <div style="color:#6b7280;font-size:12px;">Redirection automatique vers le lecteur dès la fin du rendu...</div>
+            <div style="color:#8b949e;font-size:12px;">Redirection automatique dès la fin du rendu...</div>
           </body>
         </html>
       `);
     }
+
+    const host = req.headers.host || "magiclight-api.vercel.app";
+    const protocol = req.headers["x-forwarded-proto"] || "https";
+    const coverUrl = task.cover_url ? `${protocol}://${host}/stanleystawa/image?prompt=${encodeURIComponent(task.prompt)}&format=image` : null;
 
     return res.status(200).json({
       status: task.status, // "queued" | "processing" | "completed" | "failed"
@@ -99,7 +108,7 @@ module.exports = async function handler(req, res) {
       step: task.step,
       message: task.message,
       video_url: task.video_url || null,
-      cover_url: task.cover_url ? `https://${req.headers.host || "magiclight-api.vercel.app"}/stanleystawa/image?prompt=${encodeURIComponent(task.prompt)}&format=image` : null,
+      cover_url: coverUrl,
       duration: parseFloat(task.duration || 0),
       scenes_count: parseInt(task.scenes_count || 0, 10),
       error: task.error || null,

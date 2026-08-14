@@ -78,3 +78,20 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           node scripts/render-video.js
+
+      - name: Notify Turso DB on Failure
+        if: failure()
+        env:
+          TASK_ID: ${{ github.event.client_payload.task_id || github.event.inputs.task_id }}
+          TURSO_DATABASE_URL: "https://magicligth-stanleystawa354.aws-eu-west-1.turso.io"
+          TURSO_AUTH_TOKEN: "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODY1NDMwODcsImlkIjoiMDE5ZmY2NDMtZmEwMS03NzBkLWE3YjgtMWFkMDQzOWEzN2Q0Iiwia2lkIjoiRUowd0tEaER4WmxUYlZ5MHJLX1VRRnhGZml6NF9nTEp2WXBPdFdiQlM2USIsInJpZCI6ImYzNDE1MGEzLTJkMzMtNDBjOC05ZmFmLWViMDBhODFhOGFhMiJ9.DVj4IWSi5WgU1frG8BVvUmINQYQRN77Kqe0-GLT2qgTv_w6M4ccKOP-GsEkNnaL3jX7Ikb4g7Eo45llVcQAgBQ"
+        run: |
+          node -e "
+            const turso = require('./lib/turso');
+            const taskId = process.env.TASK_ID;
+            if (taskId) {
+              turso.execute('UPDATE video_tasks SET status=\"failed\", progress=0, step=\"error\", message=\"Échec lors de la compilation sur GitHub Actions\", error=\"Le workflow GitHub Actions a échoué.\", updated_at=CURRENT_TIMESTAMP WHERE task_id=?;', [taskId])
+                .then(() => console.log('Successfully notified Turso DB of task failure:', taskId))
+                .catch((e) => console.warn('Could not notify Turso DB:', e.message));
+            }
+          "
