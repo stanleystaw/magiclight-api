@@ -1,5 +1,5 @@
 /**
- * api/stanleystawa/accounts.js — Authentification, Inscription Sécurisée, Quêtes Communauté WhatsApp & Panel Admin
+ * api/stanleystawa/accounts.js — Authentification, Inscription Sécurisée, Quêtes WhatsApp avec Vérification Réelle & Panel Admin
  */
 
 const url = require("url");
@@ -14,47 +14,47 @@ const QUESTS_LIST = [
   {
     id: "join_whatsapp",
     title: "Rejoindre le Groupe WhatsApp VIP",
-    description: "Rejoignez la communauté officielle WhatsApp pour recevoir des prompts d'or, mises à jour et échanger avec les créateurs.",
+    description: "Rejoignez le groupe WhatsApp officiel et entrez le code secret situé dans la description du groupe.",
     reward_studio: 50,
     reward_dev: 20,
     type: "one_time",
-    action_type: "link",
+    verification_type: "secret_code_and_phone",
     action_url: WHATSAPP_GROUP_URL,
-    button_text: "Rejoindre le Groupe (+50 Crédits)",
-    badge: "Indispensable"
+    button_text: "Valider avec le Code Secret (+50)",
+    badge: "Vérification Réelle"
   },
   {
     id: "share_whatsapp",
     title: "Partage Statut & Groupes WhatsApp",
-    description: "Partagez la plateforme et le groupe WhatsApp sur votre statut ou vos groupes pour faire découvrir Stanley Stawa AI.",
+    description: "Partagez l'invitation sur votre statut WhatsApp et renseignez votre numéro pour valider votre preuve.",
     reward_studio: 25,
     reward_dev: 10,
     type: "daily",
-    action_type: "share_whatsapp",
-    button_text: "Partager sur WhatsApp (+25 Crédits)",
+    verification_type: "phone_proof",
+    button_text: "Partager & Valider (+25/j)",
     badge: "Quotidien (+25/j)"
-  },
-  {
-    id: "daily_checkin",
-    title: "Bonus de Présence Quotidienne",
-    description: "Connectez-vous chaque jour sur le studio pour récupérer vos crédits gratuits et maintenir votre streak.",
-    reward_studio: 10,
-    reward_dev: 5,
-    type: "daily",
-    action_type: "claim_instant",
-    button_text: "Récupérer mon bonus (+10 Crédits)",
-    badge: "Tous les jours"
   },
   {
     id: "share_video",
     title: "Défi Créateur ★ Stanley stawa",
-    description: "Générez et partagez une vidéo portant le filigrane officiel avec vos amis ou sur vos réseaux.",
+    description: "Générez au moins une vidéo complète sur la plateforme pour valider automatiquement ce défi.",
     reward_studio: 20,
     reward_dev: 10,
     type: "daily",
-    action_type: "claim_instant",
-    button_text: "Valider ma création (+20 Crédits)",
-    badge: "Créateur"
+    verification_type: "video_generation_check",
+    button_text: "Vérifier ma Création (+20)",
+    badge: "Preuve IA"
+  },
+  {
+    id: "daily_checkin",
+    title: "Bonus de Présence Journalière",
+    description: "Connectez-vous chaque jour sur le studio pour récupérer vos crédits gratuits et maintenir votre streak.",
+    reward_studio: 10,
+    reward_dev: 5,
+    type: "daily",
+    verification_type: "instant",
+    button_text: "Récupérer mon bonus (+10)",
+    badge: "Tous les jours"
   }
 ];
 
@@ -95,14 +95,15 @@ module.exports = async function handler(req, res) {
   if (action.startsWith("admin_")) {
     const auth = await security.authenticateRequest(req);
     if (!auth.authorized || !auth.is_admin) {
-      return res.status(403).json({ error: "Accès refusé : Seul le compte administrateur associé à l'e-mail officiel peut accéder à cette section." });
+      return res.status(403).json({ error: "Accès refusé : Seul le compte administrateur officiel peut accéder à cette section." });
     }
 
     // 1. Statistiques globales
     if (action === "admin_stats") {
       try {
         const stats = await turso.getSystemStats();
-        return res.status(200).json({ status: "success", stats });
+        const secretCode = await turso.getSetting("whatsapp_secret_code", "STAWA-VIP-2026");
+        return res.status(200).json({ status: "success", stats, whatsapp_secret_code: secretCode });
       } catch (err) {
         return res.status(500).json({ error: err.message });
       }
@@ -186,10 +187,34 @@ module.exports = async function handler(req, res) {
         return res.status(500).json({ error: err.message });
       }
     }
+
+    // 9. Journal des réclamations de quêtes (Audit Anti-Fraude)
+    if (action === "admin_quest_claims") {
+      try {
+        const claims = await turso.getAllQuestClaims(100);
+        return res.status(200).json({ status: "success", claims });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    // 10. Modifier le Code Secret du Groupe WhatsApp
+    if (action === "admin_set_quest_code") {
+      const newCode = String(params.code || params.secret_code || "").trim();
+      if (!newCode || newCode.length < 3) {
+        return res.status(400).json({ error: "Veuillez fournir un code secret d'au moins 3 caractères." });
+      }
+      try {
+        await turso.setSetting("whatsapp_secret_code", newCode);
+        return res.status(200).json({ status: "success", message: `Code secret WhatsApp mis à jour : ${newCode}` });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
   }
 
   // ====================================================
-  // ACTIONS UTILISATEUR (AUTHENTIFICATION & QUÊTES)
+  // ACTIONS UTILISATEUR (AUTHENTIFICATION & QUÊTES SÉCURISÉES)
   // ====================================================
 
   // 1. Envoi OTP
@@ -207,7 +232,7 @@ module.exports = async function handler(req, res) {
 
     if (mailer.isDisposableEmail(rawEmail) || mailer.isDisposableEmail(canonicalEmail)) {
       return res.status(400).json({
-        error: "Les adresses e-mails temporaires ou jetables sont strictement interdites. Veuillez utiliser une vraie adresse Gmail, Outlook ou Yahoo."
+        error: "Les adresses e-mails temporaires ou jetables sont strictement interdites. Utilisez une vraie adresse Gmail."
       });
     }
 
@@ -311,7 +336,7 @@ module.exports = async function handler(req, res) {
         const canonicalReferrer = security.canonicalizeEmail(referralCode);
         const referrerUser = await turso.getUserByEmail(canonicalReferrer);
         if (referrerUser && canonicalReferrer !== canonicalEmail) {
-          welcomeCredits = 40; // Bonus +10 de bienvenue pour le nouveau filleul
+          welcomeCredits = 40;
           wasReferred = true;
           await turso.recordReferral(canonicalReferrer, canonicalEmail, referrerUser.account_type === "developer" ? 15 : 30);
         }
@@ -387,7 +412,7 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // 4. Quêtes & Récompenses WhatsApp
+  // 4. État des Quêtes & Récompenses
   if (action === "quests" || action === "quests_status" || action === "get_quests") {
     let authUser = null;
     let isAdm = false;
@@ -425,11 +450,14 @@ module.exports = async function handler(req, res) {
       let claimed = false;
       let canClaim = true;
       let lastClaimedDate = null;
+      let claimedPhone = null;
 
       if (authUser) {
         if (q.type === "one_time") {
-          claimed = claims.some(c => c.quest_id === q.id);
+          const match = claims.find(c => c.quest_id === q.id);
+          claimed = Boolean(match);
           canClaim = !claimed;
+          if (match) claimedPhone = match.whatsapp_number;
         } else if (q.type === "daily") {
           const todayClaim = claims.find(c => c.quest_id === q.id && c.claimed_date === today);
           claimed = Boolean(todayClaim);
@@ -447,13 +475,14 @@ module.exports = async function handler(req, res) {
         reward_studio: q.reward_studio,
         reward_dev: q.reward_dev,
         type: q.type,
-        action_type: q.action_type,
+        verification_type: q.verification_type,
         action_url: q.action_url,
         button_text: q.button_text,
         badge: q.badge,
         claimed,
         can_claim: canClaim,
-        last_claimed_date: lastClaimedDate
+        last_claimed_date: lastClaimedDate,
+        claimed_phone: claimedPhone
       };
     });
 
@@ -487,12 +516,12 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  // 5. Validation / Réclamation d'une Quête
+  // 5. VALIDATION SÉCURISÉE & VÉRIFICATION RÉELLE D'UNE QUÊTE
   if (action === "claim_quest" || action === "claimquest" || action === "claim") {
     const auth = await security.authenticateRequest(req);
     if (!auth.authorized || !auth.user) {
       return res.status(401).json({
-        error: "Authentification requise : Veuillez vous connecter pour réclamer vos crédits de quête."
+        error: "Authentification requise : Veuillez vous connecter pour valider et réclamer vos quêtes."
       });
     }
 
@@ -509,35 +538,100 @@ module.exports = async function handler(req, res) {
     const accountType = user.account_type || "studio";
     const reward = accountType === "developer" ? quest.reward_dev : quest.reward_studio;
     const today = new Date().toISOString().split("T")[0];
+    const submittedPhone = String(params.whatsapp_number || params.phone || "").trim();
+    const submittedSecret = String(params.secret_code || params.code || params.secret || "").trim();
 
     try {
+      // 1. Vérification anti-doublon générale
       if (quest.type === "one_time") {
         const already = await turso.hasClaimedQuest(user.email, quest.id);
         if (already) {
           return res.status(400).json({
-            error: `Vous avez déjà validé la quête "${quest.title}". Merci pour votre participation !`
+            error: `Vous avez déjà validé la quête "${quest.title}".`
           });
         }
       } else if (quest.type === "daily") {
         const alreadyToday = await turso.hasClaimedQuest(user.email, quest.id, today);
         if (alreadyToday) {
           return res.status(400).json({
-            error: `Vous avez déjà récupéré vos crédits pour la quête "${quest.title}" aujourd'hui. Revenez demain !`
+            error: `Vous avez déjà validé cette quête aujourd'hui. Revenez demain !`
           });
         }
       }
 
-      const newCredits = await turso.claimQuest(user.email, quest.id, reward, today);
+      // 2. VÉRIFICATION STRICTE DE LA QUÊTE #1 : REJOINDRE LE GROUPE WHATSAPP
+      if (quest.id === "join_whatsapp") {
+        // Exiger le numéro WhatsApp
+        const digitsPhone = submittedPhone.replace(/[^0-9]/g, "");
+        if (!digitsPhone || digitsPhone.length < 8) {
+          return res.status(400).json({
+            error: "Numéro WhatsApp invalide. Veuillez renseigner votre vrai numéro WhatsApp (ex: +229 97 00 00 00) avec indicatif pays."
+          });
+        }
+
+        // Vérifier l'unicité du numéro WhatsApp (1 seul compte par numéro WhatsApp)
+        const phoneAlreadyUsed = await turso.hasWhatsAppNumberClaimed(digitsPhone, "join_whatsapp");
+        if (phoneAlreadyUsed) {
+          return res.status(403).json({
+            error: `Sécurité anti-fraude : Le numéro WhatsApp ${submittedPhone} a déjà été utilisé pour valider cette quête.`
+          });
+        }
+
+        // Exiger et vérifier le Code Secret du Groupe WhatsApp
+        if (!submittedSecret) {
+          return res.status(400).json({
+            error: "Code Secret VIP manquant ! Veuillez rejoindre le groupe WhatsApp officiel et consulter la description ou le message épinglé pour trouver le code secret."
+          });
+        }
+
+        const validSecret = await turso.getSetting("whatsapp_secret_code", "STAWA-VIP-2026");
+        if (submittedSecret.toUpperCase().replace(/\s+/g, "") !== validSecret.toUpperCase().replace(/\s+/g, "")) {
+          return res.status(400).json({
+            error: `Code Secret incorrect ! Rejoignez le groupe WhatsApp officiel (${WHATSAPP_GROUP_URL}) pour lire la description et obtenir le vrai code VIP.`
+          });
+        }
+      }
+
+      // 3. VÉRIFICATION STRICTE DE LA QUÊTE #2 : PARTAGE STATUT WHATSAPP
+      if (quest.id === "share_whatsapp") {
+        const digitsPhone = submittedPhone.replace(/[^0-9]/g, "");
+        if (!digitsPhone || digitsPhone.length < 8) {
+          return res.status(400).json({
+            error: "Veuillez renseigner votre numéro WhatsApp ayant partagé le statut."
+          });
+        }
+      }
+
+      // 4. VÉRIFICATION STRICTE DE LA QUÊTE #3 : CRÉATION RÉELLE D'UNE VIDÉO SUR LA PLATEFORME
+      if (quest.id === "share_video") {
+        const hasCompletedVideo = await turso.hasUserCompletedVideo(user.email);
+        if (!hasCompletedVideo) {
+          return res.status(400).json({
+            error: "Vérification échouée : Vous n'avez pas encore généré de vidéo finalisée. Veuillez créer votre première vidéo dans l'onglet 'Vidéo Studio' pour valider ce défi !"
+          });
+        }
+      }
+
+      // 5. Validation et Crédit
+      const newCredits = await turso.claimQuest(
+        user.email,
+        quest.id,
+        reward,
+        today,
+        submittedPhone,
+        submittedSecret || "verified_ok"
+      );
 
       return res.status(200).json({
         status: "success",
-        message: `Félicitations ! Quête "${quest.title}" validée avec succès. +${reward} crédits ajoutés à votre solde !`,
+        message: `Vérification réussie ! Quête "${quest.title}" validée avec succès. +${reward} crédits ajoutés à votre compte !`,
         reward_credited: reward,
         new_credits: newCredits,
         quest_id: quest.id,
         user_email: user.email,
         account_type: accountType
       });
+
     } catch (err) {
       console.error("[Claim Quest Error]", err);
       return res.status(500).json({ error: err.message });

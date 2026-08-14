@@ -469,9 +469,9 @@
       background: var(--md-sys-color-primary);
       color: var(--md-sys-color-on-primary);
       border: none;
-      padding: 14px;
+      padding: 12px 16px;
       border-radius: var(--md-shape-corner-medium);
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 800;
       cursor: pointer;
       transition: all 0.2s var(--transition-standard);
@@ -708,13 +708,6 @@
       min-width: 260px;
     }
 
-    .quest-hero-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
     .btn-whatsapp-join {
       background: var(--color-whatsapp);
       color: #000;
@@ -730,6 +723,7 @@
       cursor: pointer;
       transition: all 0.2s;
       box-shadow: 0 4px 12px rgba(37,211,102,0.3);
+      white-space: nowrap;
     }
 
     .btn-whatsapp-join:hover {
@@ -1079,7 +1073,7 @@
   <div id="promoWhatsAppBanner" class="promo-banner">
     <div class="promo-content">
       <span class="promo-tag">COMMUNAUTÉ VIP</span>
-      <span>Rejoignez le nouveau groupe officiel WhatsApp et débloquez <strong>+50 Crédits Gratuits</strong> instantanément !</span>
+      <span>Rejoignez le nouveau groupe officiel WhatsApp et débloquez <strong>+50 Crédits Gratuits</strong> avec le code secret !</span>
     </div>
     <div class="promo-actions">
       <button type="button" class="btn-promo-join" onclick="switchTab('quests')">Voir les Quêtes (+50)</button>
@@ -1270,7 +1264,7 @@
             </div>
             <h2 style="font-size:clamp(16px, 4vw, 22px);font-weight:800;letter-spacing:-0.4px;">Quêtes & Crédits Gratuits — Stanley Stawa VIP</h2>
             <p style="font-size:13px;color:var(--md-sys-color-on-surface-variant);max-width:700px;margin-top:4px;">
-              Rejoignez le nouveau groupe WhatsApp officiel, invitez vos amis créateurs et accomplissez vos défis quotidiens pour débloquer des crédits gratuits en continu !
+              Rejoignez le nouveau groupe WhatsApp officiel, accomplissez des défis vérifiés et débloquez des crédits gratuits en illimité !
             </p>
           </div>
           <div style="background:var(--md-sys-color-surface-container);border:1px solid var(--md-sys-color-primary);border-radius:var(--md-shape-corner-medium);padding:10px 16px;text-align:right;">
@@ -1299,7 +1293,7 @@
         </div>
       </div>
 
-      <!-- QUÊTE VIP #1 HERO CARTE WHATSAPP -->
+      <!-- QUÊTE VIP #1 HERO CARTE AVEC VÉRIFICATION PAR CODE SECRET -->
       <div class="card quest-hero-card" style="grid-column: 1 / -1;">
         <div class="quest-hero-layout">
           <div class="quest-hero-icon">★</div>
@@ -1309,21 +1303,28 @@
               <span class="quest-reward-pill">+50 Crédits Offerts</span>
             </div>
             <p style="font-size:13px;color:var(--md-sys-color-on-surface-variant);margin-top:6px;line-height:1.5;">
-              Entrez dans la communauté VIP pour discuter directement avec Stanley Stawa, recevoir des invites exclusives, découvrir les prompts d'or et profiter de l'assistance créative.
+              1️⃣ Cliquez sur le bouton ci-dessous pour intégrer le groupe WhatsApp.<br>
+              2️⃣ Ouvrez la <strong>description du groupe</strong> ou le message épinglé pour trouver le <strong>Code Secret VIP</strong>.<br>
+              3️⃣ Saisissez votre numéro WhatsApp et le code secret pour débloquer immédiatement vos <strong>+50 Crédits</strong> !
             </p>
           </div>
-          <div class="quest-hero-actions">
-            <a href="https://chat.whatsapp.com/C21rwzKmQlA3nA1MppQ4oO" target="_blank" class="btn-whatsapp-join" onclick="handleWhatsAppJoinClick()">
-              Rejoindre le Groupe WhatsApp (+50)
-            </a>
-            <button type="button" id="btnClaimJoinWhatsApp" class="btn-secondary" style="font-weight:700;" onclick="claimQuest('join_whatsapp')">
-              Valider & Réclamer (+50 Crédits)
+        </div>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:10px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;">
+          <a href="https://chat.whatsapp.com/C21rwzKmQlA3nA1MppQ4oO" target="_blank" class="btn-whatsapp-join">
+            1. Rejoindre le Groupe WhatsApp
+          </a>
+          <div style="display:flex;gap:8px;flex:1;min-width:300px;flex-wrap:wrap;">
+            <input type="text" id="waJoinPhoneInput" placeholder="Votre Numéro WhatsApp (ex: +229 97 00 00 00)" style="flex:1;min-width:180px;">
+            <input type="text" id="waJoinSecretInput" placeholder="Code Secret du Groupe" style="flex:1;min-width:140px;text-transform:uppercase;font-family:var(--font-family-mono);font-weight:700;">
+            <button type="button" id="btnClaimJoinWhatsApp" class="btn-submit" onclick="submitWhatsAppJoinQuest()">
+              2. Valider ma Preuve (+50)
             </button>
           </div>
         </div>
       </div>
 
-      <!-- LISTE DES AUTRES QUÊTES DYNAMIQUES -->
+      <!-- LISTE DES AUTRES QUÊTES AVEC VÉRIFICATIONS RÉELLES -->
       <div class="card" style="grid-column: 1 / -1;">
         <div class="card-title">
           <span>Tous les Défis & Quêtes Disponibles</span>
@@ -1338,7 +1339,7 @@
       <div class="card" style="grid-column: 1 / -1;">
         <div class="card-title">Programme de Parrainage & Recrutement WhatsApp</div>
         <p style="font-size:13px;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;line-height:1.5;">
-          Partagez votre lien d'invitation avec vos amis, collègues et dans vos groupes WhatsApp. Pour chaque ami inscrit, vous gagnez <strong>+30 Crédits</strong> et votre ami reçoit un bonus spécial de <strong>+40 Crédits</strong> de bienvenue !
+          Partagez votre lien d'invitation avec vos amis, collègues et dans vos groupes WhatsApp. Pour chaque ami inscrit (Gmail vérifié par OTP), vous gagnez <strong>+30 Crédits</strong> et votre ami reçoit <strong>+40 Crédits</strong> de bienvenue !
         </p>
         
         <div class="referral-box-layout">
@@ -1392,10 +1393,28 @@
           <!-- STATS GLOBALES -->
           <div class="stats-grid" id="adminStatsGrid"></div>
 
+          <!-- GESTION DU CODE SECRET DU GROUPE WHATSAPP -->
+          <div class="card" style="background:var(--md-sys-color-surface-container);padding:16px;">
+            <div style="font-weight:800;font-size:14px;color:#fff;margin-bottom:4px;">Code Secret du Groupe WhatsApp (Vérification Anti-Fraude)</div>
+            <p style="font-size:12px;color:var(--md-sys-color-on-surface-variant);margin-bottom:10px;">
+              Ce code doit figurer dans la description de votre groupe WhatsApp. Les utilisateurs doivent obligatoirement le saisir pour valider les +50 crédits.
+            </p>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <input type="text" id="adminSecretCodeInput" style="font-family:var(--font-family-mono);font-weight:800;font-size:13px;max-width:240px;" placeholder="STAWA-VIP-2026">
+              <button type="button" class="btn-submit" style="padding:10px 16px;" onclick="adminUpdateSecretCode()">Enregistrer le Nouveau Code</button>
+            </div>
+          </div>
+
           <!-- GESTION DES UTILISATEURS -->
           <div style="display:flex;flex-direction:column;gap:8px;">
             <div style="font-weight:800;font-size:14px;color:#fff;">Utilisateurs Inscrits & Clés Personnelles</div>
             <div class="table-container" id="adminUsersTable"></div>
+          </div>
+
+          <!-- AUDIT DES QUETES VALIDEES & NUMEROS WHATSAPP -->
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="font-weight:800;font-size:14px;color:#fff;">Journal des Quêtes Validées (Preuves & Numéros WhatsApp)</div>
+            <div class="table-container" id="adminQuestClaimsTable"></div>
           </div>
 
           <!-- TACHES VIDEO RECENTES -->
@@ -1547,7 +1566,7 @@
       snackbar.style.borderColor = type === "error" ? "var(--md-sys-color-error)" : (type === "info" ? "var(--md-sys-color-secondary)" : "var(--md-sys-color-primary)");
 
       snackbar.classList.add("show");
-      setTimeout(() => snackbar.classList.remove("show"), 3800);
+      setTimeout(() => snackbar.classList.remove("show"), 4200);
     }
 
     function updateVideoPriceLabel() {
@@ -1648,7 +1667,7 @@
         btnLog.classList.add("active");
         btnReg.classList.remove("active");
         formLog.style.display = "block";
-        formReg.style.display = "none";
+        formLog.style.display = "none";
         refBox.style.display = "none";
       }
     }
@@ -1935,7 +1954,7 @@
     }
 
     // ====================================================
-    // GESTIONNAIRE DES QUÊTES & WHATSAPP
+    // GESTIONNAIRE DES QUÊTES AVEC VÉRIFICATIONS RÉELLES
     // ====================================================
 
     async function loadQuests() {
@@ -1958,17 +1977,54 @@
         document.getElementById("questUserTypeBadge").innerText = isStudio ? "Compte Studio (Bonus Max x2)" : "Compte Développeur";
         document.getElementById("userReferralLinkInput").value = data.referral.referral_url;
 
-        // Rendu des cartes de quêtes
+        // Quête WhatsApp VIP #1 état
+        const joinQuest = data.quests.find(q => q.id === "join_whatsapp");
+        const claimJoinBtn = document.getElementById("btnClaimJoinWhatsApp");
+        if (joinQuest && joinQuest.claimed) {
+          claimJoinBtn.innerText = "✓ Quête Validée (+50)";
+          claimJoinBtn.disabled = true;
+          document.getElementById("waJoinPhoneInput").disabled = true;
+          document.getElementById("waJoinSecretInput").disabled = true;
+        } else {
+          claimJoinBtn.innerText = "2. Valider ma Preuve (+50)";
+          claimJoinBtn.disabled = false;
+          document.getElementById("waJoinPhoneInput").disabled = false;
+          document.getElementById("waJoinSecretInput").disabled = false;
+        }
+
+        // Rendu des autres quêtes interactives
         const otherQuests = data.quests.filter(q => q.id !== "join_whatsapp");
         container.innerHTML = otherQuests.map(q => {
-          let btnHtml = "";
+          let actionContent = "";
           if (q.claimed) {
-            btnHtml = `<button disabled class="btn-secondary" style="width:100%;opacity:0.6;">✓ Déjà Validé (${q.type === 'daily' ? 'Aujourd\'hui' : 'Terminé'})</button>`;
+            actionContent = `<button disabled class="btn-secondary" style="width:100%;opacity:0.6;">✓ Déjà Validé (${q.type === 'daily' ? 'Aujourd\'hui' : 'Terminé'})</button>`;
           } else {
             if (q.id === "share_whatsapp") {
-              btnHtml = `<button class="btn-submit" style="width:100%;background:var(--color-whatsapp-dark);color:#fff;" onclick="shareToWhatsAppStatus()">Partager sur WhatsApp (+${q.reward})</button>`;
+              actionContent = `
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <button class="btn-whatsapp-share" style="width:100%;" onclick="openWhatsAppStatusShare()">
+                    1. Ouvrir WhatsApp & Poster le Statut
+                  </button>
+                  <div style="display:flex;gap:6px;">
+                    <input type="text" id="waStatusPhoneInput" placeholder="Votre n° WhatsApp (ex: +229 ...)" style="font-size:12px;padding:8px 10px;">
+                    <button class="btn-submit" style="padding:8px 14px;white-space:nowrap;" onclick="submitWhatsAppStatusQuest()">
+                      2. Valider (+${q.reward})
+                    </button>
+                  </div>
+                </div>
+              `;
+            } else if (q.id === "share_video") {
+              actionContent = `
+                <button class="btn-submit" style="width:100%;" onclick="claimQuest('${q.id}')">
+                  Vérifier ma Création Vidéo (+${q.reward})
+                </button>
+              `;
             } else {
-              btnHtml = `<button class="btn-submit" style="width:100%;" onclick="claimQuest('${q.id}')">${q.button_text}</button>`;
+              actionContent = `
+                <button class="btn-submit" style="width:100%;" onclick="claimQuest('${q.id}')">
+                  ${q.button_text}
+                </button>
+              `;
             }
           }
 
@@ -1982,36 +2038,65 @@
                 <span class="quest-reward-pill">+${q.reward} Crédits</span>
               </div>
               <p style="font-size:12px;color:var(--md-sys-color-on-surface-variant);line-height:1.4;">${q.description}</p>
-              <div>${btnHtml}</div>
+              <div>${actionContent}</div>
             </div>
           `;
         }).join("");
-
-        // Mettre à jour l'état du bouton WhatsApp VIP principal
-        const joinQuest = data.quests.find(q => q.id === "join_whatsapp");
-        const claimJoinBtn = document.getElementById("btnClaimJoinWhatsApp");
-        if (joinQuest && joinQuest.claimed) {
-          claimJoinBtn.innerText = "✓ Quête WhatsApp Déjà Validée (+50)";
-          claimJoinBtn.disabled = true;
-        } else {
-          claimJoinBtn.innerText = "Valider & Réclamer (+50 Crédits)";
-          claimJoinBtn.disabled = false;
-        }
 
       } catch (err) {
         console.warn("Quests load error:", err);
       }
     }
 
-    async function claimQuest(questId) {
+    async function submitWhatsAppJoinQuest() {
+      if (!isUserLoggedIn()) {
+        return openAuthModal("register", "Inscription requise : Créez votre compte pour réclamer vos +50 Crédits !");
+      }
+
+      const phone = document.getElementById("waJoinPhoneInput").value.trim();
+      const secret = document.getElementById("waJoinSecretInput").value.trim();
+
+      if (!phone) return showToast("Veuillez renseigner votre numéro WhatsApp avec indicatif (ex: +229 ...)", "error");
+      if (!secret) return showToast("Veuillez entrer le code secret VIP situé dans la description du groupe WhatsApp.", "error");
+
+      await claimQuest("join_whatsapp", { whatsapp_number: phone, secret_code: secret });
+    }
+
+    function openWhatsAppStatusShare() {
+      const refUrl = document.getElementById("userReferralLinkInput").value || getBaseUrl();
+      const text = `🎬 Créez des vidéos et images IA gratuitement avec Stanley Stawa AI Studio !\n\nRejoignez le nouveau groupe WhatsApp VIP officiel ici 👉 ${WHATSAPP_VIP_LINK}\n\nEt testez la plateforme gratuitement (+40 crédits offerts) : ${refUrl}`;
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+      window.open(waUrl, "_blank");
+      showToast("WhatsApp ouvert ! Publiez le texte sur votre statut puis renseignez votre numéro.", "info");
+    }
+
+    async function submitWhatsAppStatusQuest() {
+      if (!isUserLoggedIn()) {
+        return openAuthModal("register", "Inscription requise : Veuillez vous connecter.");
+      }
+
+      const phoneInput = document.getElementById("waStatusPhoneInput");
+      const phone = phoneInput ? phoneInput.value.trim() : "";
+
+      if (!phone) return showToast("Veuillez renseigner le numéro WhatsApp ayant partagé le statut.", "error");
+
+      await claimQuest("share_whatsapp", { whatsapp_number: phone });
+    }
+
+    async function claimQuest(questId, extraParams = {}) {
       if (!isUserLoggedIn()) {
         return openAuthModal("register", "Inscription requise : Rejoignez le Studio pour réclamer vos crédits gratuits !");
       }
 
       const key = getApiKey();
       try {
-        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=claim_quest&quest_id=${encodeURIComponent(questId)}&key=${encodeURIComponent(key)}`, {
-          method: "POST"
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=claim_quest&key=${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            quest_id: questId,
+            ...extraParams
+          })
         });
         const data = await res.json();
 
@@ -2029,34 +2114,15 @@
       }
     }
 
-    function handleWhatsAppJoinClick() {
-      setTimeout(() => {
-        if (isUserLoggedIn()) {
-          claimQuest("join_whatsapp");
-        } else {
-          showToast("Rejoignez le groupe WhatsApp, puis créez votre compte pour réclamer vos +50 Crédits !", "info");
-        }
-      }, 2000);
-    }
-
-    function shareToWhatsAppStatus() {
-      const refUrl = document.getElementById("userReferralLinkInput").value || getBaseUrl();
-      const text = `🎬 Créez des vidéos et images IA gratuitement avec Stanley Stawa AI Studio !\n\nRejoignez le nouveau groupe WhatsApp VIP officiel ici 👉 ${WHATSAPP_VIP_LINK}\n\nEt testez la plateforme gratuitement (+40 crédits offerts) : ${refUrl}`;
-      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-      window.open(waUrl, "_blank");
-
-      setTimeout(() => {
-        if (isUserLoggedIn()) {
-          claimQuest("share_whatsapp");
-        }
-      }, 1500);
-    }
-
     function shareToWhatsAppContacts() {
       const refUrl = document.getElementById("userReferralLinkInput").value || getBaseUrl();
       const text = `Salut ! Je t'invite à tester Stanley Stawa AI Studio pour créer des vidéos cinématiques et générer des voix HD par IA.\n\nEn passant par mon lien d'invitation, tu reçois 40 Crédits offerts 🎁 :\n👉 ${refUrl}\n\nEt rejoins le groupe VIP officiel WhatsApp : ${WHATSAPP_VIP_LINK}`;
       const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
       window.open(waUrl, "_blank");
+    }
+
+    function shareToWhatsAppStatus() {
+      openWhatsAppStatusShare();
     }
 
     function copyReferralLink() {
@@ -2319,7 +2385,11 @@
         if (!res.ok) throw new Error(data.error || "Accès refusé.");
 
         renderAdminStats(data.stats);
+        if (data.whatsapp_secret_code) {
+          document.getElementById("adminSecretCodeInput").value = data.whatsapp_secret_code;
+        }
         loadAdminUsers(key);
+        loadAdminQuestClaims(key);
         loadAdminTasks(key);
 
       } catch (err) {
@@ -2347,6 +2417,70 @@
           <div class="stat-label">Crédits Cluster Restants</div>
         </div>
       `;
+    }
+
+    async function adminUpdateSecretCode() {
+      const key = getApiKey();
+      const code = document.getElementById("adminSecretCodeInput").value.trim();
+      if (!code) return showToast("Veuillez saisir un code secret.", "error");
+
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_set_quest_code&key=${encodeURIComponent(key)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code })
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Échec de mise à jour.");
+        showToast(data.message || "Code secret WhatsApp mis à jour !", "success");
+      } catch (err) {
+        showToast("Erreur: " + err.message, "error");
+      }
+    }
+
+    async function loadAdminQuestClaims(key) {
+      const container = document.getElementById("adminQuestClaimsTable");
+      try {
+        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_quest_claims&key=${encodeURIComponent(key)}`);
+        const data = await res.json();
+
+        if (!data.claims || !data.claims.length) {
+          container.innerHTML = `<div style="padding:14px;color:var(--md-sys-color-on-surface-variant);">Aucune réclamation de quête enregistrée.</div>`;
+          return;
+        }
+
+        container.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>E-mail</th>
+                <th>Quête</th>
+                <th>N° WhatsApp</th>
+                <th>Preuve / Code</th>
+                <th>Bonus</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.claims.map(c => `
+                <tr>
+                  <td>#${c.id}</td>
+                  <td><strong>${c.user_email}</strong></td>
+                  <td><span class="user-credits-pill">${c.quest_id}</span></td>
+                  <td><code>${c.whatsapp_number || '—'}</code></td>
+                  <td><small style="color:var(--md-sys-color-on-surface-variant);">${c.proof_data || '—'}</small></td>
+                  <td><span style="color:var(--md-sys-color-primary);font-weight:800;">+${c.reward_credits}</span></td>
+                  <td><small>${c.created_at || c.claimed_date}</small></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        `;
+      } catch (e) {
+        container.innerHTML = `<div style="color:var(--md-sys-color-error);padding:14px;">Erreur: ${e.message}</div>`;
+      }
     }
 
     async function loadAdminUsers(key) {
