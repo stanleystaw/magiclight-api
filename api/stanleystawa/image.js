@@ -1,12 +1,12 @@
 /**
- * api/stanleystawa/image.js — Génération d'Images Ultra Haute Définition (Flux HD & Cloudflare AI)
+ * api/stanleystawa/image.js — Génération d'Images HD (Gemini 3.1 Flash-Lite Image, Cloudflare & Flux)
  * Tarif : 1 Crédit
  */
 
 const turso = require("../../lib/turso");
 const security = require("../../lib/security");
-const cloudflare = require("../../lib/cloudflare");
 const gemini = require("../../lib/gemini");
+const cloudflare = require("../../lib/cloudflare");
 
 // Amélioration automatique du prompt pour un rendu cinématique 8K
 function enhancePrompt(rawPrompt) {
@@ -25,15 +25,15 @@ async function fetchImageBuffer(prompt, ratio = "16:9") {
   const height = isPortrait ? 1280 : (isSquare ? 1024 : 720);
   const cleanPrompt = enhancePrompt(prompt);
 
-  // 1. Moteur Prioritaire : Google Imagen 3 (Google AI Studio)
+  // 1. Moteur Prioritaire : Google Gemini 3.1 Flash-Lite Image
   if (gemini.isConfigured()) {
     try {
-      const gBuf = await gemini.generateImagen(cleanPrompt, { aspectRatio: isPortrait ? "9:16" : (isSquare ? "1:1" : "16:9") });
-      if (gBuf && gBuf.length > 3000) {
-        return { buffer: gBuf, contentType: "image/jpeg", engine: "Google Imagen 3 HD" };
+      const gBuf = await gemini.generateOrEditImage(cleanPrompt, { aspectRatio: isPortrait ? "9:16" : (isSquare ? "1:1" : "16:9") });
+      if (gBuf && gBuf.length > 2000) {
+        return { buffer: gBuf, contentType: "image/jpeg", engine: "Google AI Studio (Gemini 3.1 Flash-Lite Image)" };
       }
     } catch (e) {
-      console.warn("[Google Imagen Fallback]:", e.message);
+      console.warn("[Gemini Image Warning]:", e.message);
     }
   }
 
@@ -49,7 +49,7 @@ async function fetchImageBuffer(prompt, ratio = "16:9") {
     }
   }
 
-  // 2. Moteur Fallback : Flux HD Haute Fidélité (Pollinations Flux)
+  // 3. Moteur Fallback : Flux HD Haute Fidélité
   const seed = Math.floor(Math.random() * 999999);
   try {
     const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=${width}&height=${height}&seed=${seed}&nologo=true&model=flux`;
@@ -108,7 +108,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    const engineName = cloudflare.isConfigured() ? "Cloudflare Workers AI (Flux-1-Schnell)" : "Flux HD Vision 8K";
+    const engineName = gemini.isConfigured() ? "Google AI Studio (Gemini 3.1 Flash-Lite Image)" : (cloudflare.isConfigured() ? "Cloudflare Workers AI (Flux-1-Schnell)" : "Flux HD Vision 8K");
 
     return res.status(200).json({
       status: "success",
