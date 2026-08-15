@@ -1,5 +1,5 @@
 /**
- * api/stanleystawa/download.js — Streaming direct MP4 / Images (100% Indépendant de GitHub)
+ * api/stanleystawa/download.js — Streaming direct MP4 & Service d'Images Publiques Haute Résolution
  */
 
 const turso = require("../../lib/turso");
@@ -21,15 +21,21 @@ module.exports = async function handler(req, res) {
 
   try {
     const params = { ...(req.query || {}), ...(req.body || {}) };
-    const taskId = params.task_id || params.taskId || params.id;
+    let taskId = params.task_id || params.taskId || params.id;
+    const customName = params.name || params.asset || params.file || "";
     const reqType = String(params.type || "").toLowerCase();
 
-    if (!taskId) {
+    if (!taskId && customName) {
+      const match = customName.match(/vid_\d+_[a-z0-9]+/i);
+      if (match) taskId = match[0];
+    }
+
+    if (!taskId && !customName) {
       return res.status(400).json({ error: "Le paramètre 'task_id' est requis." });
     }
 
-    // 1. Service de l'image de référence
-    if (reqType === "image" || reqType === "img" || reqType === "cover") {
+    // 1. Service de l'image de référence du personnage pour l'IA d'animation
+    if (reqType === "image" || reqType === "img" || reqType === "cover" || customName.endsWith(".jpg") || customName.endsWith(".png")) {
       const rows = await turso.execute(`SELECT initial_image FROM video_tasks WHERE task_id = ? LIMIT 1;`, [taskId]);
       if (rows.length && rows[0].initial_image) {
         const rawImg = rows[0].initial_image;
@@ -45,13 +51,28 @@ module.exports = async function handler(req, res) {
           return res.redirect(302, rawImg);
         }
       }
-      return res.status(404).json({ error: "Image introuvable." });
+      return res.status(404).json({ error: "Image du personnage introuvable." });
     }
 
     // 2. Service de la vidéo finale MP4
-    const rows = await turso.execute(`SELECT video_url FROM video_tasks WHERE task_id = ? LIMIT 1;`, [taskId]);
-    if (rows.length && rows[0].video_url && rows[0].video_url.startsWith("http")) {
-      return res.redirect(302, rows[0].video_url);
+    const rows = await turso.execute(`SELECT video_url, check_url FROM video_tasks WHERE task_id = ? LIMIT 1;`, [taskId]);
+    if (rows.length) {
+      const task = rows[0];
+      const sceneIndex = parseInt(params.scene || "1", 10) - 1;
+
+      // Si une scène précise est demandée
+      if (task.check_url && task.check_url.startsWith("[")) {
+        try {
+          const scenes = JSON.parse(task.check_url);
+          if (scenes[sceneIndex] && scenes[sceneIndex].videoUrl) {
+            return res.redirect(302, scenes[sceneIndex].videoUrl);
+          }
+        } catch (e) {}
+      }
+
+      if (task.video_url && task.video_url.startsWith("http")) {
+        return res.redirect(302, task.video_url);
+      }
     }
 
     return res.status(404).json({ error: "Vidéo en cours de génération ou introuvable." });

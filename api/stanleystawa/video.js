@@ -1,9 +1,9 @@
 /**
- * api/stanleystawa/video.js — Moteur Complet MagicLight AI (Parallélisé & Ultra-Rapide)
+ * api/stanleystawa/video.js — Moteur Complet MagicLight AI
  * 1. Scénariste Magique (Expansion d'histoire & Décomposition en N scènes)
- * 2. Synthèse Vocale Neuronale MagicLight Voice pour chaque scène (Parallèle)
- * 3. Cohérence absolue du Personnage de référence (100% respectée)
- * 4. Animation des N scènes (ex: 6 sections = 60s / 1 minute totale)
+ * 2. Transmission de l'Image du Personnage via URL Publique .jpg (100% Cohérence)
+ * 3. Animation directe avec voix intégrée et dialogues réalistes
+ * 4. Respect strict de la durée totale (ex: 6 sections = 60s / 1 minute)
  */
 
 const turso = require("../../lib/turso");
@@ -72,7 +72,6 @@ module.exports = async function handler(req, res) {
     const duration = String(params.duration || params.seconds || "10");
     const ratio = String(params.ratio || "1");
     const language = String(params.language || "french");
-    const voiceId = String(params.voice_id || params.voiceId || "MM:lengdan_xiongzhang");
     const format = String(params.format || "json").toLowerCase();
 
     if (!prompt) {
@@ -89,9 +88,9 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // 2. Tarification Dynamique : 1 crédit par section
+    // 2. Tarification : 1 crédit par section
     const numSections = Math.max(1, parseInt(sections, 10) || 6);
-    const creditCost = numSections; // 6 sections = 6 crédits (1 minute totale), 2 sections = 2 crédits (20s)
+    const creditCost = numSections; // 6 sections = 6 crédits (1 min), 2 sections = 2 crédits (20s)
     let remainingCredits = null;
 
     if (!auth.is_admin && auth.key) {
@@ -111,10 +110,10 @@ module.exports = async function handler(req, res) {
     const host = req.headers.host || "magiclight-api-gamma.vercel.app";
     const protocol = req.headers["x-forwarded-proto"] || "https";
 
-    // URL publique de l'image de référence du personnage (pour cohérence absolue)
+    // URL publique .jpg dédiée pour que le moteur d'animation télécharge exactement votre image de personnage
     const publicCharImgUrl = initialImage.startsWith("http")
       ? initialImage
-      : `${protocol}://${host}/stanleystawa/download?task_id=${taskId}&type=image`;
+      : `${protocol}://${host}/stanleystawa/download?task_id=${taskId}&type=image&name=character_${taskId}.jpg`;
 
     // ----------------------------------------------------
     // ÉTAPE 1 : Le Scénariste Magique MagicLight AI
@@ -139,28 +138,19 @@ module.exports = async function handler(req, res) {
     }
 
     // ----------------------------------------------------
-    // ÉTAPE 2 : Traitement Parallèle des N Scènes (Voix + Animation)
+    // ÉTAPE 2 : Déclenchement de l'Animation avec Paroles et Personnage Réel
     // ----------------------------------------------------
     const sceneJobs = await Promise.all(
       finalScenes.map(async (sceneText, i) => {
         const sceneIdx = i + 1;
-        let voiceAudioUrl = "";
         let checkUrl = "";
 
-        // 1. Voix IA MagicLight en parallèle
-        try {
-          const vRes = await magiclight.synthesizeVoice({ text: sceneText, voiceId });
-          if (vRes && vRes.direct_upstream_audio) {
-            voiceAudioUrl = vRes.direct_upstream_audio;
-          }
-        } catch (vErr) {
-          console.warn(`[Scene ${sceneIdx} Voice Warning]:`, vErr.message);
-        }
+        // Prompt d'animation avec paroles directes pour que le personnage parle et agisse
+        const animPrompt = `${sceneText}, character speaking directly with natural facial expressions and speech audio, cinematic lighting, 8k masterpiece`;
 
-        // 2. Déclenchement de l'Animation IA en parallèle
         try {
-          const animUrl = `https://vercel-animate-api.vercel.app/stanleystawa/video?prompt=${encodeURIComponent(sceneText)}&imageUrl=${encodeURIComponent(publicCharImgUrl)}&duration=10&quality=${quality}&format=json`;
-          const animRes = await fetch(animUrl, { signal: AbortSignal.timeout(6000) });
+          const animUrl = `https://vercel-animate-api.vercel.app/stanleystawa/video?prompt=${encodeURIComponent(animPrompt)}&imageUrl=${encodeURIComponent(publicCharImgUrl)}&duration=10&quality=${quality}&format=json`;
+          const animRes = await fetch(animUrl, { signal: AbortSignal.timeout(7000) });
           if (animRes.ok) {
             const animData = await animRes.json();
             if (animData.checkUrl) {
@@ -174,7 +164,6 @@ module.exports = async function handler(req, res) {
         return {
           scene: sceneIdx,
           prompt: sceneText,
-          voice_audio: voiceAudioUrl,
           checkUrl: checkUrl,
           videoUrl: null,
           status: "IN_PROGRESS"
@@ -183,7 +172,7 @@ module.exports = async function handler(req, res) {
     );
 
     const totalSeconds = numSections * 10;
-    const initialMessage = `Scénario "${storyTitle}" en cours : Animation de ${numSections} scènes (${totalSeconds}s au total)...`;
+    const initialMessage = `Scénario "${storyTitle}" en cours : Génération du film complet de ${totalSeconds}s (${numSections} scènes)...`;
 
     // ----------------------------------------------------
     // ÉTAPE 3 : Enregistrement dans Turso DB
@@ -223,11 +212,11 @@ module.exports = async function handler(req, res) {
       credits_deducted: creditCost,
       credits_remaining: remainingCredits !== null ? remainingCredits : "unlimited",
       character_image: "Fournie (100% Cohérence Visuelle)",
-      scenes: sceneJobs.map(s => ({ scene: s.scene, narration: s.prompt, voice_audio: s.voice_audio })),
+      scenes: sceneJobs.map(s => ({ scene: s.scene, narration: s.prompt })),
       check_url: statusUrl,
       download_url: downloadUrl,
       mp4_direct_url: mp4PollUrl,
-      message: `Scénariste Magique & Voix IA activés : Rendu de ${numSections} scènes initié avec succès (${totalSeconds}s totales).`
+      message: `Scénariste Magique activé : Film complet de ${numSections} scènes initié (${totalSeconds}s totales).`
     });
 
   } catch (err) {
