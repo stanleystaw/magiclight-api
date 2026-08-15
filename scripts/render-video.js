@@ -19,7 +19,7 @@ const REPO = process.env.GITHUB_REPOSITORY || "stanleystaw/magiclight-api";
 
 const MAGICLIGHT_API = "https://api.magiclight.ai";
 const ANIMATE_API = "https://vercel-animate-api.vercel.app";
-const VERCEL_PUBLIC_HOST = "https://magiclight-api.vercel.app";
+const VERCEL_PUBLIC_HOST = process.env.VERCEL_PUBLIC_HOST || "https://magiclight-api-gamma.vercel.app";
 
 async function executeTurso(sql, args = []) {
   let url = TURSO_URL.replace("libsql://", "https://");
