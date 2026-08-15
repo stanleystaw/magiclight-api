@@ -1,55 +1,46 @@
 /**
- * api/stanleystawa/image.js — Génération d'images HD avec Tarification (1 Crédit)
+ * api/stanleystawa/image.js — Génération d'images HD via Cloudflare Workers AI (Flux-1-Schnell) & Fallback
  *
  * GET/POST /stanleystawa/image?prompt=...&ratio=16:9&format=image
  */
 
 const turso = require("../../lib/turso");
 const security = require("../../lib/security");
+const cloudflare = require("../../lib/cloudflare");
 
 async function fetchImageBuffer(prompt, ratio = "16:9") {
   const isPortrait = ratio === "9:16" || ratio === "2";
   const isSquare = ratio === "1:1";
-  const width = isPortrait ? 576 : (isSquare ? 768 : 1024);
-  const height = isPortrait ? 1024 : (isSquare ? 768 : 576);
-  const seed = Math.floor(Math.random() * 999999);
+  const width = isPortrait ? 720 : (isSquare ? 1024 : 1280);
+  const height = isPortrait ? 1280 : (isSquare ? 1024 : 720);
   const cleanPrompt = String(prompt || "").trim();
 
+  // 1. Moteur Prioritaire : Cloudflare Workers AI (Flux-1-Schnell)
+  if (cloudflare.isConfigured()) {
+    try {
+      const cfBuf = await cloudflare.generateImage(cleanPrompt, { num_steps: 4, width, height });
+      if (cfBuf && cfBuf.length > 3000) {
+        return { buffer: cfBuf, contentType: "image/jpeg", engine: "Cloudflare Workers AI (Flux-1-Schnell)" };
+      }
+    } catch (e) {
+      console.warn("[Cloudflare Image AI Warning]:", e.message);
+    }
+  }
+
+  // 2. Moteur Fallback : Flux HD Haute Définition
+  const seed = Math.floor(Math.random() * 999999);
   try {
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=${width}&height=${height}&seed=${seed}&nologo=true&nofeed=true`;
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
-      },
-      signal: AbortSignal.timeout(12000)
-    });
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt + ", cinematic lighting, 8k masterpiece, detailed")}?width=${width}&height=${height}&seed=${seed}&nologo=true&model=flux`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
     if (res.ok && res.headers.get("content-type")?.includes("image")) {
       const arrayBuffer = await res.arrayBuffer();
       const buf = Buffer.from(arrayBuffer);
-      if (buf.length > 5000) {
-        return { buffer: buf, contentType: "image/jpeg" };
+      if (buf.length > 3000) {
+        return { buffer: buf, contentType: "image/jpeg", engine: "Flux HD Vision" };
       }
     }
   } catch (err) {
-    console.warn("[Image Source 1 Warning]", err.message);
-  }
-
-  try {
-    const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt + ", cinematic lighting, 8k masterpiece")}?seed=${seed}&nologo=true`;
-    const res = await fetch(fallbackUrl, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-      signal: AbortSignal.timeout(10000)
-    });
-    if (res.ok && res.headers.get("content-type")?.includes("image")) {
-      const arrayBuffer = await res.arrayBuffer();
-      const buf = Buffer.from(arrayBuffer);
-      if (buf.length > 5000) {
-        return { buffer: buf, contentType: "image/jpeg" };
-      }
-    }
-  } catch (e) {
-    console.warn("[Image Source 2 Warning]", e.message);
+    console.warn("[Image Fallback Warning]:", err.message);
   }
 
   return null;
@@ -80,7 +71,7 @@ module.exports = async function handler(req, res) {
       remainingCredits = await turso.deductUserCredits(auth.key, 1);
     }
 
-    const host = req.headers.host || "magiclight-api.vercel.app";
+    const host = req.headers.host || "magiclight-api-gamma.vercel.app";
     const protocol = req.headers["x-forwarded-proto"] || "https";
     const publicImageUrl = `${protocol}://${host}/stanleystawa/image?prompt=${encodeURIComponent(prompt)}&ratio=${ratioStr}&format=image`;
 
@@ -95,13 +86,15 @@ module.exports = async function handler(req, res) {
       }
     }
 
+    const engineName = cloudflare.isConfigured() ? "Cloudflare Workers AI (Flux-1-Schnell)" : "Stanley Stawa Neural Vision HD";
+
     return res.status(200).json({
       status: "success",
       image_url: publicImageUrl,
       prompt,
       ratio: ratioStr,
       credits_remaining: remainingCredits !== null ? remainingCredits : "unlimited",
-      engine: "Stanley Stawa Neural Vision HD"
+      engine: engineName
     });
   } catch (err) {
     console.error("[API Image Error]", err);
