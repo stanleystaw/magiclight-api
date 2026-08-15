@@ -1362,15 +1362,25 @@
           <label>Instructions de Changement de Lieu / Décor / Action</label>
           <textarea id="editPrompt" placeholder="Ex: Placer le personnage sur une plage tropicale au coucher du soleil avec des vagues turquoise">Placer le personnage dans une forêt enchantée avec des lucioles dorées et une ambiance féerique</textarea>
         </div>
-        <div class="form-group">
-          <label>Format de Sortie</label>
-          <select id="editRatio">
-            <option value="16:9" selected>16:9 (Paysage)</option>
-            <option value="9:16">9:16 (Portrait)</option>
-            <option value="1:1">1:1 (Carré)</option>
-          </select>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Format de Sortie</label>
+            <select id="editRatio">
+              <option value="16:9" selected>16:9 (Paysage)</option>
+              <option value="9:16">9:16 (Portrait)</option>
+              <option value="1:1">1:1 (Carré)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Intensité de Transformation (Neural img2img Strength)</label>
+            <select id="editStrength">
+              <option value="0.45">Légère (Conserve 80% des traits)</option>
+              <option value="0.60" selected>Équilibrée (Recommandée — Vrai img2img)</option>
+              <option value="0.75">Forte (Changement de décor & style prononcé)</option>
+            </select>
+          </div>
         </div>
-        <button id="btnEditImg" class="btn-submit" onclick="triggerImageEdit()">Adapter le Lieu & Retoucher (Coût : 2 Crédits)</button>
+        <button id="btnEditImg" class="btn-submit" onclick="triggerImageEdit()">Lancer la Transformation Neuronale (Coût : 2 Crédits)</button>
       </div>
 
       <div class="card">
@@ -2898,6 +2908,7 @@
       const prompt = document.getElementById("editPrompt").value.trim();
       const image = document.getElementById("editImgData").value;
       const ratio = document.getElementById("editRatio").value;
+      const strength = document.getElementById("editStrength")?.value || "0.60";
       const box = document.getElementById("editPreviewBox") || document.getElementById("imagePreviewBox");
       const btn = document.getElementById("btnEditImg");
 
@@ -2905,13 +2916,13 @@
       if (!prompt) return showToast("Veuillez saisir des instructions de retouche / mise en scène.", "error");
 
       btn.disabled = true;
-      box.innerHTML = `<div class="loader"></div><div>Retouche & adaptation de l'image en cours...</div>`;
+      box.innerHTML = `<div class="loader"></div><div>Transformation neuronale Image-to-Image en cours...</div>`;
 
       try {
         const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/edit`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image, prompt, ratio })
+          body: JSON.stringify({ image, prompt, ratio, strength })
         });
 
         if (data.image_url || data.data_url) {

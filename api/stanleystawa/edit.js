@@ -34,11 +34,12 @@ module.exports = async function handler(req, res) {
       remainingCredits = await turso.deductUserCredits(auth.key, 2);
     }
 
-    // Exécution du Moteur de Fusion de Personnage 100% Identique
+    // Exécution du Moteur Neural Image-to-Image Diffusion
     const result = await engine.editImage({
       image,
       prompt,
-      ratio
+      ratio,
+      strength: params.strength || 0.60
     });
 
     return res.status(200).json({
