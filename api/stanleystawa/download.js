@@ -1,6 +1,6 @@
 /**
  * api/stanleystawa/download.js — Streaming direct & Montage MP4 temps réel (20s, 60s réelles)
- * + Service d'Image de Personnage Haute Résolution .jpg
+ * + Service d'Image de Personnage Haute Résolution .jpg (Lapin blanc lunettes de soleil de Stanley)
  */
 
 const fs = require("fs");
@@ -87,7 +87,7 @@ module.exports = async function handler(req, res) {
       } catch (e) {}
     }
 
-    // Si une seule scène ou pas de multi-scènes
+    // Si une seule scène disponible
     if (sceneJobs.length <= 1) {
       const singleUrl = (sceneJobs[0] && sceneJobs[0].videoUrl) || task.video_url;
       if (singleUrl && singleUrl.startsWith("http") && !singleUrl.includes("/stanleystawa/download")) {
@@ -95,7 +95,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // Montage réel des N scènes en un fichier MP4 unique
+    // Montage réel des N scènes en un fichier MP4 unique dans /tmp
     const tmpDir = path.join("/tmp", `merge_${taskId}`);
     const finalMergedFile = path.join(tmpDir, `${taskId}_complete.mp4`);
 
@@ -119,7 +119,7 @@ module.exports = async function handler(req, res) {
       const concatPath = path.join(tmpDir, "concat.txt");
       fs.writeFileSync(concatPath, concatList);
 
-      // Assemblage réel ultra-rapide en flux direct avec FFmpeg (< 100ms)
+      // Concaténation réelle des flux vidéo et audio sans perte (< 100ms)
       execSync(`${FFMPEG_PATH} -y -f concat -safe 0 -i "${concatPath}" -c copy -movflags +faststart "${finalMergedFile}" -loglevel error`);
     }
 
@@ -143,17 +143,28 @@ module.exports = async function handler(req, res) {
       const chunksize = end - start + 1;
       const file = fs.createReadStream(finalMergedFile, { start, end });
 
-      res.writeHead(206, {
-        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
-        "Accept-Ranges": "bytes",
-        "Content-Length": chunksize,
-        "Content-Type": "video/mp4"
-      });
-      return file.pipe(res);
+      if (typeof res.writeHead === "function") {
+        res.writeHead(206, {
+          "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+          "Accept-Ranges": "bytes",
+          "Content-Length": chunksize,
+          "Content-Type": "video/mp4"
+        });
+      }
+      if (typeof file.pipe === "function" && typeof res.on === "function") {
+        return file.pipe(res);
+      } else {
+        const fileBuffer = fs.readFileSync(finalMergedFile);
+        return res.status(206).send(fileBuffer.subarray(start, end + 1));
+      }
     } else {
       res.setHeader("Content-Length", fileSize);
-      res.status(200);
-      return fs.createReadStream(finalMergedFile).pipe(res);
+      if (typeof res.status === "function") res.status(200);
+      if (typeof fs.createReadStream === "function" && typeof res.on === "function") {
+        return fs.createReadStream(finalMergedFile).pipe(res);
+      } else {
+        return res.send(fs.readFileSync(finalMergedFile));
+      }
     }
 
   } catch (err) {

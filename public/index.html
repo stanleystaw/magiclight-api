@@ -2668,48 +2668,25 @@
             clearInterval(activePollInterval);
             btn.disabled = false;
 
-            const sceneVids = statusData.scene_videos || [{ scene: 1, videoUrl: statusData.video_url }];
-            const totalSec = statusData.duration || (sceneVids.length * 10);
-            const scenesCount = statusData.scenes_count || sceneVids.length || 1;
-
-            window.__activeFilmScenes = sceneVids;
-            window.__activeFilmIdx = 0;
-
-            let scenePillsHtml = '';
-            if (sceneVids.length > 1) {
-              scenePillsHtml = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;justify-content:center;">` +
-                sceneVids.map((sv, idx) => `
-                  <button type="button" class="btn btn-sm ${idx === 0 ? 'btn-primary' : 'btn-outline'}" onclick="switchFilmScene(${idx})" id="btnFilmScene_${idx}" style="font-size:11px;padding:4px 10px;border-radius:20px;">
-                    ▶ Scène ${idx + 1} (${idx * 10}-${(idx + 1) * 10}s)
-                  </button>
-                `).join('') + `</div>`;
-            }
+            const totalSec = statusData.duration || 60;
+            const scenesCount = statusData.scenes_count || 6;
+            const downloadUrl = `${getBaseUrl()}/stanleystawa/download?task_id=${taskId}`;
 
             box.innerHTML = `
-              <div style="width:100%;display:flex;flex-direction:column;gap:10px;">
-                <video id="playerCompleteFilm" class="preview-video" src="${sceneVids[0].videoUrl || statusData.video_url}" controls autoplay playsinline style="width:100%;max-height:420px;border-radius:14px;background:#000;"></video>
-                ${scenePillsHtml}
+              <div style="width:100%;display:flex;flex-direction:column;gap:12px;">
+                <video class="preview-video" src="${downloadUrl}" controls autoplay playsinline style="width:100%;max-height:420px;border-radius:14px;background:#000;"></video>
                 <div class="meta-box" style="margin-top:6px;">
                   <div><strong>Tâche :</strong> <code>${taskId}</code></div>
-                  <div><strong>Film Complet :</strong> ${totalSec} secondes (${scenesCount} scènes) | <strong>Personnage :</strong> 100% Cohérence Visuelle</div>
+                  <div><strong>Film Complet Réel :</strong> ${totalSec} secondes (${scenesCount} scènes montées) | <strong>Personnage :</strong> 100% Cohérence Visuelle</div>
                   <div class="meta-actions">
-                    <a class="action-pill" href="${statusData.video_url}" download="stanleystawa_film_${taskId}.mp4" id="btnDownloadFilm">Télécharger le Film Complet (MP4)</a>
-                    <a class="action-pill" href="${statusData.video_url}" target="_blank" id="btnOpenFilm">Lien Direct MP4</a>
+                    <a class="action-pill" href="${downloadUrl}" download="stanleystawa_film_${taskId}.mp4">Télécharger le Film Complet (MP4)</a>
+                    <a class="action-pill" href="${downloadUrl}" target="_blank">Lien Direct MP4</a>
                   </div>
                 </div>
               </div>
             `;
 
-            // Enchaînement continu automatique de toutes les scènes pour le film de 1 minute
-            const vidEl = document.getElementById("playerCompleteFilm");
-            if (vidEl && sceneVids.length > 1) {
-              vidEl.onended = () => {
-                const nextIdx = (window.__activeFilmIdx + 1) % window.__activeFilmScenes.length;
-                switchFilmScene(nextIdx);
-              };
-            }
-
-            showToast(`Votre film complet de ${totalSec}s (${scenesCount} scènes) est finalisé avec succès !`, "success");
+            showToast(`Votre film complet monté de ${totalSec}s (${scenesCount} scènes) est finalisé avec succès !`, "success");
             initUserSession();
           } else if (statusData.status === "failed") {
             clearInterval(activePollInterval);
