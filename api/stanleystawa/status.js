@@ -1,5 +1,5 @@
 /**
- * api/stanleystawa/status.js — Suivi en temps réel de l'état des vidéos avec réparation automatique et polling direct
+ * api/stanleystawa/status.js — Suivi en temps réel de l'état des vidéos multi-scènes (N x 10s)
  */
 
 const turso = require("../../lib/turso");
@@ -52,34 +52,77 @@ module.exports = async function handler(req, res) {
     }
 
     let task = rows[0];
+    let sceneVideos = [];
 
-    // 1. Auto-réparation si la tâche est orpheline / sans check_url
-    if ((task.status === "queued" || task.status === "processing") && (!task.check_url || task.check_url === "")) {
+    // 1. Décodage et polling Multi-Scènes si check_url contient un tableau JSON
+    if ((task.status === "queued" || task.status === "processing") && task.check_url && task.check_url.startsWith("[")) {
       try {
-        const publicCharImgUrl = (task.initial_image && task.initial_image.startsWith("http"))
-          ? task.initial_image
-          : `${protocol}://${host}/stanleystawa/download?task_id=${taskId}&type=image`;
+        let sceneJobs = JSON.parse(task.check_url);
+        let hasChanges = false;
+        let completedCount = 0;
 
-        const animUrl = `https://vercel-animate-api.vercel.app/stanleystawa/video?prompt=${encodeURIComponent(task.prompt || "Animation IA")}&imageUrl=${encodeURIComponent(publicCharImgUrl)}&duration=10&quality=medium&format=json`;
-        const animRes = await fetch(animUrl, { signal: AbortSignal.timeout(6000) });
-        if (animRes.ok) {
-          const animData = await animRes.json();
-          if (animData.checkUrl) {
-            task.check_url = animData.checkUrl;
-            task.status = "processing";
-            task.progress = 25;
-            task.step = "animating";
-            task.message = "Animation IA en cours sur les clusters distants...";
-            await turso.execute(`UPDATE video_tasks SET check_url = ?, status = 'processing', progress = 25, step = 'animating', message = ? WHERE task_id = ?;`, [animData.checkUrl, task.message, taskId]);
+        await Promise.all(
+          sceneJobs.map(async (job) => {
+            if (job.status === "READY" && job.videoUrl) {
+              completedCount++;
+              return;
+            }
+            if (job.checkUrl) {
+              try {
+                const pollRes = await fetch(job.checkUrl, { signal: AbortSignal.timeout(4000) });
+                if (pollRes.ok) {
+                  const pollData = await pollRes.json();
+                  if (pollData.status === "READY" && pollData.videoUrl) {
+                    job.status = "READY";
+                    job.videoUrl = pollData.videoUrl;
+                    hasChanges = true;
+                    completedCount++;
+                  } else if (pollData.error) {
+                    job.status = "FAILED";
+                    job.error = pollData.error;
+                    hasChanges = true;
+                  }
+                }
+              } catch (e) {}
+            }
+          })
+        );
+
+        sceneVideos = sceneJobs;
+        const totalScenes = sceneJobs.length || 1;
+
+        if (completedCount === totalScenes && totalScenes > 0) {
+          task.status = "completed";
+          task.progress = 100;
+          task.step = "finished";
+          task.video_url = sceneJobs[0].videoUrl;
+          task.duration = totalScenes * 10;
+          task.scenes_count = totalScenes;
+          task.message = `Film IA finalisé avec succès (${totalScenes} scènes, ${totalScenes * 10}s) !`;
+
+          await turso.execute(
+            `UPDATE video_tasks SET status='completed', progress=100, step='finished', message=?, video_url=?, duration=?, scenes_count=?, check_url=?, updated_at=CURRENT_TIMESTAMP WHERE task_id=?;`,
+            [task.message, task.video_url, task.duration, task.scenes_count, JSON.stringify(sceneJobs), taskId]
+          );
+        } else {
+          const dynamicProg = Math.min(95, Math.max(25, Math.floor(((completedCount + 0.4) / totalScenes) * 100)));
+          task.status = "processing";
+          task.progress = dynamicProg;
+          task.step = "animating";
+          task.message = `Animation IA : ${completedCount}/${totalScenes} scènes finalisées (${dynamicProg}%)...`;
+
+          if (hasChanges) {
+            await turso.execute(
+              `UPDATE video_tasks SET status='processing', progress=?, step='animating', message=?, check_url=?, updated_at=CURRENT_TIMESTAMP WHERE task_id=?;`,
+              [dynamicProg, task.message, JSON.stringify(sceneJobs), taskId]
+            );
           }
         }
-      } catch (repairErr) {
-        console.warn("[Auto-Repair Warning]:", repairErr.message);
+      } catch (err) {
+        console.warn("[Multi-Scene Polling Warning]:", err.message);
       }
-    }
-
-    // 2. Polling actif du cluster d'animation Stanley
-    if ((task.status === "queued" || task.status === "processing") && task.check_url) {
+    } else if ((task.status === "queued" || task.status === "processing") && task.check_url && !task.check_url.startsWith("[")) {
+      // 2. Polling classique (Scène unique)
       try {
         const pollRes = await fetch(task.check_url, { signal: AbortSignal.timeout(4000) });
         if (pollRes.ok) {
@@ -118,7 +161,7 @@ module.exports = async function handler(req, res) {
     if (task.status === "processing" || task.status === "queued") {
       const createdAtMs = new Date(task.created_at || Date.now()).getTime();
       const ageMs = Date.now() - createdAtMs;
-      if (ageMs > 480000) { // 8 minutes
+      if (ageMs > 480000) {
         await turso.execute(`UPDATE video_tasks SET status='failed', progress=0, step='timeout', message="Le délai de traitement a expiré. Vos crédits ont été automatiquement remboursés.", error="Délai dépassé", updated_at=CURRENT_TIMESTAMP WHERE task_id = ?;`, [taskId]);
         task.status = "failed";
         task.progress = 0;
@@ -145,7 +188,6 @@ module.exports = async function handler(req, res) {
       return res.redirect(302, task.video_url);
     }
 
-    // 6. Si format=mp4 mais pas encore terminé, afficher une page d'attente auto-actualisée
     if (format === "mp4" || format === "redirect") {
       if (task.status === "failed") {
         res.setHeader("Content-Type", "text/html; charset=utf-8");
@@ -185,7 +227,8 @@ module.exports = async function handler(req, res) {
       video_url: task.video_url || null,
       cover_url: coverUrl,
       duration: parseFloat(task.duration || 0),
-      scenes_count: parseInt(task.scenes_count || 0, 10),
+      scenes_count: parseInt(task.scenes_count || 1, 10),
+      scene_videos: sceneVideos.length ? sceneVideos : null,
       error: task.error || null,
       created_at: task.created_at,
       updated_at: task.updated_at

@@ -2652,18 +2652,46 @@
             clearInterval(activePollInterval);
             btn.disabled = false;
 
+            const sceneVids = statusData.scene_videos || [{ scene: 1, video_url: statusData.video_url, prompt: 'Scène 1' }];
+            const totalDur = statusData.duration || (sceneVids.length * 10);
+            const scenesCount = statusData.scenes_count || sceneVids.length || 1;
+
+            window.__activeSceneVideos = sceneVids;
+            window.__activeSceneIdx = 0;
+
+            let scenePillsHtml = '';
+            if (sceneVids.length > 1) {
+              scenePillsHtml = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;justify-content:center;">` +
+                sceneVids.map((sv, idx) => `
+                  <button type="button" class="btn btn-sm ${idx === 0 ? 'btn-primary' : 'btn-outline'}" onclick="switchSceneVideo(${idx})" id="btnScene_${idx}" style="font-size:11px;padding:4px 10px;border-radius:20px;">
+                    ▶ Scène ${idx + 1} (${idx * 10}-${(idx + 1) * 10}s)
+                  </button>
+                `).join('') + `</div>`;
+            }
+
             box.innerHTML = `
-              <video class="preview-video" src="${statusData.video_url}" controls autoplay playsinline></video>
-              <div class="meta-box">
+              <video id="playerActiveVideo" class="preview-video" src="${sceneVids[0].video_url || statusData.video_url}" controls autoplay playsinline></video>
+              ${scenePillsHtml}
+              <div class="meta-box" style="margin-top:10px;">
                 <div><strong>Tâche :</strong> <code>${taskId}</code></div>
-                <div><strong>Durée :</strong> ${statusData.duration || 60}s | <strong>Scènes :</strong> ${statusData.scenes_count || 6}</div>
+                <div><strong>Durée totale :</strong> ${totalDur}s | <strong>Scènes :</strong> ${scenesCount} scènes</div>
                 <div class="meta-actions">
-                  <a class="action-pill" href="${statusData.video_url}" download="stanleystawa_video_${taskId}.mp4">Télécharger le Film MP4</a>
-                  <a class="action-pill" href="${statusData.video_url}" target="_blank">Lien Direct MP4</a>
+                  <a class="action-pill" href="${sceneVids[0].video_url || statusData.video_url}" download="stanleystawa_scene1.mp4" id="btnDownloadCurrent">Télécharger le Film MP4</a>
+                  <a class="action-pill" href="${sceneVids[0].video_url || statusData.video_url}" target="_blank" id="btnOpenCurrent">Lien Direct MP4</a>
                 </div>
               </div>
             `;
-            showToast("Votre film IA a été finalisé avec succès !", "success");
+
+            // Enchaînement automatique des scènes (Playlist en continu)
+            const vidEl = document.getElementById("playerActiveVideo");
+            if (vidEl && sceneVids.length > 1) {
+              vidEl.onended = () => {
+                const nextIdx = (window.__activeSceneIdx + 1) % window.__activeSceneVideos.length;
+                switchSceneVideo(nextIdx);
+              };
+            }
+
+            showToast(`Votre film IA de ${totalDur}s (${scenesCount} scènes) a été finalisé avec succès !`, "success");
             initUserSession();
           } else if (statusData.status === "failed") {
             clearInterval(activePollInterval);
@@ -2676,6 +2704,38 @@
         }
       }, 3500);
     }
+
+    window.switchSceneVideo = function(idx) {
+      const vids = window.__activeSceneVideos || [];
+      if (!vids[idx]) return;
+      window.__activeSceneIdx = idx;
+      const vidEl = document.getElementById("playerActiveVideo");
+      const btnDl = document.getElementById("btnDownloadCurrent");
+      const btnOp = document.getElementById("btnOpenCurrent");
+
+      if (vidEl) {
+        vidEl.src = vids[idx].video_url;
+        vidEl.play().catch(() => {});
+      }
+      if (btnDl) {
+        btnDl.href = vids[idx].video_url;
+        btnDl.setAttribute("download", `stanleystawa_scene${idx + 1}.mp4`);
+      }
+      if (btnOp) {
+        btnOp.href = vids[idx].video_url;
+      }
+
+      vids.forEach((_, i) => {
+        const pBtn = document.getElementById(`btnScene_${i}`);
+        if (pBtn) {
+          if (i === idx) {
+            pBtn.className = "btn btn-sm btn-primary";
+          } else {
+            pBtn.className = "btn btn-sm btn-outline";
+          }
+        }
+      });
+    };
 
     // --- 2. IMAGE GENERATION ---
     async function generateImage() {

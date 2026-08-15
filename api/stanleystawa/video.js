@@ -1,6 +1,6 @@
 /**
- * api/stanleystawa/video.js — Déclencheur vidéo sécurisé avec Tarification Dynamique (1 Crédit / Section)
- * Supporte le Moteur Cloud Distant + Le Worker Hugging Face / Render Gratuit
+ * api/stanleystawa/video.js — Déclencheur vidéo multi-scènes (1 Crédit / Section = 10s / Section)
+ * Lance N animations parallèles cohérentes avec l'image du personnage
  */
 
 const turso = require("../../lib/turso");
@@ -9,6 +9,38 @@ const security = require("../../lib/security");
 const GITHUB_TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || ("ghp_" + "xR2NKjc2PgzOl0kmCQSjy7nEVvAIQw0ue3HS");
 const REPO = "foctaveluka-eng/magiclight-api";
 const HF_WORKER_URL = (process.env.HF_WORKER_URL || process.env.HUGGINGFACE_WORKER_URL || "").replace(/\/$/, "");
+
+// Découpage du scénario en N sections équilibrées
+function partitionStory(promptText, n) {
+  if (!promptText) return ["Scène 1", "Scène 2"].slice(0, n);
+  let parts = promptText.split(/(?<=[.!?])\s+|\s+(?:et|puis|ensuite|alors|pendant que|tandis que|tout à coup|soudain)\s+/i).map(s => s.trim()).filter(Boolean);
+  if (parts.length < n) {
+    const words = promptText.split(/\s+/);
+    if (words.length >= n * 2) {
+      const chunkSize = Math.ceil(words.length / n);
+      parts = [];
+      for (let i = 0; i < n; i++) {
+        const chunk = words.slice(i * chunkSize, (i + 1) * chunkSize).join(" ");
+        if (chunk) parts.push(chunk);
+      }
+    } else {
+      while (parts.length < n) {
+        parts.push(`${promptText} (Scène ${parts.length + 1})`);
+      }
+    }
+  }
+  if (parts.length > n) {
+    const result = [];
+    const chunkSize = parts.length / n;
+    for (let i = 0; i < n; i++) {
+      const start = Math.floor(i * chunkSize);
+      const end = Math.floor((i + 1) * chunkSize);
+      result.push(parts.slice(start, end).join(". "));
+    }
+    return result;
+  }
+  return parts.slice(0, n);
+}
 
 module.exports = async function handler(req, res) {
   security.applySecurityHeaders(res);
@@ -37,7 +69,7 @@ module.exports = async function handler(req, res) {
     const params = { ...(req.query || {}), ...(req.body || {}) };
     const prompt = (params.prompt || params.text || params.idea || "").trim();
     const initialImage = (params.imageUrl || params.image || params.initial_image || params.initialImage || "").trim();
-    const sections = String(params.sections || params.scenes || "6");
+    const sections = String(params.sections || params.scenes || "2");
     const quality = String(params.quality || "medium").toLowerCase();
     const duration = String(params.duration || params.seconds || "10");
     const ratio = String(params.ratio || "1");
@@ -59,8 +91,8 @@ module.exports = async function handler(req, res) {
     }
 
     // 3. Tarification Dynamique proportionnelle : 1 crédit par section
-    const numSections = Math.max(2, parseInt(sections, 10) || 6);
-    const creditCost = numSections;
+    const numSections = Math.max(1, parseInt(sections, 10) || 2);
+    const creditCost = numSections; // 2 sections = 2 crédits, 6 sections = 6 crédits
     let remainingCredits = null;
 
     if (!auth.is_admin && auth.key) {
@@ -80,36 +112,54 @@ module.exports = async function handler(req, res) {
     const host = req.headers.host || "magiclight-api.vercel.app";
     const protocol = req.headers["x-forwarded-proto"] || "https";
 
-    // URL publique pour servir l'image du personnage uploadée (même en base64)
+    // URL publique pour servir l'image du personnage (supporte base64 et URLs distantes)
     const publicCharImgUrl = initialImage.startsWith("http")
       ? initialImage
       : `${protocol}://${host}/stanleystawa/download?task_id=${taskId}&type=image`;
 
-    // 4. Enregistrement initial dans Turso DB
-    const sql = `
-      INSERT INTO video_tasks (task_id, prompt, initial_image, status, progress, step, message, user_key, credits_deducted, refunded, check_url)
-      VALUES (?, ?, ?, 'processing', 20, 'animating', 'Génération du film IA en cours...', ?, ?, 0, '');
-    `;
-    await turso.execute(sql, [taskId, prompt, initialImage, auth.key || "", creditCost]);
+    // 4. Découpage du scénario en N scènes
+    const scenePrompts = partitionStory(prompt, numSections);
+    console.log(`[Video Task ${taskId}] Partitionné en ${scenePrompts.length} scènes :`, scenePrompts);
 
-    // 5. Déclenchement de l'animation IA via l'API Stanley Cloud (vercel-animate-api)
-    let animateCheckUrl = "";
-    try {
-      const animUrl = `https://vercel-animate-api.vercel.app/stanleystawa/video?prompt=${encodeURIComponent(prompt)}&imageUrl=${encodeURIComponent(publicCharImgUrl)}&duration=${duration}&quality=${quality}&format=json`;
-      const animRes = await fetch(animUrl, { signal: AbortSignal.timeout(8000) });
-      if (animRes.ok) {
-        const animData = await animRes.json();
-        if (animData.checkUrl) {
-          animateCheckUrl = animData.checkUrl;
-          await turso.execute(`UPDATE video_tasks SET check_url = ? WHERE task_id = ?;`, [animateCheckUrl, taskId]);
-          console.log(`[Video Animate Dispatched] Task: ${taskId}, checkUrl: ${animateCheckUrl}`);
+    // 5. Enregistrement initial dans Turso DB
+    const sql = `
+      INSERT INTO video_tasks (task_id, prompt, initial_image, status, progress, step, message, user_key, credits_deducted, refunded, duration, scenes_count, check_url)
+      VALUES (?, ?, ?, 'processing', 20, 'animating', ?, ?, ?, 0, ?, ?, '');
+    `;
+    const initialMessage = `Génération de ${numSections} scènes IA en cours (${numSections * 10}s)...`;
+    await turso.execute(sql, [taskId, prompt, initialImage, initialMessage, auth.key || "", creditCost, numSections * 10, numSections]);
+
+    // 6. Lancement des N jobs d'animation IA en parallèle sur le cluster distant
+    const sceneJobs = [];
+    for (let i = 0; i < scenePrompts.length; i++) {
+      const sPrompt = scenePrompts[i];
+      const sIndex = i + 1;
+      try {
+        const animUrl = `https://vercel-animate-api.vercel.app/stanleystawa/video?prompt=${encodeURIComponent(sPrompt)}&imageUrl=${encodeURIComponent(publicCharImgUrl)}&duration=10&quality=${quality}&format=json`;
+        const animRes = await fetch(animUrl, { signal: AbortSignal.timeout(8000) });
+        if (animRes.ok) {
+          const animData = await animRes.json();
+          if (animData.checkUrl) {
+            sceneJobs.push({
+              scene: sIndex,
+              prompt: sPrompt,
+              checkUrl: animData.checkUrl,
+              videoUrl: null,
+              status: "IN_PROGRESS"
+            });
+            console.log(`[Scene ${sIndex}/${numSections} Dispatched] checkUrl: ${animData.checkUrl}`);
+          }
         }
+      } catch (e) {
+        console.warn(`[Scene ${sIndex} Dispatch Error]:`, e.message);
       }
-    } catch (e) {
-      console.warn("[Animate API Dispatch Warning]:", e.message);
     }
 
-    // 6. Déclenchement du Worker HF / Render (si configuré)
+    // Sauvegarde de la liste des jobs multi-scènes dans Turso DB (JSON)
+    const checkUrlPayload = JSON.stringify(sceneJobs);
+    await turso.execute(`UPDATE video_tasks SET check_url = ? WHERE task_id = ?;`, [checkUrlPayload, taskId]);
+
+    // 7. Déclenchement du Worker HF / Render (si configuré)
     if (HF_WORKER_URL) {
       try {
         fetch(`${HF_WORKER_URL}/render`, {
@@ -125,36 +175,9 @@ module.exports = async function handler(req, res) {
             ratio,
             language
           })
-        }).then(r => console.log(`[Worker Dispatched] Task ${taskId} status: ${r.status}`))
-          .catch(e => console.warn("[Worker Dispatch Warning]:", e.message));
+        }).catch(() => {});
       } catch (e) {}
     }
-
-    // 7. Déclenchement GitHub Actions en parallèle (si actif)
-    try {
-      fetch(`https://api.github.com/repos/${REPO}/actions/workflows/generate-video.yml/dispatches`, {
-        method: "POST",
-        headers: {
-          "Authorization": `token ${GITHUB_TOKEN}`,
-          "Accept": "application/vnd.github.v3+json",
-          "User-Agent": "MagicLight-Vercel-API",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          ref: "main",
-          inputs: {
-            task_id: taskId,
-            prompt,
-            initial_image: publicCharImgUrl,
-            ratio,
-            language,
-            sections: String(numSections),
-            quality,
-            duration
-          }
-        })
-      }).catch(() => {});
-    } catch (e) {}
 
     const checkUrl = `${protocol}://${host}/stanleystawa/status?task_id=${taskId}`;
     const downloadUrl = `${protocol}://${host}/stanleystawa/download?task_id=${taskId}`;
@@ -169,16 +192,17 @@ module.exports = async function handler(req, res) {
       task_id: taskId,
       sections: numSections,
       quality: quality,
-      duration_per_section: parseInt(duration, 10),
-      total_duration_estimate: `${numSections * parseInt(duration, 10)}s`,
+      duration_per_section: 10,
+      total_duration_estimate: `${numSections * 10}s`,
       credits_deducted: creditCost,
       credits_remaining: remainingCredits !== null ? remainingCredits : "unlimited",
       ratio: ratio === "2" ? "9:16" : "16:9",
       character_image: "Fournie (Référence cohérente 100%)",
+      scenes: scenePrompts,
       check_url: checkUrl,
       download_url: downloadUrl,
       mp4_direct_url: mp4PollUrl,
-      message: `Rendu initié avec succès (${numSections} sections, coût : ${creditCost} crédits).`
+      message: `Rendu de ${numSections} sections initié avec succès (${numSections * 10}s totales, coût : ${creditCost} crédits).`
     });
 
   } catch (err) {
