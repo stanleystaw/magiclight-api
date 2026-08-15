@@ -1344,7 +1344,7 @@
       </div>
     </div>
 
-    <!-- 2. TAB IMAGE -->
+    <!-- 2. TAB IMAGE & RETOUCHE -->
     <div id="tab-image" class="tab-panel">
       <div class="card">
         <div class="card-title">Génération d'Image HD (Tarif : 1 Crédit)</div>
@@ -1363,10 +1363,37 @@
         </div>
         <button id="btnGenImg" class="btn-submit" onclick="generateImage()">Générer l'Image HD (Coût : 1 Crédit)</button>
       </div>
+
       <div class="card">
-        <div class="card-title">Aperçu de l'Image</div>
+        <div class="card-title">Retouche & Adaptation du Personnage (Edit IA — Tarif : 2 Crédits)</div>
+        <div class="form-group">
+          <label>Image Source / Personnage à Retoucher</label>
+          <div class="upload-box" onclick="document.getElementById('editImgFile').click()">
+            <input type="file" id="editImgFile" accept="image/*" style="display:none" onchange="handleImageUpload(event, 'editImgPreview', 'editImgData')">
+            <span id="editImgPlaceholder">Sélectionner l'image à adapter / retoucher</span>
+            <img id="editImgPreview" class="upload-preview-thumb" alt="Aperçu">
+          </div>
+          <input type="hidden" id="editImgData">
+        </div>
+        <div class="form-group">
+          <label>Instructions de Retouche / Mise en Scène</label>
+          <textarea id="editPrompt" placeholder="Ex: Placer le personnage sur une plage ensoleillée avec des palmiers et un ciel bleu éclatant">Placer le personnage dans une forêt enchantée avec des lucioles dorées et une ambiance féerique</textarea>
+        </div>
+        <div class="form-group">
+          <label>Format de Sortie</label>
+          <select id="editRatio">
+            <option value="16:9" selected>16:9 (Paysage)</option>
+            <option value="9:16">9:16 (Portrait)</option>
+            <option value="1:1">1:1 (Carré)</option>
+          </select>
+        </div>
+        <button id="btnEditImg" class="btn-submit" onclick="triggerImageEdit()">Retoucher & Adapter le Personnage (Coût : 2 Crédits)</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Aperçu Visuel (Génération / Retouche)</div>
         <div id="imagePreviewBox" class="preview-box">
-          <div class="preview-placeholder">L'image générée apparaîtra ici.</div>
+          <div class="preview-placeholder">L'image générée ou retouchée apparaîtra ici.</div>
         </div>
       </div>
     </div>
@@ -2344,11 +2371,40 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(evt) {
-        const base64 = evt.target.result;
-        document.getElementById(dataId).value = base64;
-        const prev = document.getElementById(previewId);
-        prev.src = base64;
-        prev.style.display = "block";
+        const rawImg = new Image();
+        rawImg.onload = function() {
+          const maxDim = 1024;
+          let w = rawImg.width;
+          let h = rawImg.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(rawImg, 0, 0, w, h);
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.85);
+
+          document.getElementById(dataId).value = compressedBase64;
+          const prev = document.getElementById(previewId);
+          if (prev) {
+            prev.src = compressedBase64;
+            prev.style.display = "block";
+          }
+          const place = document.getElementById("videoCharPlaceholder");
+          if (place) {
+            place.innerText = "Personnage personnalisé actif (" + file.name + ")";
+          }
+          showToast("Image du personnage chargée et optimisée !", "success");
+        };
+        rawImg.src = evt.target.result;
       };
       reader.readAsDataURL(file);
     }
@@ -2792,6 +2848,55 @@
             </div>
           `;
           showToast("Image HD générée avec succès (Coût: 1 Crédit) !", "success");
+          initUserSession();
+        }
+      } catch (err) {
+        box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px;">Erreur: ${err.message}</div>`;
+        showToast(err.message, "error");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // --- 2b. RETOUCHE & ADAPTATION IMAGE (EDIT IA) ---
+    async function triggerImageEdit() {
+      if (!isUserLoggedIn()) {
+        return openLoginModal("Connexion requise : Veuillez vous connecter pour retoucher des images.");
+      }
+
+      const prompt = document.getElementById("editPrompt").value.trim();
+      const image = document.getElementById("editImgData").value;
+      const ratio = document.getElementById("editRatio").value;
+      const box = document.getElementById("imagePreviewBox");
+      const btn = document.getElementById("btnEditImg");
+
+      if (!image) return showToast("Veuillez sélectionner une image à retoucher.", "error");
+      if (!prompt) return showToast("Veuillez saisir des instructions de retouche / mise en scène.", "error");
+
+      btn.disabled = true;
+      box.innerHTML = `<div class="loader"></div><div>Retouche & adaptation de l'image en cours...</div>`;
+
+      try {
+        const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/edit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image, prompt, ratio })
+        });
+
+        if (data.image_url || data.data_url) {
+          const finalUrl = data.data_url || data.image_url;
+          box.innerHTML = `
+            <img class="preview-img" src="${finalUrl}" alt="Image retouchée">
+            <div class="meta-box">
+              <div><strong>Retouche :</strong> ${data.prompt}</div>
+              <div><strong>Format :</strong> ${data.ratio || ratio}</div>
+              <div class="meta-actions">
+                <a class="action-pill" href="${finalUrl}" target="_blank" download="stanleystawa_edited.jpg">Télécharger l'Image Retouchée</a>
+                <a class="action-pill" href="${finalUrl}" target="_blank">Ouvrir l'Image</a>
+              </div>
+            </div>
+          `;
+          showToast("Personnage adapté et retouché avec succès (Coût: 2 Crédits) !", "success");
           initUserSession();
         }
       } catch (err) {
