@@ -76,15 +76,32 @@ module.exports = async function handler(req, res) {
     }
 
     const taskId = `vid_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const inputImageUrl = initialImage.startsWith("http") ? initialImage : "";
 
-    // 4. Enregistrement dans Turso DB avec clé utilisateur et crédits pour remboursement automatique garanti
+    // 4. Déclenchement de l'animation IA via l'API Stanley (vercel-animate-api)
+    let animateCheckUrl = "";
+    try {
+      const animUrl = `https://vercel-animate-api.vercel.app/stanleystawa/video?prompt=${encodeURIComponent(prompt)}&imageUrl=${encodeURIComponent(inputImageUrl)}&duration=${duration}&quality=${quality}&format=json`;
+      const animRes = await fetch(animUrl, { signal: AbortSignal.timeout(10000) });
+      if (animRes.ok) {
+        const animData = await animRes.json();
+        if (animData.checkUrl) {
+          animateCheckUrl = animData.checkUrl;
+          console.log(`[Video Animate Dispatched] checkUrl: ${animateCheckUrl}`);
+        }
+      }
+    } catch (e) {
+      console.warn("[Animate API Dispatch Warning]:", e.message);
+    }
+
+    // 5. Enregistrement dans Turso DB avec clé utilisateur et checkUrl pour polling instantané
     const sql = `
-      INSERT INTO video_tasks (task_id, prompt, initial_image, status, progress, step, message, user_key, credits_deducted, refunded)
-      VALUES (?, ?, ?, 'queued', 10, 'queued', 'Initialisation du film IA (${numSections} sections, ${numSections * parseInt(duration, 10)}s)...', ?, ?, 0);
+      INSERT INTO video_tasks (task_id, prompt, initial_image, status, progress, step, message, user_key, credits_deducted, refunded, check_url)
+      VALUES (?, ?, ?, 'processing', 20, 'animating', 'Génération du film IA en cours...', ?, ?, 0, ?);
     `;
-    await turso.execute(sql, [taskId, prompt, initialImage, auth.key || "", creditCost]);
+    await turso.execute(sql, [taskId, prompt, initialImage, auth.key || "", creditCost, animateCheckUrl]);
 
-    // 5. Déclenchement garanti du worker GitHub Actions
+    // 6. Déclenchement GitHub Actions en parallèle (si actif)
     const ghHeaders = {
       "Authorization": `token ${GITHUB_TOKEN}`,
       "Accept": "application/vnd.github.v3+json",
@@ -92,10 +109,8 @@ module.exports = async function handler(req, res) {
       "Content-Type": "application/json"
     };
 
-    const inputImageUrl = initialImage.startsWith("http") ? initialImage : "";
-
     try {
-      const dispatchRes = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/generate-video.yml/dispatches`, {
+      fetch(`https://api.github.com/repos/${REPO}/actions/workflows/generate-video.yml/dispatches`, {
         method: "POST",
         headers: ghHeaders,
         body: JSON.stringify({
@@ -111,14 +126,8 @@ module.exports = async function handler(req, res) {
             duration
           }
         })
-      });
-      if (!dispatchRes.ok) {
-        const txt = await dispatchRes.text();
-        console.error("[GitHub Dispatch Error Body]:", txt);
-      }
-    } catch (e) {
-      console.error("[GitHub Dispatch Error]:", e.message);
-    }
+      }).catch(e => console.warn("[GitHub Dispatch Note]:", e.message));
+    } catch (e) {}
 
     const host = req.headers.host || "magiclight-api.vercel.app";
     const protocol = req.headers["x-forwarded-proto"] || "https";

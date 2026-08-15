@@ -50,6 +50,42 @@ module.exports = async function handler(req, res) {
 
     let task = rows[0];
 
+    // Polling actif de l'API d'animation Stanley (vercel-animate-api)
+    if ((task.status === "queued" || task.status === "processing") && task.check_url) {
+      try {
+        const pollRes = await fetch(task.check_url, { signal: AbortSignal.timeout(4000) });
+        if (pollRes.ok) {
+          const pollData = await pollRes.json();
+          if (pollData.status === "READY" && pollData.videoUrl) {
+            await turso.execute(
+              `UPDATE video_tasks SET status='completed', progress=100, step='finished', message='Film IA finalisé avec succès !', video_url=?, duration=10, updated_at=CURRENT_TIMESTAMP WHERE task_id=?;`,
+              [pollData.videoUrl, taskId]
+            );
+            task.status = "completed";
+            task.progress = 100;
+            task.step = "finished";
+            task.message = "Film IA finalisé avec succès !";
+            task.video_url = pollData.videoUrl;
+            task.duration = 10;
+          } else if (pollData.status === "IN_PROGRESS") {
+            const createdAtMs = new Date(task.created_at || Date.now()).getTime();
+            const elapsedSec = Math.floor((Date.now() - createdAtMs) / 1000);
+            const dynamicProg = Math.min(92, 25 + Math.floor(elapsedSec * 2));
+            task.status = "processing";
+            task.progress = dynamicProg;
+            task.step = "animating";
+            task.message = `Animation IA en cours (${dynamicProg}%)...`;
+            await turso.execute(`UPDATE video_tasks SET status='processing', progress=?, step='animating', message=?, updated_at=CURRENT_TIMESTAMP WHERE task_id=?;`, [dynamicProg, task.message, taskId]);
+          } else if (pollData.error) {
+            task.status = "failed";
+            task.error = pollData.error;
+          }
+        }
+      } catch (e) {
+        console.warn("[Status Poll Animate Warning]:", e.message);
+      }
+    }
+
     // Détection d'échec / timeout : si la tâche est en processing depuis plus de 8 minutes
     if (task.status === "processing" || task.status === "queued") {
       const createdAtMs = new Date(task.created_at || Date.now()).getTime();
