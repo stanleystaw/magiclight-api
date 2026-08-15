@@ -1,5 +1,6 @@
 /**
  * api/stanleystawa/video.js — Déclencheur vidéo sécurisé avec Tarification Dynamique (1 Crédit / Section)
+ * Supporte le Moteur Cloud Distant + Le Worker Hugging Face Spaces Gratuit
  */
 
 const turso = require("../../lib/turso");
@@ -7,7 +8,7 @@ const security = require("../../lib/security");
 
 const GITHUB_TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || ("ghp_" + "xR2NKjc2PgzOl0kmCQSjy7nEVvAIQw0ue3HS");
 const REPO = "foctaveluka-eng/magiclight-api";
-const WORKFLOW_ID = "332930279";
+const HF_WORKER_URL = (process.env.HF_WORKER_URL || process.env.HUGGINGFACE_WORKER_URL || "").replace(/\/$/, "");
 
 module.exports = async function handler(req, res) {
   security.applySecurityHeaders(res);
@@ -78,7 +79,7 @@ module.exports = async function handler(req, res) {
     const taskId = `vid_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const inputImageUrl = initialImage.startsWith("http") ? initialImage : "";
 
-    // 4. Déclenchement de l'animation IA via l'API Stanley (vercel-animate-api)
+    // 4. Déclenchement de l'animation IA via l'API Stanley Cloud (vercel-animate-api)
     let animateCheckUrl = "";
     try {
       const animUrl = `https://vercel-animate-api.vercel.app/stanleystawa/video?prompt=${encodeURIComponent(prompt)}&imageUrl=${encodeURIComponent(inputImageUrl)}&duration=${duration}&quality=${quality}&format=json`;
@@ -101,7 +102,28 @@ module.exports = async function handler(req, res) {
     `;
     await turso.execute(sql, [taskId, prompt, initialImage, auth.key || "", creditCost, animateCheckUrl]);
 
-    // 6. Déclenchement GitHub Actions en parallèle (si actif)
+    // 6. Déclenchement du Worker Hugging Face Space (si configuré)
+    if (HF_WORKER_URL) {
+      try {
+        fetch(`${HF_WORKER_URL}/render`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            task_id: taskId,
+            prompt,
+            initial_image: inputImageUrl,
+            sections: numSections,
+            quality,
+            duration: parseInt(duration, 10),
+            ratio,
+            language
+          })
+        }).then(r => console.log(`[HF Worker Dispatched] Task ${taskId} status: ${r.status}`))
+          .catch(e => console.warn("[HF Worker Dispatch Warning]:", e.message));
+      } catch (e) {}
+    }
+
+    // 7. Déclenchement GitHub Actions en parallèle (si actif)
     const ghHeaders = {
       "Authorization": `token ${GITHUB_TOKEN}`,
       "Accept": "application/vnd.github.v3+json",
@@ -153,6 +175,7 @@ module.exports = async function handler(req, res) {
       check_url: checkUrl,
       download_url: downloadUrl,
       mp4_direct_url: mp4PollUrl,
+      worker_engine: HF_WORKER_URL ? "Hugging Face Space + Cloud Animate" : "Cloud Animate Direct",
       message: `Rendu initié avec succès (${numSections} sections, coût : ${creditCost} crédits).`
     });
 
