@@ -6,6 +6,7 @@
 const turso = require("../../lib/turso");
 const security = require("../../lib/security");
 const cloudflare = require("../../lib/cloudflare");
+const gemini = require("../../lib/gemini");
 
 // Amélioration automatique du prompt pour un rendu cinématique 8K
 function enhancePrompt(rawPrompt) {
@@ -24,7 +25,19 @@ async function fetchImageBuffer(prompt, ratio = "16:9") {
   const height = isPortrait ? 1280 : (isSquare ? 1024 : 720);
   const cleanPrompt = enhancePrompt(prompt);
 
-  // 1. Moteur Prioritaire : Cloudflare Workers AI (Flux-1-Schnell)
+  // 1. Moteur Prioritaire : Google Imagen 3 (Google AI Studio)
+  if (gemini.isConfigured()) {
+    try {
+      const gBuf = await gemini.generateImagen(cleanPrompt, { aspectRatio: isPortrait ? "9:16" : (isSquare ? "1:1" : "16:9") });
+      if (gBuf && gBuf.length > 3000) {
+        return { buffer: gBuf, contentType: "image/jpeg", engine: "Google Imagen 3 HD" };
+      }
+    } catch (e) {
+      console.warn("[Google Imagen Fallback]:", e.message);
+    }
+  }
+
+  // 2. Moteur Cloudflare Workers AI (Flux-1-Schnell)
   if (cloudflare.isConfigured()) {
     try {
       const cfBuf = await cloudflare.generateImage(cleanPrompt, { num_steps: 4, width, height });
