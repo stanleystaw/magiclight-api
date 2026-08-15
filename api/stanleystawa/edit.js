@@ -1,7 +1,6 @@
 /**
- * api/stanleystawa/edit.js — Retouche & Adaptation d'images via Cloudflare Workers AI (Tarif : 2 Crédits)
- *
- * POST /stanleystawa/edit { image, prompt, ratio }
+ * api/stanleystawa/edit.js — Retouche & Adaptation de Personnage Image-to-Image Haute Définition
+ * Tarif : 2 Crédits
  */
 
 const engine = require("../../lib/magiclight");
@@ -23,12 +22,12 @@ module.exports = async function handler(req, res) {
 
   try {
     const params = { ...(req.query || {}), ...(req.body || {}) };
-    const prompt = (params.prompt || params.instructions || "Amélioration des détails et mise en scène du personnage").trim();
+    const prompt = (params.prompt || params.instructions || "Amélioration des détails et adaptation du personnage").trim();
     const image = params.image || params.imageUrl || params.image_url;
     const ratio = params.ratio || "16:9";
 
     if (!image) {
-      return res.status(400).json({ error: "Le paramètre 'image' ou 'imageUrl' est requis." });
+      return res.status(400).json({ error: "Le paramètre 'image' ou 'imageUrl' est requis pour la retouche." });
     }
 
     let remainingCredits = null;
@@ -51,7 +50,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // 2. Moteur Fallback : MagicLight / Flux HD Edit
+    // 2. Moteur Image-to-Image Flux HD (Maintien du personnage + transformation de lieu)
     const result = await engine.editImage({
       image,
       prompt,

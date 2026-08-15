@@ -117,6 +117,31 @@ module.exports = async function handler(req, res) {
   const action = String(params.action || query.action || body.action || "").toLowerCase();
 
   // ====================================================
+  // MES CRÉATIONS (HISTORIQUE UTILISATEUR ET VIDÉOS)
+  // ====================================================
+  if (action === "my_creations" || action === "creations") {
+    const auth = await security.authenticateRequest(req);
+    if (!auth.authorized) {
+      return res.status(401).json({ error: "Connexion requise pour consulter vos créations." });
+    }
+    try {
+      let tasks = [];
+      if (auth.is_admin) {
+        tasks = await turso.getRecentTasks(60);
+      } else if (auth.key) {
+        const rows = await turso.execute(
+          `SELECT task_id, prompt, status, progress, duration, scenes_count, video_url, cover_url, created_at FROM video_tasks WHERE user_key = ? ORDER BY created_at DESC LIMIT 50;`,
+          [auth.key]
+        );
+        tasks = rows;
+      }
+      return res.status(200).json({ status: "success", tasks });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  // ====================================================
   // ACTIONS ADMINISTRATEUR (PANEL ADMIN SECURISE)
   // ====================================================
 

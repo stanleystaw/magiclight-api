@@ -1584,11 +1584,18 @@
     <div id="tab-creations" class="tab-panel">
       <div class="card" style="grid-column: 1 / -1;">
         <div class="card-title">
-          <span>Mes Créations & Historique Vidéo</span>
-          <button type="button" class="btn-secondary" onclick="loadMyCreations()">Actualiser</button>
+          <span>Mes Créations & Historique (Vidéos, Images & Retouches)</span>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div style="display:flex;gap:4px;">
+              <button type="button" class="btn btn-sm btn-primary creation-filter-btn active" id="btnFilterCreations_all" onclick="filterCreations('all')" style="font-size:11px;padding:4px 10px;border-radius:20px;">Tous</button>
+              <button type="button" class="btn btn-sm btn-outline creation-filter-btn" id="btnFilterCreations_video" onclick="filterCreations('video')" style="font-size:11px;padding:4px 10px;border-radius:20px;">Vidéos</button>
+              <button type="button" class="btn btn-sm btn-outline creation-filter-btn" id="btnFilterCreations_image" onclick="filterCreations('image')" style="font-size:11px;padding:4px 10px;border-radius:20px;">Images & Retouches</button>
+            </div>
+            <button type="button" class="btn-secondary" onclick="loadMyCreations()">Actualiser</button>
+          </div>
         </div>
-        <div id="myCreationsGrid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;">
-          <div style="text-align:center;color:var(--md-sys-color-on-surface-variant);padding:24px;">Aucune vidéo enregistrée pour le moment.</div>
+        <div id="myCreationsGrid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;margin-top:14px;">
+          <div style="text-align:center;color:var(--md-sys-color-on-surface-variant);padding:24px;">Chargement de vos créations...</div>
         </div>
       </div>
     </div>
@@ -2753,6 +2760,13 @@
             `;
 
             showToast(`Votre film complet monté de ${totalSec}s (${scenesCount} scènes) est finalisé avec succès !`, "success");
+            saveCreationLocally({
+              id: taskId,
+              type: "video",
+              title: `Film Complet (${totalSec}s)`,
+              prompt: statusData.prompt || "Film IA Stanley Stawa",
+              media_url: downloadUrl
+            });
             initUserSession();
           } else if (statusData.status === "failed") {
             clearInterval(activePollInterval);
@@ -2858,6 +2872,13 @@
             </div>
           `;
           showToast("Image HD générée avec succès (Coût: 1 Crédit) !", "success");
+          saveCreationLocally({
+            id: `img_${Date.now()}`,
+            type: "image",
+            title: `Image HD (${ratio})`,
+            prompt: data.prompt,
+            media_url: data.image_url
+          });
           initUserSession();
         }
       } catch (err) {
@@ -2907,6 +2928,13 @@
             </div>
           `;
           showToast("Personnage adapté et retouché avec succès (Coût: 2 Crédits) !", "success");
+          saveCreationLocally({
+            id: `edit_${Date.now()}`,
+            type: "edit",
+            title: `Retouche (${ratio})`,
+            prompt: data.prompt,
+            media_url: finalUrl
+          });
           initUserSession();
         }
       } catch (err) {
@@ -2996,31 +3024,128 @@
       }
     }
 
-    // --- 5. MES CREATIONS ---
+    // --- GESTIONNAIRE D'HISTORIQUE DE CREATIONS ---
+    function saveCreationLocally(item) {
+      try {
+        const list = JSON.parse(localStorage.getItem("stanleystawa_creations") || "[]");
+        // Éviter les doublons
+        const exists = list.find(c => c.media_url === item.media_url || (item.id && c.id === item.id));
+        if (!exists) {
+          list.unshift({
+            id: item.id || `cr_${Date.now()}`,
+            type: item.type || "video", // "video" | "image" | "edit"
+            title: item.title || item.prompt || "Création IA",
+            prompt: item.prompt || "",
+            media_url: item.media_url,
+            date: new Date().toLocaleString()
+          });
+          localStorage.setItem("stanleystawa_creations", JSON.stringify(list.slice(0, 80)));
+        }
+      } catch (e) {}
+    }
+
+    // --- 5. MES CREATIONS (VIDEOS, IMAGES ET RETOUCHES SAUVEGARDEES) ---
+    let currentCreationsFilter = "all";
+
+    function filterCreations(type) {
+      currentCreationsFilter = type;
+      document.querySelectorAll(".creation-filter-btn").forEach(b => b.classList.remove("active"));
+      const targetBtn = document.getElementById(`btnFilterCreations_${type}`);
+      if (targetBtn) targetBtn.classList.add("active");
+      renderCreationsGrid();
+    }
+
+    let loadedCreationsCache = [];
+
     async function loadMyCreations() {
       const container = document.getElementById("myCreationsGrid");
       const key = getApiKey();
       
-      try {
-        const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=admin_tasks&key=${encodeURIComponent(key)}`);
-        const data = await res.json();
-        
-        if (!data.tasks || !data.tasks.length) {
-          container.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--md-sys-color-on-surface-variant);padding:24px;">Aucune vidéo récente trouvée. Lancez votre première production !</div>`;
-          return;
-        }
-
-        container.innerHTML = data.tasks.map(t => `
-          <div class="card" style="padding:14px;">
-            <div style="font-weight:800;font-size:13px;color:#fff;margin-bottom:6px;line-height:1.4;">${t.prompt.slice(0, 60)}...</div>
-            <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant);margin-bottom:10px;">ID: <code>${t.task_id}</code> | Statut: <span class="user-credits-pill">${t.status}</span></div>
-            ${t.video_url ? `<video src="${t.video_url}" controls playsinline style="width:100%;border-radius:8px;max-height:180px;background:#000;"></video>` : '<div style="padding:20px;text-align:center;font-size:11px;color:var(--md-sys-color-on-surface-variant);">Vidéo en cours ou en file d\'attente...</div>'}
-          </div>
-        `).join("");
-
-      } catch (err) {
-        container.innerHTML = `<div style="grid-column:1/-1;color:var(--md-sys-color-error);text-align:center;padding:24px;">Erreur lors du chargement des créations.</div>`;
+      let serverTasks = [];
+      if (key) {
+        try {
+          const res = await fetch(`${getBaseUrl()}/stanleystawa/accounts?action=my_creations&key=${encodeURIComponent(key)}`);
+          const data = await res.json();
+          if (data.tasks) serverTasks = data.tasks;
+        } catch (e) {}
       }
+
+      let localCreations = [];
+      try {
+        localCreations = JSON.parse(localStorage.getItem("stanleystawa_creations") || "[]");
+      } catch (e) {}
+
+      // Fusionner les créations serveur et locales sans doublons
+      const combined = [];
+      serverTasks.forEach(t => {
+        if (t.video_url) {
+          combined.push({
+            id: t.task_id,
+            type: "video",
+            title: `Film IA (${t.duration || 20}s)`,
+            prompt: t.prompt || "Film IA Stanley Stawa",
+            media_url: t.video_url,
+            date: t.created_at || "Récemment"
+          });
+        }
+      });
+
+      localCreations.forEach(lc => {
+        const alreadyIn = combined.find(c => c.media_url === lc.media_url || c.id === lc.id);
+        if (!alreadyIn) combined.push(lc);
+      });
+
+      loadedCreationsCache = combined;
+      renderCreationsGrid();
+    }
+
+    function renderCreationsGrid() {
+      const container = document.getElementById("myCreationsGrid");
+      if (!container) return;
+
+      const items = loadedCreationsCache.filter(item => {
+        if (currentCreationsFilter === "all") return true;
+        if (currentCreationsFilter === "video") return item.type === "video";
+        if (currentCreationsFilter === "image") return item.type === "image" || item.type === "edit";
+        return true;
+      });
+
+      if (!items.length) {
+        container.innerHTML = `
+          <div style="grid-column:1/-1;text-align:center;color:var(--md-sys-color-on-surface-variant);padding:40px 20px;">
+            <div style="font-size:32px;margin-bottom:10px;">🎨</div>
+            <div style="font-weight:700;font-size:15px;color:#fff;margin-bottom:6px;">Aucune création dans cette catégorie.</div>
+            <div style="font-size:12px;">Lancez une génération de vidéo, d'image HD ou une retouche pour la retrouver ici !</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = items.map(c => `
+        <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-weight:700;font-size:13px;color:var(--md-sys-color-primary);">${c.title}</span>
+            <span class="user-credits-pill" style="font-size:10px;text-transform:uppercase;">${c.type}</span>
+          </div>
+          <div style="font-size:11px;color:var(--md-sys-color-on-surface);max-height:36px;overflow:hidden;text-overflow:ellipsis;line-height:1.4;">
+            "${c.prompt || c.title}"
+          </div>
+          <div style="width:100%;border-radius:10px;overflow:hidden;background:#000;min-height:160px;display:flex;align-items:center;justify-content:center;">
+            ${c.type === "video" ? `
+              <video src="${c.media_url}" controls playsinline style="width:100%;max-height:220px;object-fit:contain;"></video>
+            ` : `
+              <img src="${c.media_url}" alt="Création" style="width:100%;max-height:220px;object-fit:cover;">
+            `}
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+            <span style="font-size:10px;color:var(--md-sys-color-on-surface-variant);">${c.date}</span>
+            <div style="display:flex;gap:6px;">
+              <a class="action-pill" href="${c.media_url}" download="creation_${c.id}.${c.type === 'video' ? 'mp4' : 'jpg'}" style="font-size:11px;padding:4px 8px;">Télécharger</a>
+              <a class="action-pill" href="${c.media_url}" target="_blank" style="font-size:11px;padding:4px 8px;">Ouvrir</a>
+            </div>
+          </div>
+        </div>
+      `).join("");
     }
 
     // --- 6. PANEL ADMINISTRATEUR ULTRA-RESPONSIVE ---
