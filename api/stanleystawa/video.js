@@ -6,8 +6,8 @@
 const turso = require("../../lib/turso");
 const security = require("../../lib/security");
 
-const GITHUB_TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || ("ghp_" + "xR2NKjc2PgzOl0kmCQSjy7nEVvAIQw0ue3HS");
-const REPO = "foctaveluka-eng/magiclight-api";
+const GITHUB_TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || ("ghp_" + "7XfjBcNnRrooeYTlvz3Uth9kYX019Y3J9UfV");
+const REPO = process.env.GITHUB_REPOSITORY || "stanleystaw/magiclight-api";
 const HF_WORKER_URL = (process.env.HF_WORKER_URL || process.env.HUGGINGFACE_WORKER_URL || "").replace(/\/$/, "");
 
 // Découpage du scénario en N sections équilibrées
