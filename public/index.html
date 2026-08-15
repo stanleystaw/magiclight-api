@@ -3561,6 +3561,23 @@
       }
     }
 
+    function initDefaultCharacter() {
+      const charInput = document.getElementById("videoCharData");
+      const charImg = document.getElementById("videoCharPreview");
+      const charPlace = document.getElementById("videoCharPlaceholder");
+      if (charInput && !charInput.value) {
+        charInput.value = "/default_character.jpg";
+        if (charImg) {
+          charImg.src = "/default_character.jpg";
+          charImg.style.display = "block";
+        }
+        if (charPlace) {
+          charPlace.innerText = "Personnage par défaut actif (Lapin blanc lunettes rouges) — Cliquez pour changer";
+        }
+      }
+    }
+
+    initDefaultCharacter();
     initUserSession();
   </script>
 </body>

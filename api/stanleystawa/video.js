@@ -1,14 +1,15 @@
 /**
  * api/stanleystawa/video.js — Moteur Complet MagicLight AI
  * 1. Scénariste Magique (Expansion d'histoire & Décomposition en N scènes)
- * 2. Transmission de l'Image du Personnage via URL Publique .jpg (100% Cohérence)
- * 3. Animation directe avec voix intégrée et dialogues réalistes
- * 4. Respect strict de la durée totale (ex: 6 sections = 60s / 1 minute)
+ * 2. Personnage par Défaut : Lapin blanc avec lunettes de soleil rouges (Snowball)
+ * 3. Animation avec paroles et action des personnages
+ * 4. Respect strict de la durée réelle (ex: 6 sections = 60s / 1 minute)
  */
 
 const turso = require("../../lib/turso");
 const security = require("../../lib/security");
 const magiclight = require("../../lib/magiclight");
+const defaultImage = require("../../lib/default-image");
 
 // Partitionnement des phrases générées par le Scénariste Magique en N sections équilibrées
 function partitionSentences(sentences, n) {
@@ -66,7 +67,7 @@ module.exports = async function handler(req, res) {
   try {
     const params = { ...(req.query || {}), ...(req.body || {}) };
     const prompt = (params.prompt || params.text || params.idea || "").trim();
-    const initialImage = (params.imageUrl || params.image || params.initial_image || params.initialImage || "").trim();
+    let initialImage = (params.imageUrl || params.image || params.initial_image || params.initialImage || "").trim();
     const sections = String(params.sections || params.scenes || "6");
     const quality = String(params.quality || "medium").toLowerCase();
     const duration = String(params.duration || params.seconds || "10");
@@ -77,20 +78,18 @@ module.exports = async function handler(req, res) {
     if (!prompt) {
       return res.status(400).json({
         error: "Le paramètre 'prompt' ou 'text' est requis.",
-        example: `https://${req.headers.host || 'magiclight-api-gamma.vercel.app'}/stanleystawa/video?prompt=Un+jeune+magicien+explore+la+lune&imageUrl=https://...&key=${auth.key || security.MASTER_API_KEY}`
+        example: `https://${req.headers.host || 'magiclight-api-gamma.vercel.app'}/stanleystawa/video?prompt=Un+lapin+avec+des+lunettes+rouges+explore+le+jardin&imageUrl=https://...&key=${auth.key || security.MASTER_API_KEY}`
       });
     }
 
+    // Si aucune image n'est fournie, utiliser le personnage officiel par défaut (Lapin blanc lunettes rouges)
     if (!initialImage) {
-      return res.status(400).json({
-        error: "Une image de personnage de référence ('imageUrl' ou image uploadée) est OBLIGATOIRE pour garantir 100% de cohérence visuelle sur toutes les scènes de la vidéo.",
-        required_field: "imageUrl"
-      });
+      initialImage = defaultImage.getDefaultImageDataUrl();
     }
 
     // 2. Tarification : 1 crédit par section
     const numSections = Math.max(1, parseInt(sections, 10) || 6);
-    const creditCost = numSections; // 6 sections = 6 crédits (1 min), 2 sections = 2 crédits (20s)
+    const creditCost = numSections; // 2 sections = 2 crédits (20s), 6 sections = 6 crédits (1 min)
     let remainingCredits = null;
 
     if (!auth.is_admin && auth.key) {
@@ -110,7 +109,7 @@ module.exports = async function handler(req, res) {
     const host = req.headers.host || "magiclight-api-gamma.vercel.app";
     const protocol = req.headers["x-forwarded-proto"] || "https";
 
-    // URL publique .jpg dédiée pour que le moteur d'animation télécharge exactement votre image de personnage
+    // URL publique .jpg dédiée pour que l'IA télécharge et anime exactement le personnage
     const publicCharImgUrl = initialImage.startsWith("http")
       ? initialImage
       : `${protocol}://${host}/stanleystawa/download?task_id=${taskId}&type=image&name=character_${taskId}.jpg`;
@@ -138,15 +137,15 @@ module.exports = async function handler(req, res) {
     }
 
     // ----------------------------------------------------
-    // ÉTAPE 2 : Déclenchement de l'Animation avec Paroles et Personnage Réel
+    // ÉTAPE 2 : Déclenchement Parallèle de l'Animation avec Paroles Réelles & Personnage
     // ----------------------------------------------------
     const sceneJobs = await Promise.all(
       finalScenes.map(async (sceneText, i) => {
         const sceneIdx = i + 1;
         let checkUrl = "";
 
-        // Prompt d'animation avec paroles directes pour que le personnage parle et agisse
-        const animPrompt = `${sceneText}, character speaking directly with natural facial expressions and speech audio, cinematic lighting, 8k masterpiece`;
+        // Prompt d'animation avec paroles directes et jeu d'acteur
+        const animPrompt = `A character speaking: "${sceneText}", character in scene, natural speech audio and facial expressions, cinematic lighting, 8k masterpiece`;
 
         try {
           const animUrl = `https://vercel-animate-api.vercel.app/stanleystawa/video?prompt=${encodeURIComponent(animPrompt)}&imageUrl=${encodeURIComponent(publicCharImgUrl)}&duration=10&quality=${quality}&format=json`;
@@ -211,12 +210,12 @@ module.exports = async function handler(req, res) {
       total_duration_estimate: `${totalSeconds}s (${Math.floor(totalSeconds / 60)} min ${totalSeconds % 60 ? (totalSeconds % 60) + 's' : ''})`.trim(),
       credits_deducted: creditCost,
       credits_remaining: remainingCredits !== null ? remainingCredits : "unlimited",
-      character_image: "Fournie (100% Cohérence Visuelle)",
+      character_image: "Personnage officiel (100% Cohérence Visuelle)",
       scenes: sceneJobs.map(s => ({ scene: s.scene, narration: s.prompt })),
       check_url: statusUrl,
       download_url: downloadUrl,
       mp4_direct_url: mp4PollUrl,
-      message: `Scénariste Magique activé : Film complet de ${numSections} scènes initié (${totalSeconds}s totales).`
+      message: `Scénariste Magique activé : Film complet de ${numSections} scènes initié (${totalSeconds}s réelles).`
     });
 
   } catch (err) {
