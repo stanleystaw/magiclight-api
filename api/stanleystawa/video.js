@@ -1,7 +1,7 @@
 /**
  * api/stanleystawa/video.js — Moteur Complet MagicLight AI
- * 1. Scénariste Magique (Expansion d'histoire & Décomposition en N scènes)
- * 2. Personnage par Défaut : Lapin blanc avec lunettes de soleil rouges (Snowball)
+ * 1. Scénariste Magique (Expansion d'histoire & Décomposition en N scènes via Gemini / Llama / MagicLight)
+ * 2. Analyse Visuelle du Personnage (Gemini Vision) pour fidélité 100%
  * 3. Animation avec paroles et action des personnages
  * 4. Respect strict de la durée réelle (ex: 6 sections = 60s / 1 minute)
  */
@@ -10,6 +10,7 @@ const turso = require("../../lib/turso");
 const security = require("../../lib/security");
 const magiclight = require("../../lib/magiclight");
 const defaultImage = require("../../lib/default-image");
+const gemini = require("../../lib/gemini");
 
 // Partitionnement des phrases générées par le Scénariste Magique en N sections équilibrées
 function partitionSentences(sentences, n) {
@@ -82,14 +83,14 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Si aucune image n'est fournie, utiliser le personnage officiel par défaut (Lapin blanc lunettes rouges)
+    // Personnage par défaut (Lapin blanc aux lunettes rouges) si non fourni
     if (!initialImage) {
       initialImage = defaultImage.getDefaultImageDataUrl();
     }
 
     // 2. Tarification : 1 crédit par section
     const numSections = Math.max(1, parseInt(sections, 10) || 6);
-    const creditCost = numSections; // 2 sections = 2 crédits (20s), 6 sections = 6 crédits (1 min)
+    const creditCost = numSections;
     let remainingCredits = null;
 
     if (!auth.is_admin && auth.key) {
@@ -115,7 +116,7 @@ module.exports = async function handler(req, res) {
       : `${protocol}://${host}/stanleystawa/download?task_id=${taskId}&type=image&name=character_${taskId}.jpg`;
 
     // ----------------------------------------------------
-    // ÉTAPE 1 : Le Scénariste Magique MagicLight AI
+    // ÉTAPE 1 : Scénariste Magique & Analyse Visuelle du Personnage
     // ----------------------------------------------------
     let finalScenes = [];
     let storyTitle = "Histoire IA";
@@ -136,6 +137,9 @@ module.exports = async function handler(req, res) {
       finalScenes = partitionSentences([prompt], numSections);
     }
 
+    // Analyse visuelle du personnage via Gemini Vision
+    const charDesc = await gemini.describeCharacter(initialImage);
+
     // ----------------------------------------------------
     // ÉTAPE 2 : Déclenchement Parallèle de l'Animation avec Paroles Réelles & Personnage
     // ----------------------------------------------------
@@ -144,8 +148,8 @@ module.exports = async function handler(req, res) {
         const sceneIdx = i + 1;
         let checkUrl = "";
 
-        // Prompt d'animation avec paroles directes et jeu d'acteur
-        const animPrompt = `A character speaking: "${sceneText}", character in scene, natural speech audio and facial expressions, cinematic lighting, 8k masterpiece`;
+        // Prompt d'animation précis avec le personnage identifié
+        const animPrompt = `${charDesc} in scene: "${sceneText}", character speaking with natural mouth movement and speech audio, expressive facial acting, cinematic lighting, 8k masterpiece`;
 
         try {
           const animUrl = `https://vercel-animate-api.vercel.app/stanleystawa/video?prompt=${encodeURIComponent(animPrompt)}&imageUrl=${encodeURIComponent(publicCharImgUrl)}&duration=10&quality=${quality}&format=json`;
@@ -205,6 +209,7 @@ module.exports = async function handler(req, res) {
       task_id: taskId,
       title: storyTitle,
       expanded_story: expandedStory,
+      character_description: charDesc,
       sections: numSections,
       duration_per_section: 10,
       total_duration_estimate: `${totalSeconds}s (${Math.floor(totalSeconds / 60)} min ${totalSeconds % 60 ? (totalSeconds % 60) + 's' : ''})`.trim(),
