@@ -1,7 +1,7 @@
 /**
- * api/stanleystawa/video.js — Moteur Complet MagicLight AI
+ * api/stanleystawa/video.js — Moteur Complet MagicLight AI (Parallélisé & Ultra-Rapide)
  * 1. Scénariste Magique (Expansion d'histoire & Décomposition en N scènes)
- * 2. Synthèse Vocale Neuronale MagicLight Voice pour chaque scène
+ * 2. Synthèse Vocale Neuronale MagicLight Voice pour chaque scène (Parallèle)
  * 3. Cohérence absolue du Personnage de référence (100% respectée)
  * 4. Animation des N scènes (ex: 6 sections = 60s / 1 minute totale)
  */
@@ -119,7 +119,6 @@ module.exports = async function handler(req, res) {
     // ----------------------------------------------------
     // ÉTAPE 1 : Le Scénariste Magique MagicLight AI
     // ----------------------------------------------------
-    console.log(`[Video Task ${taskId}] Appel du Scénariste Magique pour : "${prompt}"...`);
     let finalScenes = [];
     let storyTitle = "Histoire IA";
     let expandedStory = prompt;
@@ -139,51 +138,49 @@ module.exports = async function handler(req, res) {
       finalScenes = partitionSentences([prompt], numSections);
     }
 
-    console.log(`[Scénariste Magique] ${finalScenes.length} scènes créées :`, finalScenes);
-
     // ----------------------------------------------------
-    // ÉTAPE 2 : Synthèse Vocale MagicLight Voice & Animation IA pour chaque scène
+    // ÉTAPE 2 : Traitement Parallèle des N Scènes (Voix + Animation)
     // ----------------------------------------------------
-    const sceneJobs = [];
-    for (let i = 0; i < finalScenes.length; i++) {
-      const sceneText = finalScenes[i];
-      const sceneIdx = i + 1;
+    const sceneJobs = await Promise.all(
+      finalScenes.map(async (sceneText, i) => {
+        const sceneIdx = i + 1;
+        let voiceAudioUrl = "";
+        let checkUrl = "";
 
-      // 1. Voix IA MagicLight
-      let voiceAudioUrl = "";
-      try {
-        const vRes = await magiclight.synthesizeVoice({ text: sceneText, voiceId });
-        if (vRes && vRes.direct_upstream_audio) {
-          voiceAudioUrl = vRes.direct_upstream_audio;
-        }
-      } catch (vErr) {
-        console.warn(`[Scene ${sceneIdx} Voice Note]:`, vErr.message);
-      }
-
-      // 2. Animation IA avec le personnage de référence
-      let checkUrl = "";
-      try {
-        const animUrl = `https://vercel-animate-api.vercel.app/stanleystawa/video?prompt=${encodeURIComponent(sceneText)}&imageUrl=${encodeURIComponent(publicCharImgUrl)}&duration=10&quality=${quality}&format=json`;
-        const animRes = await fetch(animUrl, { signal: AbortSignal.timeout(8000) });
-        if (animRes.ok) {
-          const animData = await animRes.json();
-          if (animData.checkUrl) {
-            checkUrl = animData.checkUrl;
+        // 1. Voix IA MagicLight en parallèle
+        try {
+          const vRes = await magiclight.synthesizeVoice({ text: sceneText, voiceId });
+          if (vRes && vRes.direct_upstream_audio) {
+            voiceAudioUrl = vRes.direct_upstream_audio;
           }
+        } catch (vErr) {
+          console.warn(`[Scene ${sceneIdx} Voice Warning]:`, vErr.message);
         }
-      } catch (aErr) {
-        console.warn(`[Scene ${sceneIdx} Animate Note]:`, aErr.message);
-      }
 
-      sceneJobs.push({
-        scene: sceneIdx,
-        prompt: sceneText,
-        voice_audio: voiceAudioUrl,
-        checkUrl: checkUrl,
-        videoUrl: null,
-        status: "IN_PROGRESS"
-      });
-    }
+        // 2. Déclenchement de l'Animation IA en parallèle
+        try {
+          const animUrl = `https://vercel-animate-api.vercel.app/stanleystawa/video?prompt=${encodeURIComponent(sceneText)}&imageUrl=${encodeURIComponent(publicCharImgUrl)}&duration=10&quality=${quality}&format=json`;
+          const animRes = await fetch(animUrl, { signal: AbortSignal.timeout(6000) });
+          if (animRes.ok) {
+            const animData = await animRes.json();
+            if (animData.checkUrl) {
+              checkUrl = animData.checkUrl;
+            }
+          }
+        } catch (aErr) {
+          console.warn(`[Scene ${sceneIdx} Animate Warning]:`, aErr.message);
+        }
+
+        return {
+          scene: sceneIdx,
+          prompt: sceneText,
+          voice_audio: voiceAudioUrl,
+          checkUrl: checkUrl,
+          videoUrl: null,
+          status: "IN_PROGRESS"
+        };
+      })
+    );
 
     const totalSeconds = numSections * 10;
     const initialMessage = `Scénario "${storyTitle}" en cours : Animation de ${numSections} scènes (${totalSeconds}s au total)...`;
