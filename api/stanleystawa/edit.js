@@ -1,10 +1,9 @@
 /**
- * api/stanleystawa/edit.js — Retouche & Adaptation de Personnage Image-to-Image Haute Définition
+ * api/stanleystawa/edit.js — Retouche & Adaptation de Personnage 100% Identique
  * Tarif : 2 Crédits
  */
 
 const engine = require("../../lib/magiclight");
-const cloudflare = require("../../lib/cloudflare");
 const turso = require("../../lib/turso");
 const security = require("../../lib/security");
 
@@ -22,7 +21,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const params = { ...(req.query || {}), ...(req.body || {}) };
-    const prompt = (params.prompt || params.instructions || "Amélioration des détails et adaptation du personnage").trim();
+    const prompt = (params.prompt || params.instructions || "Mise en scène du personnage dans un nouveau décor").trim();
     const image = params.image || params.imageUrl || params.image_url;
     const ratio = params.ratio || "16:9";
 
@@ -35,22 +34,7 @@ module.exports = async function handler(req, res) {
       remainingCredits = await turso.deductUserCredits(auth.key, 2);
     }
 
-    // 1. Moteur Prioritaire : Cloudflare Workers AI Edit
-    if (cloudflare.isConfigured()) {
-      try {
-        const cfResult = await cloudflare.editImage({ image, prompt, ratio });
-        if (cfResult && (cfResult.image_url || cfResult.data_url)) {
-          return res.status(200).json({
-            ...cfResult,
-            credits_remaining: remainingCredits !== null ? remainingCredits : "unlimited"
-          });
-        }
-      } catch (cfErr) {
-        console.warn("[Cloudflare Edit Fallback]:", cfErr.message);
-      }
-    }
-
-    // 2. Moteur Image-to-Image Flux HD (Maintien du personnage + transformation de lieu)
+    // Exécution du Moteur de Fusion de Personnage 100% Identique
     const result = await engine.editImage({
       image,
       prompt,
