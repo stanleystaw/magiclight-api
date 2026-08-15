@@ -1259,6 +1259,7 @@
     <!-- NAVIGATION TABS -->
     <div class="tabs-nav">
       <button class="tab-btn active" onclick="switchTab('video')">Vidéo Studio</button>
+      <button class="tab-btn" onclick="switchTab('edit')">🎨 Retouche & Edit IA</button>
       <button class="tab-btn" onclick="switchTab('image')">Image & Vision</button>
       <button class="tab-btn" onclick="switchTab('voice')">Voix Studio</button>
       <button class="tab-btn" onclick="switchTab('story')">Laboratoire Scénario</button>
@@ -1344,7 +1345,43 @@
       </div>
     </div>
 
-    <!-- 2. TAB IMAGE & RETOUCHE -->
+    <!-- 2. TAB RETOUCHE & EDIT IA -->
+    <div id="tab-edit" class="tab-panel">
+      <div class="card">
+        <div class="card-title">Retouche & Adaptation du Personnage (Edit IA — Tarif : 2 Crédits)</div>
+        <div class="form-group">
+          <label>Image Source / Personnage à Adapter (Lieu / Décor / Vêtements)</label>
+          <div class="upload-box" onclick="document.getElementById('editImgFile').click()">
+            <input type="file" id="editImgFile" accept="image/*" style="display:none" onchange="handleImageUpload(event, 'editImgPreview', 'editImgData')">
+            <span id="editImgPlaceholder">Sélectionner l'image du personnage à adapter</span>
+            <img id="editImgPreview" class="upload-preview-thumb" alt="Aperçu">
+          </div>
+          <input type="hidden" id="editImgData">
+        </div>
+        <div class="form-group">
+          <label>Instructions de Changement de Lieu / Décor / Action</label>
+          <textarea id="editPrompt" placeholder="Ex: Placer le personnage sur une plage tropicale au coucher du soleil avec des vagues turquoise">Placer le personnage dans une forêt enchantée avec des lucioles dorées et une ambiance féerique</textarea>
+        </div>
+        <div class="form-group">
+          <label>Format de Sortie</label>
+          <select id="editRatio">
+            <option value="16:9" selected>16:9 (Paysage)</option>
+            <option value="9:16">9:16 (Portrait)</option>
+            <option value="1:1">1:1 (Carré)</option>
+          </select>
+        </div>
+        <button id="btnEditImg" class="btn-submit" onclick="triggerImageEdit()">Adapter le Lieu & Retoucher (Coût : 2 Crédits)</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Aperçu du Personnage dans son Nouveau Décor</div>
+        <div id="editPreviewBox" class="preview-box">
+          <div class="preview-placeholder">L'image retouchée et adaptée au nouveau décor apparaîtra ici.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. TAB IMAGE -->
     <div id="tab-image" class="tab-panel">
       <div class="card">
         <div class="card-title">Génération d'Image HD (Tarif : 1 Crédit)</div>
@@ -1363,37 +1400,10 @@
         </div>
         <button id="btnGenImg" class="btn-submit" onclick="generateImage()">Générer l'Image HD (Coût : 1 Crédit)</button>
       </div>
-
       <div class="card">
-        <div class="card-title">Retouche & Adaptation du Personnage (Edit IA — Tarif : 2 Crédits)</div>
-        <div class="form-group">
-          <label>Image Source / Personnage à Retoucher</label>
-          <div class="upload-box" onclick="document.getElementById('editImgFile').click()">
-            <input type="file" id="editImgFile" accept="image/*" style="display:none" onchange="handleImageUpload(event, 'editImgPreview', 'editImgData')">
-            <span id="editImgPlaceholder">Sélectionner l'image à adapter / retoucher</span>
-            <img id="editImgPreview" class="upload-preview-thumb" alt="Aperçu">
-          </div>
-          <input type="hidden" id="editImgData">
-        </div>
-        <div class="form-group">
-          <label>Instructions de Retouche / Mise en Scène</label>
-          <textarea id="editPrompt" placeholder="Ex: Placer le personnage sur une plage ensoleillée avec des palmiers et un ciel bleu éclatant">Placer le personnage dans une forêt enchantée avec des lucioles dorées et une ambiance féerique</textarea>
-        </div>
-        <div class="form-group">
-          <label>Format de Sortie</label>
-          <select id="editRatio">
-            <option value="16:9" selected>16:9 (Paysage)</option>
-            <option value="9:16">9:16 (Portrait)</option>
-            <option value="1:1">1:1 (Carré)</option>
-          </select>
-        </div>
-        <button id="btnEditImg" class="btn-submit" onclick="triggerImageEdit()">Retoucher & Adapter le Personnage (Coût : 2 Crédits)</button>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Aperçu Visuel (Génération / Retouche)</div>
+        <div class="card-title">Aperçu de l'Image</div>
         <div id="imagePreviewBox" class="preview-box">
-          <div class="preview-placeholder">L'image générée ou retouchée apparaîtra ici.</div>
+          <div class="preview-placeholder">L'image générée apparaîtra ici.</div>
         </div>
       </div>
     </div>
@@ -2867,7 +2877,7 @@
       const prompt = document.getElementById("editPrompt").value.trim();
       const image = document.getElementById("editImgData").value;
       const ratio = document.getElementById("editRatio").value;
-      const box = document.getElementById("imagePreviewBox");
+      const box = document.getElementById("editPreviewBox") || document.getElementById("imagePreviewBox");
       const btn = document.getElementById("btnEditImg");
 
       if (!image) return showToast("Veuillez sélectionner une image à retoucher.", "error");
