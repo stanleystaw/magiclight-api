@@ -3790,6 +3790,7 @@
     }
 
     function initDefaultCharacter() {
+      // 1. Vidéo Studio
       const charInput = document.getElementById("videoCharData");
       const charImg = document.getElementById("videoCharPreview");
       const charPlace = document.getElementById("videoCharPlaceholder");
@@ -3801,6 +3802,21 @@
         }
         if (charPlace) {
           charPlace.innerText = "Personnage par défaut actif (Lapin blanc lunettes rouges) — Cliquez pour changer";
+        }
+      }
+
+      // 2. Retouche & Edit IA
+      const editInput = document.getElementById("editImgData");
+      const editImg = document.getElementById("editImgPreview");
+      const editPlace = document.getElementById("editImgPlaceholder");
+      if (editInput && !editInput.value) {
+        editInput.value = "/default_character.jpg";
+        if (editImg) {
+          editImg.src = "/default_character.jpg";
+          editImg.style.display = "block";
+        }
+        if (editPlace) {
+          editPlace.innerText = "Personnage par défaut actif (Lapin lunettes rouges) — Prêt pour retouche";
         }
       }
     }
