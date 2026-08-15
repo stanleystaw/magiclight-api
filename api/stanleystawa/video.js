@@ -122,7 +122,7 @@ module.exports = async function handler(req, res) {
     let expandedStory = prompt;
 
     try {
-      const storyData = await magiclight.expandStory(prompt, language);
+      const storyData = await magiclight.expandStory(prompt, language, "5001", numSections);
       if (storyData && storyData.scenes && storyData.scenes.length) {
         storyTitle = storyData.title || storyTitle;
         expandedStory = storyData.expanded_story || prompt;
