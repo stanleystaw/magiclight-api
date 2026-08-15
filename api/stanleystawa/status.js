@@ -125,6 +125,7 @@ module.exports = async function handler(req, res) {
       duration: parseFloat(task.duration || 0),
       scenes_count: parseInt(task.scenes_count || 0, 10),
       error: task.error || null,
+      github_actions_pipeline: `https://github.com/foctaveluka-eng/magiclight-api/actions`,
       created_at: task.created_at,
       updated_at: task.updated_at
     });

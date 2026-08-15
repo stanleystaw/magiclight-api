@@ -84,7 +84,7 @@ module.exports = async function handler(req, res) {
     `;
     await turso.execute(sql, [taskId, prompt, initialImage, auth.key || "", creditCost]);
 
-    // 5. Déclenchement du worker GitHub Actions
+    // 5. Déclenchement garanti du worker GitHub Actions
     const ghHeaders = {
       "Authorization": `token ${GITHUB_TOKEN}`,
       "Accept": "application/vnd.github.v3+json",
@@ -95,7 +95,7 @@ module.exports = async function handler(req, res) {
     const inputImageUrl = initialImage.startsWith("http") ? initialImage : "";
 
     try {
-      const dispatchRes = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
+      const dispatchRes = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/generate-video.yml/dispatches`, {
         method: "POST",
         headers: ghHeaders,
         body: JSON.stringify({
