@@ -1,13 +1,10 @@
 /**
- * api/stanleystawa/video.js — Déclencheur vidéo sécurisé avec Moteur de Montage GitHub Actions
- * Tarification Dynamique (1 Crédit / Section = 10s / Section)
+ * api/stanleystawa/video.js — Moteur de Génération Vidéo IA 100% Cloud Direct
+ * (ZÉRO GitHub Actions — 100% Serverless, Zéro risque de ban)
  */
 
 const turso = require("../../lib/turso");
 const security = require("../../lib/security");
-
-const GITHUB_TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || ("ghp_" + "7XfjBcNnRrooeYTlvz3Uth9kYX019Y3J9UfV");
-const REPO = process.env.GITHUB_REPOSITORY || "stanleystaw/magiclight-api";
 
 module.exports = async function handler(req, res) {
   security.applySecurityHeaders(res);
@@ -25,8 +22,8 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  // 2. Limitation de débit anti-spam par IP
-  if (!security.checkRateLimit(req, 10)) {
+  // 2. Limitation anti-spam
+  if (!security.checkRateLimit(req, 15)) {
     return res.status(429).json({
       error: "Trop de requêtes vidéo initiées. Veuillez patienter une minute avant de relancer un rendu."
     });
@@ -36,11 +33,9 @@ module.exports = async function handler(req, res) {
     const params = { ...(req.query || {}), ...(req.body || {}) };
     const prompt = (params.prompt || params.text || params.idea || "").trim();
     const initialImage = (params.imageUrl || params.image || params.initial_image || params.initialImage || "").trim();
-    const sections = String(params.sections || params.scenes || "2");
     const quality = String(params.quality || "medium").toLowerCase();
     const duration = String(params.duration || params.seconds || "10");
     const ratio = String(params.ratio || "1");
-    const language = String(params.language || "french");
     const format = String(params.format || "json").toLowerCase();
 
     if (!prompt) {
@@ -52,14 +47,13 @@ module.exports = async function handler(req, res) {
 
     if (!initialImage) {
       return res.status(400).json({
-        error: "Une image de personnage de référence ('imageUrl' ou image uploadée) est OBLIGATOIRE pour garantir 100% de cohérence sur toutes les scènes de la vidéo.",
+        error: "Une image de personnage de référence ('imageUrl' ou image uploadée) est requise pour assurer la cohérence visuelle.",
         required_field: "imageUrl"
       });
     }
 
-    // 3. Tarification Dynamique proportionnelle : 1 crédit par section
-    const numSections = Math.max(1, parseInt(sections, 10) || 2);
-    const creditCost = numSections; // 2 sections = 2 crédits (20s), 6 sections = 6 crédits (60s)
+    // 3. Déduction de crédits (1 crédit par vidéo)
+    const creditCost = 1;
     let remainingCredits = null;
 
     if (!auth.is_admin && auth.key) {
@@ -67,7 +61,7 @@ module.exports = async function handler(req, res) {
       const userCredits = parseInt(user?.credits || 0, 10);
       if (userCredits < creditCost) {
         return res.status(402).json({
-          error: `Crédits insuffisants : Cette vidéo de ${numSections} sections requiert ${creditCost} crédits (Votre solde actuel : ${userCredits} crédits).`,
+          error: `Crédits insuffisants : La génération requiert ${creditCost} crédit (Votre solde actuel : ${userCredits} crédits).`,
           required_credits: creditCost,
           current_credits: userCredits
         });
@@ -79,49 +73,33 @@ module.exports = async function handler(req, res) {
     const host = req.headers.host || "magiclight-api-gamma.vercel.app";
     const protocol = req.headers["x-forwarded-proto"] || "https";
 
-    // URL publique pour servir l'image du personnage de référence
+    // URL publique pour l'image du personnage uploadée
     const publicCharImgUrl = initialImage.startsWith("http")
       ? initialImage
       : `${protocol}://${host}/stanleystawa/download?task_id=${taskId}&type=image`;
 
-    // 4. Enregistrement initial dans Turso DB
+    // 4. Appel DIRECT au Moteur d'Animation Cloud IA (ZÉRO GitHub Actions)
+    let animateCheckUrl = "";
+    try {
+      const animUrl = `https://vercel-animate-api.vercel.app/stanleystawa/video?prompt=${encodeURIComponent(prompt)}&imageUrl=${encodeURIComponent(publicCharImgUrl)}&duration=${duration}&quality=${quality}&format=json`;
+      const animRes = await fetch(animUrl, { signal: AbortSignal.timeout(10000) });
+      if (animRes.ok) {
+        const animData = await animRes.json();
+        if (animData.checkUrl) {
+          animateCheckUrl = animData.checkUrl;
+          console.log(`[Cloud Video Dispatched] Task: ${taskId}, checkUrl: ${animateCheckUrl}`);
+        }
+      }
+    } catch (e) {
+      console.warn("[Cloud Animate Dispatch Note]:", e.message);
+    }
+
+    // 5. Enregistrement dans Turso DB avec checkUrl pour polling en direct
     const sql = `
       INSERT INTO video_tasks (task_id, prompt, initial_image, status, progress, step, message, user_key, credits_deducted, refunded, duration, scenes_count, check_url)
-      VALUES (?, ?, ?, 'processing', 20, 'animating', ?, ?, ?, 0, ?, ?, '');
+      VALUES (?, ?, ?, 'processing', 25, 'animating', 'Génération du film IA en cours...', ?, ?, 0, 10, 1, ?);
     `;
-    const initialMessage = `Montage complet du film IA en cours (${numSections} scènes, ${numSections * 10}s)...`;
-    await turso.execute(sql, [taskId, prompt, initialImage, initialMessage, auth.key || "", creditCost, numSections * 10, numSections]);
-
-    // 5. Déclenchement du Moteur de Montage Complet via GitHub Actions
-    const ghHeaders = {
-      "Authorization": `token ${GITHUB_TOKEN}`,
-      "Accept": "application/vnd.github.v3+json",
-      "User-Agent": "MagicLight-Vercel-API",
-      "Content-Type": "application/json"
-    };
-
-    try {
-      const ghRes = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/generate-video.yml/dispatches`, {
-        method: "POST",
-        headers: ghHeaders,
-        body: JSON.stringify({
-          ref: "main",
-          inputs: {
-            task_id: taskId,
-            prompt,
-            initial_image: publicCharImgUrl,
-            ratio,
-            language,
-            sections: String(numSections),
-            quality,
-            duration: String(duration)
-          }
-        })
-      });
-      console.log(`[GitHub Actions Dispatched] Task ${taskId}, status: ${ghRes.status}`);
-    } catch (ghErr) {
-      console.warn("[GitHub Dispatch Note]:", ghErr.message);
-    }
+    await turso.execute(sql, [taskId, prompt, initialImage, auth.key || "", creditCost, animateCheckUrl]);
 
     const checkUrl = `${protocol}://${host}/stanleystawa/status?task_id=${taskId}`;
     const downloadUrl = `${protocol}://${host}/stanleystawa/download?task_id=${taskId}`;
@@ -134,19 +112,17 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       status: "processing",
       task_id: taskId,
-      sections: numSections,
+      duration: parseInt(duration, 10),
       quality: quality,
-      duration_per_section: 10,
-      total_duration_estimate: `${numSections * 10}s`,
       credits_deducted: creditCost,
       credits_remaining: remainingCredits !== null ? remainingCredits : "unlimited",
       ratio: ratio === "2" ? "9:16" : "16:9",
-      character_image: "Fournie (Référence cohérente 100%)",
+      character_image: "Fournie (Référence cohérente)",
       check_url: checkUrl,
       download_url: downloadUrl,
       mp4_direct_url: mp4PollUrl,
-      pipeline: "GitHub Actions Full Montage Engine (FFmpeg + Edge-TTS + Watermark)",
-      message: `Rendu de ${numSections} sections initié avec succès (${numSections * 10}s totales, coût : ${creditCost} crédits).`
+      engine: "Cloud GPU Direct",
+      message: "Génération vidéo IA lancée avec succès !"
     });
 
   } catch (err) {

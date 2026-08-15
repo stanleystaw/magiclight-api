@@ -2605,12 +2605,12 @@
       box.innerHTML = `
         <div style="display:flex;flex-direction:column;align-items:center;padding:20px;gap:10px;width:100%;">
           <div class="loader"></div>
-          <div style="font-weight:700;font-size:15px;color:var(--md-sys-color-primary);">Montage Vidéo IA en cours (GitHub Actions)...</div>
+          <div style="font-weight:700;font-size:15px;color:var(--md-sys-color-primary);">Génération Vidéo IA en cours...</div>
           <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);text-align:center;">
-            Création du personnage, animation des ${sections} scènes, voix parlée, sous-titres et filigrane Stanley stawa.
+            Création de la vidéo IA avec cohérence absolue du personnage de référence.
           </div>
-          <div class="progress-bar-wrap" style="width:100%;max-width:400px;"><div id="videoProgressBar" class="progress-bar-fill" style="width: 20%;"></div></div>
-          <div id="videoProgressText" style="font-size:12px;color:var(--md-sys-color-primary);font-weight:600;">Démarrage du montage...</div>
+          <div class="progress-bar-wrap" style="width:100%;max-width:400px;"><div id="videoProgressBar" class="progress-bar-fill" style="width: 25%;"></div></div>
+          <div id="videoProgressText" style="font-size:12px;color:var(--md-sys-color-primary);font-weight:600;">Animation en cours...</div>
         </div>
       `;
 
@@ -2618,11 +2618,11 @@
         const data = await safeFetchJson(`${getBaseUrl()}/stanleystawa/video`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, imageUrl: initialImage || undefined, sections, quality, ratio, duration })
+          body: JSON.stringify({ prompt, imageUrl: initialImage || undefined, quality, ratio, duration })
         });
 
         if (data.task_id) {
-          showToast(`Montage vidéo lancé (${data.sections} scènes, ${data.total_duration_estimate}) !`, "info");
+          showToast("Génération vidéo IA lancée avec succès !", "info");
           pollVideoStatus(data.task_id);
           initUserSession();
         } else {
@@ -2647,8 +2647,8 @@
         try {
           const statusData = await safeFetchJson(`${getBaseUrl()}/stanleystawa/status?task_id=${taskId}`);
           
-          if (pBar) pBar.style.width = (statusData.progress || 20) + "%";
-          if (pText) pText.innerText = `${statusData.message || 'Montage en cours...'} (${statusData.progress || 20}%)`;
+          if (pBar) pBar.style.width = (statusData.progress || 25) + "%";
+          if (pText) pText.innerText = `${statusData.message || 'Génération en cours...'} (${statusData.progress || 25}%)`;
 
           if (statusData.status === "completed" && statusData.video_url) {
             clearInterval(activePollInterval);
@@ -2658,21 +2658,21 @@
               <video class="preview-video" src="${statusData.video_url}" controls autoplay playsinline style="width:100%;max-height:380px;border-radius:12px;background:#000;"></video>
               <div class="meta-box" style="margin-top:12px;">
                 <div><strong>Tâche :</strong> <code>${taskId}</code></div>
-                <div><strong>Montage :</strong> Film Complet Finalisé (${statusData.duration || 20}s | ${statusData.scenes_count || 2} scènes)</div>
+                <div><strong>Statut :</strong> Vidéo IA Finalisée (${statusData.duration || 10}s)</div>
                 <div class="meta-actions">
-                  <a class="action-pill" href="${statusData.video_url}" download="stanleystawa_film_${taskId}.mp4">Télécharger le Film Complet (MP4)</a>
+                  <a class="action-pill" href="${statusData.video_url}" download="stanleystawa_video_${taskId}.mp4">Télécharger la Vidéo (MP4)</a>
                   <a class="action-pill" href="${statusData.video_url}" target="_blank">Lien Direct MP4</a>
                 </div>
               </div>
             `;
 
-            showToast(`Votre film IA complet de ${statusData.duration || 20}s (${statusData.scenes_count || 2} scènes) est prêt !`, "success");
+            showToast("Votre vidéo IA a été finalisée avec succès !", "success");
             initUserSession();
           } else if (statusData.status === "failed") {
             clearInterval(activePollInterval);
             btn.disabled = false;
             box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px; text-align:center;">Échec du rendu: ${statusData.error || 'Erreur inconnue'}</div>`;
-            showToast("Échec du montage vidéo.", "error");
+            showToast("Échec de la génération vidéo.", "error");
           }
         } catch (e) {
           console.warn("Poll attempt warning:", e);
