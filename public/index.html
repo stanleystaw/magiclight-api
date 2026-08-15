@@ -2603,13 +2603,16 @@
 
       btn.disabled = true;
       box.innerHTML = `
-        <div class="loader"></div>
-        <div style="font-weight:700;margin-bottom:6px;">Génération vidéo IA en cours...</div>
-        <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);text-align:center;">
-          Initialisation de la scène, voix parlée et rendu cinématique H.264 ultra-compact.
+        <div style="display:flex;flex-direction:column;align-items:center;padding:20px;gap:10px;width:100%;">
+          <div class="loader"></div>
+          <div style="font-weight:700;font-size:15px;color:var(--md-sys-color-primary);">Découpage & Lancement de la Pipeline Vidéo...</div>
+          <div style="font-size:12px;color:var(--md-sys-color-on-surface-variant);text-align:center;">
+            Création immédiate des ${sections} scènes IA avec cohérence du personnage.
+          </div>
+          <div class="progress-bar-wrap" style="width:100%;max-width:400px;"><div id="videoProgressBar" class="progress-bar-fill" style="width: 15%;"></div></div>
+          <div id="videoProgressText" style="font-size:12px;color:var(--md-sys-color-primary);font-weight:600;">Initialisation des scènes...</div>
+          <div id="storyboardContainer" style="width:100%;margin-top:14px;"></div>
         </div>
-        <div class="progress-bar-wrap"><div id="videoProgressBar" class="progress-bar-fill" style="width: 15%;"></div></div>
-        <div id="videoProgressText" style="font-size:11px;color:var(--md-sys-color-primary);margin-top:4px;">File d'attente...</div>
       `;
 
       try {
@@ -2620,25 +2623,57 @@
         });
 
         if (data.task_id) {
-          showToast(`Tâche vidéo démarrée (Coût: ${sections} Crédits) !`, "info");
-          pollVideoStatus(data.task_id);
+          showToast(`Pipeline vidéo lancée (${data.sections} scènes, ${data.total_duration_estimate}) !`, "info");
+          renderInitialStoryboard(data.scenes || [prompt], initialImage);
+          pollVideoStatus(data.task_id, initialImage);
           initUserSession();
         } else {
           throw new Error("Réponse de démarrage invalide.");
         }
       } catch (err) {
-        box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px;">Erreur: ${err.message}</div>`;
+        box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px; text-align:center;">Erreur: ${err.message}</div>`;
         showToast(err.message, "error");
         btn.disabled = false;
       }
     }
 
-    function pollVideoStatus(taskId) {
+    function renderInitialStoryboard(scenes, charImg) {
+      const container = document.getElementById("storyboardContainer");
+      if (!container) return;
+
+      container.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:14px;width:100%;">
+          ${scenes.map((sPrompt, idx) => `
+            <div id="cardScene_${idx}" style="background:var(--md-sys-color-surface-container);border:1px solid var(--md-sys-color-outline-variant);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-weight:700;font-size:13px;color:var(--md-sys-color-primary);">Scène ${idx + 1} (10s)</span>
+                <span id="badgeScene_${idx}" style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(124,240,196,0.15);color:var(--md-sys-color-primary);font-weight:600;">En cours...</span>
+              </div>
+              <div style="font-size:12px;color:var(--md-sys-color-on-surface);line-height:1.4;max-height:40px;overflow:hidden;text-overflow:ellipsis;">
+                "${sPrompt}"
+              </div>
+              <div id="mediaBoxScene_${idx}" style="position:relative;width:100%;height:170px;border-radius:10px;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center;">
+                <img src="${charImg || ''}" style="width:100%;height:100%;object-fit:cover;opacity:0.35;filter:blur(2px);">
+                <div style="position:absolute;display:flex;flex-direction:column;align-items:center;gap:6px;color:#fff;">
+                  <div class="loader" style="width:22px;height:22px;border-width:2px;"></div>
+                  <span style="font-size:11px;font-weight:600;">Génération IA...</span>
+                </div>
+              </div>
+              <div id="actionsScene_${idx}" style="display:none;gap:6px;margin-top:4px;">
+                <a id="dlLinkScene_${idx}" class="action-pill" href="#" download="scene_${idx + 1}.mp4" style="flex:1;text-align:center;font-size:11px;padding:6px;">Télécharger Scène ${idx + 1}</a>
+                <a id="openLinkScene_${idx}" class="action-pill" href="#" target="_blank" style="font-size:11px;padding:6px 10px;">Lien Direct</a>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function pollVideoStatus(taskId, charImg) {
       if (activePollInterval) clearInterval(activePollInterval);
 
       const pBar = document.getElementById("videoProgressBar");
       const pText = document.getElementById("videoProgressText");
-      const box = document.getElementById("videoPreviewBox");
       const btn = document.getElementById("btnGenVideo");
 
       activePollInterval = setInterval(async () => {
@@ -2648,55 +2683,47 @@
           if (pBar) pBar.style.width = (statusData.progress || 20) + "%";
           if (pText) pText.innerText = `${statusData.message || 'Traitement en cours...'} (${statusData.progress || 20}%)`;
 
-          if (statusData.status === "completed" && statusData.video_url) {
+          const sceneVids = statusData.scene_videos || (statusData.video_url ? [{ scene: 1, video_url: statusData.video_url, status: 'READY', prompt: 'Scène 1' }] : []);
+
+          // Mise à jour en direct de chaque carte de scène dès qu'elle est prête
+          sceneVids.forEach((sv, idx) => {
+            const mediaBox = document.getElementById(`mediaBoxScene_${idx}`);
+            const badge = document.getElementById(`badgeScene_${idx}`);
+            const actions = document.getElementById(`actionsScene_${idx}`);
+            const dlLink = document.getElementById(`dlLinkScene_${idx}`);
+            const openLink = document.getElementById(`openLinkScene_${idx}`);
+
+            if (sv.status === "READY" && sv.videoUrl && mediaBox && !mediaBox.querySelector("video")) {
+              badge.innerText = "Prête (10s)";
+              badge.style.background = "rgba(124, 240, 196, 0.25)";
+              badge.style.color = "#7cf0c4";
+
+              mediaBox.innerHTML = `
+                <video class="preview-video" src="${sv.videoUrl}" controls playsinline style="width:100%;height:100%;object-fit:contain;border-radius:10px;"></video>
+              `;
+
+              if (actions && dlLink && openLink) {
+                actions.style.display = "flex";
+                dlLink.href = sv.videoUrl;
+                dlLink.setAttribute("download", `scene_${idx + 1}.mp4`);
+                openLink.href = sv.videoUrl;
+              }
+            }
+          });
+
+          if (statusData.status === "completed") {
             clearInterval(activePollInterval);
             btn.disabled = false;
 
-            const sceneVids = statusData.scene_videos || [{ scene: 1, video_url: statusData.video_url, prompt: 'Scène 1' }];
-            const totalDur = statusData.duration || (sceneVids.length * 10);
-            const scenesCount = statusData.scenes_count || sceneVids.length || 1;
+            if (pText) pText.innerHTML = `<span style="color:#7cf0c4;font-weight:700;">Toutes les scènes sont prêtes (${statusData.duration || (sceneVids.length * 10)}s au total) !</span>`;
+            if (pBar) pBar.style.width = "100%";
 
-            window.__activeSceneVideos = sceneVids;
-            window.__activeSceneIdx = 0;
-
-            let scenePillsHtml = '';
-            if (sceneVids.length > 1) {
-              scenePillsHtml = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;justify-content:center;">` +
-                sceneVids.map((sv, idx) => `
-                  <button type="button" class="btn btn-sm ${idx === 0 ? 'btn-primary' : 'btn-outline'}" onclick="switchSceneVideo(${idx})" id="btnScene_${idx}" style="font-size:11px;padding:4px 10px;border-radius:20px;">
-                    ▶ Scène ${idx + 1} (${idx * 10}-${(idx + 1) * 10}s)
-                  </button>
-                `).join('') + `</div>`;
-            }
-
-            box.innerHTML = `
-              <video id="playerActiveVideo" class="preview-video" src="${sceneVids[0].video_url || statusData.video_url}" controls autoplay playsinline></video>
-              ${scenePillsHtml}
-              <div class="meta-box" style="margin-top:10px;">
-                <div><strong>Tâche :</strong> <code>${taskId}</code></div>
-                <div><strong>Durée totale :</strong> ${totalDur}s | <strong>Scènes :</strong> ${scenesCount} scènes</div>
-                <div class="meta-actions">
-                  <a class="action-pill" href="${sceneVids[0].video_url || statusData.video_url}" download="stanleystawa_scene1.mp4" id="btnDownloadCurrent">Télécharger le Film MP4</a>
-                  <a class="action-pill" href="${sceneVids[0].video_url || statusData.video_url}" target="_blank" id="btnOpenCurrent">Lien Direct MP4</a>
-                </div>
-              </div>
-            `;
-
-            // Enchaînement automatique des scènes (Playlist en continu)
-            const vidEl = document.getElementById("playerActiveVideo");
-            if (vidEl && sceneVids.length > 1) {
-              vidEl.onended = () => {
-                const nextIdx = (window.__activeSceneIdx + 1) % window.__activeSceneVideos.length;
-                switchSceneVideo(nextIdx);
-              };
-            }
-
-            showToast(`Votre film IA de ${totalDur}s (${scenesCount} scènes) a été finalisé avec succès !`, "success");
+            showToast(`Vos ${statusData.scenes_count || sceneVids.length} scènes vidéo ont été générées avec succès !`, "success");
             initUserSession();
           } else if (statusData.status === "failed") {
             clearInterval(activePollInterval);
             btn.disabled = false;
-            box.innerHTML = `<div style="color: var(--md-sys-color-error); padding: 16px;">Échec du rendu: ${statusData.error || 'Erreur inconnue'}</div>`;
+            if (pText) pText.innerHTML = `<span style="color:var(--md-sys-color-error);">Échec du rendu: ${statusData.error || 'Erreur inconnue'}</span>`;
             showToast("Échec de la génération vidéo.", "error");
           }
         } catch (e) {
