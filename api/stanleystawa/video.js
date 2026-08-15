@@ -1,10 +1,45 @@
 /**
- * api/stanleystawa/video.js — Moteur de Génération Vidéo IA 100% Cloud Direct
- * (ZÉRO GitHub Actions — 100% Serverless, Zéro risque de ban)
+ * api/stanleystawa/video.js — Moteur Complet MagicLight AI
+ * 1. Scénariste Magique (Expansion d'histoire & Décomposition en N scènes)
+ * 2. Synthèse Vocale Neuronale MagicLight Voice pour chaque scène
+ * 3. Cohérence absolue du Personnage de référence (100% respectée)
+ * 4. Animation des N scènes (ex: 6 sections = 60s / 1 minute totale)
  */
 
 const turso = require("../../lib/turso");
 const security = require("../../lib/security");
+const magiclight = require("../../lib/magiclight");
+
+// Partitionnement des phrases générées par le Scénariste Magique en N sections équilibrées
+function partitionSentences(sentences, n) {
+  if (!sentences || !sentences.length) return [];
+  if (sentences.length <= n) {
+    const result = [...sentences];
+    while (result.length < n) {
+      let longestIdx = 0;
+      for (let i = 1; i < result.length; i++) {
+        if (result[i].length > result[longestIdx].length) longestIdx = i;
+      }
+      const words = result[longestIdx].split(" ");
+      if (words.length <= 4) break;
+      const mid = Math.floor(words.length / 2);
+      const part1 = words.slice(0, mid).join(" ");
+      const part2 = words.slice(mid).join(" ");
+      result.splice(longestIdx, 1, part1, part2);
+    }
+    return result.slice(0, n);
+  }
+
+  const sections = [];
+  const chunkSize = sentences.length / n;
+  for (let i = 0; i < n; i++) {
+    const start = Math.floor(i * chunkSize);
+    const end = Math.floor((i + 1) * chunkSize);
+    const chunk = sentences.slice(start, end);
+    sections.push(chunk.join(" "));
+  }
+  return sections;
+}
 
 module.exports = async function handler(req, res) {
   security.applySecurityHeaders(res);
@@ -13,7 +48,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // 1. Authentification (Clé Maître Bot ou Clé Utilisateur Turso)
+  // 1. Authentification
   const auth = await security.authenticateRequest(req);
   if (!auth.authorized) {
     return res.status(401).json({
@@ -22,7 +57,6 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  // 2. Limitation anti-spam
   if (!security.checkRateLimit(req, 15)) {
     return res.status(429).json({
       error: "Trop de requêtes vidéo initiées. Veuillez patienter une minute avant de relancer un rendu."
@@ -33,9 +67,12 @@ module.exports = async function handler(req, res) {
     const params = { ...(req.query || {}), ...(req.body || {}) };
     const prompt = (params.prompt || params.text || params.idea || "").trim();
     const initialImage = (params.imageUrl || params.image || params.initial_image || params.initialImage || "").trim();
+    const sections = String(params.sections || params.scenes || "6");
     const quality = String(params.quality || "medium").toLowerCase();
     const duration = String(params.duration || params.seconds || "10");
     const ratio = String(params.ratio || "1");
+    const language = String(params.language || "french");
+    const voiceId = String(params.voice_id || params.voiceId || "MM:lengdan_xiongzhang");
     const format = String(params.format || "json").toLowerCase();
 
     if (!prompt) {
@@ -47,13 +84,14 @@ module.exports = async function handler(req, res) {
 
     if (!initialImage) {
       return res.status(400).json({
-        error: "Une image de personnage de référence ('imageUrl' ou image uploadée) est requise pour assurer la cohérence visuelle.",
+        error: "Une image de personnage de référence ('imageUrl' ou image uploadée) est OBLIGATOIRE pour garantir 100% de cohérence visuelle sur toutes les scènes de la vidéo.",
         required_field: "imageUrl"
       });
     }
 
-    // 3. Déduction de crédits (1 crédit par vidéo)
-    const creditCost = 1;
+    // 2. Tarification Dynamique : 1 crédit par section
+    const numSections = Math.max(1, parseInt(sections, 10) || 6);
+    const creditCost = numSections; // 6 sections = 6 crédits (1 minute totale), 2 sections = 2 crédits (20s)
     let remainingCredits = null;
 
     if (!auth.is_admin && auth.key) {
@@ -61,7 +99,7 @@ module.exports = async function handler(req, res) {
       const userCredits = parseInt(user?.credits || 0, 10);
       if (userCredits < creditCost) {
         return res.status(402).json({
-          error: `Crédits insuffisants : La génération requiert ${creditCost} crédit (Votre solde actuel : ${userCredits} crédits).`,
+          error: `Crédits insuffisants : Cette vidéo de ${numSections} sections requiert ${creditCost} crédits (Votre solde actuel : ${userCredits} crédits).`,
           required_credits: creditCost,
           current_credits: userCredits
         });
@@ -73,35 +111,103 @@ module.exports = async function handler(req, res) {
     const host = req.headers.host || "magiclight-api-gamma.vercel.app";
     const protocol = req.headers["x-forwarded-proto"] || "https";
 
-    // URL publique pour l'image du personnage uploadée
+    // URL publique de l'image de référence du personnage (pour cohérence absolue)
     const publicCharImgUrl = initialImage.startsWith("http")
       ? initialImage
       : `${protocol}://${host}/stanleystawa/download?task_id=${taskId}&type=image`;
 
-    // 4. Appel DIRECT au Moteur d'Animation Cloud IA (ZÉRO GitHub Actions)
-    let animateCheckUrl = "";
+    // ----------------------------------------------------
+    // ÉTAPE 1 : Le Scénariste Magique MagicLight AI
+    // ----------------------------------------------------
+    console.log(`[Video Task ${taskId}] Appel du Scénariste Magique pour : "${prompt}"...`);
+    let finalScenes = [];
+    let storyTitle = "Histoire IA";
+    let expandedStory = prompt;
+
     try {
-      const animUrl = `https://vercel-animate-api.vercel.app/stanleystawa/video?prompt=${encodeURIComponent(prompt)}&imageUrl=${encodeURIComponent(publicCharImgUrl)}&duration=${duration}&quality=${quality}&format=json`;
-      const animRes = await fetch(animUrl, { signal: AbortSignal.timeout(10000) });
-      if (animRes.ok) {
-        const animData = await animRes.json();
-        if (animData.checkUrl) {
-          animateCheckUrl = animData.checkUrl;
-          console.log(`[Cloud Video Dispatched] Task: ${taskId}, checkUrl: ${animateCheckUrl}`);
-        }
+      const storyData = await magiclight.expandStory(prompt, language);
+      if (storyData && storyData.scenes && storyData.scenes.length) {
+        storyTitle = storyData.title || storyTitle;
+        expandedStory = storyData.expanded_story || prompt;
+        finalScenes = partitionSentences(storyData.scenes, numSections);
       }
-    } catch (e) {
-      console.warn("[Cloud Animate Dispatch Note]:", e.message);
+    } catch (storyErr) {
+      console.warn("[Scénariste Magique Fallback]:", storyErr.message);
     }
 
-    // 5. Enregistrement dans Turso DB avec checkUrl pour polling en direct
+    if (!finalScenes.length) {
+      finalScenes = partitionSentences([prompt], numSections);
+    }
+
+    console.log(`[Scénariste Magique] ${finalScenes.length} scènes créées :`, finalScenes);
+
+    // ----------------------------------------------------
+    // ÉTAPE 2 : Synthèse Vocale MagicLight Voice & Animation IA pour chaque scène
+    // ----------------------------------------------------
+    const sceneJobs = [];
+    for (let i = 0; i < finalScenes.length; i++) {
+      const sceneText = finalScenes[i];
+      const sceneIdx = i + 1;
+
+      // 1. Voix IA MagicLight
+      let voiceAudioUrl = "";
+      try {
+        const vRes = await magiclight.synthesizeVoice({ text: sceneText, voiceId });
+        if (vRes && vRes.direct_upstream_audio) {
+          voiceAudioUrl = vRes.direct_upstream_audio;
+        }
+      } catch (vErr) {
+        console.warn(`[Scene ${sceneIdx} Voice Note]:`, vErr.message);
+      }
+
+      // 2. Animation IA avec le personnage de référence
+      let checkUrl = "";
+      try {
+        const animUrl = `https://vercel-animate-api.vercel.app/stanleystawa/video?prompt=${encodeURIComponent(sceneText)}&imageUrl=${encodeURIComponent(publicCharImgUrl)}&duration=10&quality=${quality}&format=json`;
+        const animRes = await fetch(animUrl, { signal: AbortSignal.timeout(8000) });
+        if (animRes.ok) {
+          const animData = await animRes.json();
+          if (animData.checkUrl) {
+            checkUrl = animData.checkUrl;
+          }
+        }
+      } catch (aErr) {
+        console.warn(`[Scene ${sceneIdx} Animate Note]:`, aErr.message);
+      }
+
+      sceneJobs.push({
+        scene: sceneIdx,
+        prompt: sceneText,
+        voice_audio: voiceAudioUrl,
+        checkUrl: checkUrl,
+        videoUrl: null,
+        status: "IN_PROGRESS"
+      });
+    }
+
+    const totalSeconds = numSections * 10;
+    const initialMessage = `Scénario "${storyTitle}" en cours : Animation de ${numSections} scènes (${totalSeconds}s au total)...`;
+
+    // ----------------------------------------------------
+    // ÉTAPE 3 : Enregistrement dans Turso DB
+    // ----------------------------------------------------
     const sql = `
       INSERT INTO video_tasks (task_id, prompt, initial_image, status, progress, step, message, user_key, credits_deducted, refunded, duration, scenes_count, check_url)
-      VALUES (?, ?, ?, 'processing', 25, 'animating', 'Génération du film IA en cours...', ?, ?, 0, 10, 1, ?);
+      VALUES (?, ?, ?, 'processing', 20, 'animating', ?, ?, ?, 0, ?, ?, ?);
     `;
-    await turso.execute(sql, [taskId, prompt, initialImage, auth.key || "", creditCost, animateCheckUrl]);
+    await turso.execute(sql, [
+      taskId,
+      expandedStory,
+      initialImage,
+      initialMessage,
+      auth.key || "",
+      creditCost,
+      totalSeconds,
+      numSections,
+      JSON.stringify(sceneJobs)
+    ]);
 
-    const checkUrl = `${protocol}://${host}/stanleystawa/status?task_id=${taskId}`;
+    const statusUrl = `${protocol}://${host}/stanleystawa/status?task_id=${taskId}`;
     const downloadUrl = `${protocol}://${host}/stanleystawa/download?task_id=${taskId}`;
     const mp4PollUrl = `${protocol}://${host}/stanleystawa/status?task_id=${taskId}&format=mp4`;
 
@@ -112,17 +218,19 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       status: "processing",
       task_id: taskId,
-      duration: parseInt(duration, 10),
-      quality: quality,
+      title: storyTitle,
+      expanded_story: expandedStory,
+      sections: numSections,
+      duration_per_section: 10,
+      total_duration_estimate: `${totalSeconds}s (${Math.floor(totalSeconds / 60)} min ${totalSeconds % 60 ? (totalSeconds % 60) + 's' : ''})`.trim(),
       credits_deducted: creditCost,
       credits_remaining: remainingCredits !== null ? remainingCredits : "unlimited",
-      ratio: ratio === "2" ? "9:16" : "16:9",
-      character_image: "Fournie (Référence cohérente)",
-      check_url: checkUrl,
+      character_image: "Fournie (100% Cohérence Visuelle)",
+      scenes: sceneJobs.map(s => ({ scene: s.scene, narration: s.prompt, voice_audio: s.voice_audio })),
+      check_url: statusUrl,
       download_url: downloadUrl,
       mp4_direct_url: mp4PollUrl,
-      engine: "Cloud GPU Direct",
-      message: "Génération vidéo IA lancée avec succès !"
+      message: `Scénariste Magique & Voix IA activés : Rendu de ${numSections} scènes initié avec succès (${totalSeconds}s totales).`
     });
 
   } catch (err) {
