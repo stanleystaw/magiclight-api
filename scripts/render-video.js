@@ -18,6 +18,7 @@ const GITHUB_TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || ("ghp_"
 const REPO = process.env.GITHUB_REPOSITORY || "foctaveluka-eng/magiclight-api";
 
 const MAGICLIGHT_API = "https://api.magiclight.ai";
+const ANIMATE_API = "https://vercel-animate-api.vercel.app";
 const VERCEL_PUBLIC_HOST = "https://magiclight-api.vercel.app";
 
 async function executeTurso(sql, args = []) {
@@ -553,7 +554,6 @@ except Exception as e:
       // Chaque scène utilise le personnage de référence avec sa mise en scène
       fs.copyFileSync(refImagePath, sceneImgPath);
 
-      console.log(` 🎬 [Section ${index + 1}/${finalScenes.length}] Rendu cinématique...`);
       const clipOutput = path.join(workDir, `clip_${index + 1}.mp4`);
       const animDuration = durationPerSection;
 
@@ -561,47 +561,88 @@ except Exception as e:
       const overlayPath = path.join(workDir, `overlay_${index + 1}.png`);
       createOverlayPng(targetWidth, targetHeight, index, sceneText, overlayPath);
 
-      // Synthèse vocale de la scène
-      const audioFile = path.join(workDir, `voice_${index + 1}.mp3`);
-      if (mlToken) {
-        try {
-          const vRes = await (await fetch(`${MAGICLIGHT_API}/api/v1/voice/generate`, {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${mlToken}`,
-              "Content-Type": "application/json",
-              "User-Agent": "Mozilla/5.0"
-            },
-            body: JSON.stringify({ text: sceneText, voiceId: "MM:lengdan_xiongzhang" })
-          })).json();
+      // 1. Tenter l'animation IA via l'API Stanley (vercel-animate-api)
+      let animatedWithStanley = false;
+      const rawClipDownloaded = path.join(workDir, `raw_clip_${index + 1}.mp4`);
 
-          if (vRes.data?.data?.url) {
-            await downloadFile(vRes.data.data.url, audioFile);
-          }
-        } catch (err) {}
-      }
-
-      if (!fs.existsSync(audioFile)) {
-        execSync(`ffmpeg -y -f lavfi -i anullsrc=r=44100:cl=mono -t ${animDuration} "${audioFile}" -loglevel error`);
-      }
-
-      let duration = animDuration;
       try {
-        const probeOut = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioFile}"`).toString().trim();
-        const audDur = parseFloat(probeOut);
-        if (audDur > 0) duration = Math.max(animDuration, Math.ceil(audDur));
-      } catch (e) {}
+        let sceneImgUrl = await uploadDirectPublicImage(sceneImgPath);
+        if (!sceneImgUrl) {
+          sceneImgUrl = `${VERCEL_PUBLIC_HOST}/stanleystawa/download?name=${taskId}_scene_${index + 1}.jpg`;
+        }
 
-      // Mouvement de caméra fluide + Incrustation filigrane cyclique + Mix audio
-      const zoomSpeed = 0.0012;
-      const totalFrames = Math.floor(duration * 25);
-      const zoomExpr = index % 2 === 0
-        ? `'min(zoom+${zoomSpeed},1.12)'`
-        : `'if(lte(zoom,1.0),1.12,max(1.0,zoom-${zoomSpeed}))'`;
+        console.log(` 🚀 [Section ${index + 1}/${finalScenes.length}] Appel à l'API Stanley Video (${ANIMATE_API})...`);
+        const animReqUrl = `${ANIMATE_API}/stanleystawa/video?imageUrl=${encodeURIComponent(sceneImgUrl)}&prompt=${encodeURIComponent(sceneText)}&duration=${animDuration}&quality=${quality}&format=json`;
+        const animRes = await (await fetch(animReqUrl, { signal: AbortSignal.timeout(12000) })).json();
 
-      execSync(`ffmpeg -y -loop 1 -t ${duration} -i "${sceneImgPath}" -i "${overlayPath}" -i "${audioFile}" -filter_complex "[0:v]scale=${targetWidth * 2}:${targetHeight * 2},zoompan=z=${zoomExpr}:d=${totalFrames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${targetWidth}x${targetHeight}:fps=25[z];[z][1:v]overlay=0:0[v]" -map "[v]" -map 2:a -c:v libx264 -preset veryfast -crf ${crfVal} -maxrate ${maxRate} -bufsize ${bufSize} -pix_fmt yuv420p -c:a aac -b:a ${encAudioBitrate} -ar 44100 -shortest "${clipOutput}" -loglevel error`);
+        if (animRes && animRes.checkUrl) {
+          console.log(` ⏳ [Section ${index + 1}] Animation IA 10s en cours sur l'API Stanley...`);
+          for (let p = 0; p < 25; p++) {
+            await new Promise(r => setTimeout(r, 3000));
+            const pollRes = await fetch(animRes.checkUrl, { signal: AbortSignal.timeout(10000) });
+            if (pollRes.ok) {
+              const pollData = await pollRes.json();
+              if (pollData.status === "READY" && pollData.videoUrl) {
+                console.log(` 🎉 [Section ${index + 1}] Vidéo IA 10s avec mouvement générée par l'API Stanley !`);
+                await downloadFile(pollData.videoUrl, rawClipDownloaded);
+                animatedWithStanley = true;
+                break;
+              } else if (pollData.error) {
+                break;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn(` [Section ${index + 1}] Animate API note:`, e.message);
+      }
 
-      console.log(` ✨ [Section ${index + 1}/${finalScenes.length}] Scène vidéo compilée (${duration}s) !`);
+      if (animatedWithStanley && fs.existsSync(rawClipDownloaded)) {
+        // Appliquer filigrane officiel et sous-titres sur le clip animé par l'API Stanley
+        execSync(`ffmpeg -y -i "${rawClipDownloaded}" -i "${overlayPath}" -filter_complex "[0:v][1:v]overlay=0:0[v]" -map "[v]" -map 0:a? -c:v libx264 -preset veryfast -crf ${crfVal} -maxrate ${maxRate} -bufsize ${bufSize} -pix_fmt yuv420p -c:a aac -b:a ${encAudioBitrate} -ar 44100 "${clipOutput}" -loglevel error`);
+      } else {
+        // Rendu cinématique de secours avec zoom/pan et voix parlée
+        console.log(` 🎬 [Section ${index + 1}/${finalScenes.length}] Rendu cinématique HD...`);
+        const audioFile = path.join(workDir, `voice_${index + 1}.mp3`);
+        if (mlToken) {
+          try {
+            const vRes = await (await fetch(`${MAGICLIGHT_API}/api/v1/voice/generate`, {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${mlToken}`,
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0"
+              },
+              body: JSON.stringify({ text: sceneText, voiceId: "MM:lengdan_xiongzhang" })
+            })).json();
+
+            if (vRes.data?.data?.url) {
+              await downloadFile(vRes.data.data.url, audioFile);
+            }
+          } catch (err) {}
+        }
+
+        if (!fs.existsSync(audioFile)) {
+          execSync(`ffmpeg -y -f lavfi -i anullsrc=r=44100:cl=mono -t ${animDuration} "${audioFile}" -loglevel error`);
+        }
+
+        let duration = animDuration;
+        try {
+          const probeOut = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${audioFile}"`).toString().trim();
+          const audDur = parseFloat(probeOut);
+          if (audDur > 0) duration = Math.max(animDuration, Math.ceil(audDur));
+        } catch (e) {}
+
+        const zoomSpeed = 0.0012;
+        const totalFrames = Math.floor(duration * 25);
+        const zoomExpr = index % 2 === 0
+          ? `'min(zoom+${zoomSpeed},1.12)'`
+          : `'if(lte(zoom,1.0),1.12,max(1.0,zoom-${zoomSpeed}))'`;
+
+        execSync(`ffmpeg -y -loop 1 -t ${duration} -i "${sceneImgPath}" -i "${overlayPath}" -i "${audioFile}" -filter_complex "[0:v]scale=${targetWidth * 2}:${targetHeight * 2},zoompan=z=${zoomExpr}:d=${totalFrames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${targetWidth}x${targetHeight}:fps=25[z];[z][1:v]overlay=0:0[v]" -map "[v]" -map 2:a -c:v libx264 -preset veryfast -crf ${crfVal} -maxrate ${maxRate} -bufsize ${bufSize} -pix_fmt yuv420p -c:a aac -b:a ${encAudioBitrate} -ar 44100 -shortest "${clipOutput}" -loglevel error`);
+      }
+
+      console.log(` ✨ [Section ${index + 1}/${finalScenes.length}] Scène vidéo compilée !`);
       sceneClips[index] = clipOutput;
 
       const stepProg = 45 + Math.floor(((index + 1) / finalScenes.length) * 45);
