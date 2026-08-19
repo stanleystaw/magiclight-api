@@ -3,6 +3,7 @@
   "cleanUrls": true,
   "rewrites": [
     { "source": "/", "destination": "/api/index" },
+    { "source": "/api/edit-image", "destination": "/api/stanleystawa/edit" },
     { "source": "/stanleystawa/:path*", "destination": "/api/stanleystawa/:path*" }
   ],
   "env": {
